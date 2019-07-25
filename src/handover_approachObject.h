@@ -15,10 +15,11 @@
 #include <utility>
 #include <time.h>
 
-
 #include <Eigen/Core>
 #include <Eigen/SVD>
 #include <Eigen/Dense>
+
+#include <mc_control/fsm/Controller.h>
 
 #include <mc_control/mc_controller.h>
 #include <mc_control/mc_global_controller.h>
@@ -33,6 +34,7 @@
 
 #include "handover_controller.h"
 #include "handover_trajectories.h"
+
 
 
 using namespace std;
@@ -55,38 +57,39 @@ namespace mc_handover
 		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> predictionController(
 			const Eigen::Vector3d& curPosEf,
 			const Eigen::Matrix3d & constRotLink6,
-			std::vector<std::string> lShpMarkersName);
+			std::vector<std::string> subjMarkersName);
 
-		bool goToHandoverPose(
+		void goToHandoverPose(
 			double min,
 			double max,
 			bool& enableHand,
 			Eigen::Vector3d& curPosEf,
 			std::shared_ptr<mc_tasks::PositionTask>& posTask,
 			std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
-			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d,
-			Eigen::Matrix3d> handPredict,
-			Eigen::Vector3d fingerPos);
+			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> handPredict,
+			Eigen::Vector3d offsetPos);
 
 		bool forceController(
 			bool& enableHand,
-			Eigen::Vector3d constPos,
-			Eigen::Vector3d initPos,
-			Eigen::Matrix3d initRot,
-			Eigen::Vector3d handForce,
-			Eigen::Vector3d ForceLo,
-			Eigen::Vector3d Th,
-			Eigen::Vector3d efAce,
-			std::shared_ptr<mc_tasks::PositionTask>& posTask,
-			std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
-			std::string gripperName,
-			std::vector<std::string> robotMarkersName,
-			std::vector<std::string> lShpMarkersName,
-			double obj_rel_robotHand);
+
+			Eigen::Vector3d initPosR, Eigen::Matrix3d initRotR,
+			Eigen::Vector3d initPosL, Eigen::Matrix3d initRotL,
+			Eigen::Vector3d relaxPosR, Eigen::Matrix3d relaxRotR,
+			Eigen::Vector3d relaxPosL, Eigen::Matrix3d relaxRotL,
+			Eigen::VectorXd thresh,
+			Eigen::Vector3d leftForce, Eigen::Vector3d rightForce,
+			Eigen::Vector3d leftForceLo, Eigen::Vector3d rightForceLo,
+			Eigen::Vector3d efLAce, Eigen::Vector3d efRAce,
+			std::shared_ptr<mc_tasks::PositionTask>& posTaskL,
+			std::shared_ptr<mc_tasks::OrientationTask>& oriTaskL,
+			std::shared_ptr<mc_tasks::PositionTask>& posTaskR,
+			std::shared_ptr<mc_tasks::OrientationTask>& oriTaskR);
+
 
 		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
 
 		bool Flag_prediction{false}; //TRUE otherwise, use fingerPos
+
 
 		Eigen::Vector3d tuner;
 
@@ -99,7 +102,6 @@ namespace mc_handover
 		int e{1};
 
 		int totalMarkers;
-
 
 		int count_hr_success{0};
 		int count_rh_success{0};
@@ -122,37 +124,49 @@ namespace mc_handover
 
 		bool bool_t1{true};
 		bool bool_t6{true};
-		bool rh_fail{true};
-
 
 		std::vector<Eigen::Vector3d> Markers;
 		std::vector<Eigen::MatrixXd> markersPos;
 
 		std::map<std::string, double> markers_name_index;
 		std::vector<std::string> strMarkersBodyName, strMarkersName;
-		std::vector<std::string> robotLtMarkers, subjLtMarkers, robotRtMarkers, subjRtMarkers, subjMarkers, subjHeadMarkers;
+		std::vector<std::string> robotLtMarkers, robotRtMarkers;
+		std::vector<std::string> objMarkers, subjRtMarkers, subjLtMarkers, subjMarkers, subjHeadMarkers;
 
-		Eigen::Vector3d local_Fzero;
+		Eigen::Matrix3d idtMat = Eigen::Matrix3d::Identity();
+
+		Eigen::Matrix3d subjLHandRot, subjRHandRot, objRot;
+
+		Eigen::Vector3d gripperEfL, gripperEfR;
+		Eigen::Vector3d gripperLtEfA, gripperRtEfA;
+		Eigen::Vector3d gripperLtEfB, gripperRtEfB;
 
 		Eigen::Vector3d headPos, headPos1, headPos2;
-		Eigen::Vector3d objectPos, fingerPosL, fingerPosR;
-		Eigen::Matrix3d idtMat = Eigen::Matrix3d::Identity();
-		Eigen::Matrix3d handRot= idtMat;
+		Eigen::Vector3d fingerPosL, fingerPosR;
+		Eigen::Vector3d objectPosC, objectPosCx, objectPosCy;
+		sva::PTransformd virObjLeft, virObjRight;
 
+		double finR_rel_efL, finL_rel_efR;
 		double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
+		double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;
 
 		std::shared_ptr<mc_handover::HandoverTrajectory> handoverTraj;
 
 		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> lHandPredict, rHandPredict;
 
-		bool useLtEf{true};
-		bool stopLtEf{true};
+		bool addContacts{false};
+		bool removeContacts{false};
+		bool objHasContacts{false};
 
-		bool useRtEf{true};
-		bool stopRtEf{true};
+		bool useLeftEf{false};
+		bool useRightEf{false};
 
-		bool enableLHand{true};
-		bool enableRHand{true};
+		bool subjHasObject{true};
+		bool robotHasObject{false};
+
+		bool enableHand{true};
+
+		bool pickNearestHand{true};
 
 		bool gOpen{false};
 		bool gClose{false};
@@ -165,18 +179,29 @@ namespace mc_handover
 		bool goBackInit{true};
 		bool restartHandover{false};
 
-		bool pickaHand{false};
-
+		bool startNow{false};
 
 	public:
-		std::vector<double> Floadx, Floady, Floadz;
-		double objMass{0.2};
-		Eigen::Vector3d newTh = Eigen::Vector3d::Zero();
-		Eigen::Vector3d Finert = Eigen::Vector3d::Zero();
-		Eigen::Vector3d Fzero = Eigen::Vector3d::Zero();
-		Eigen::Vector3d Fclose = Eigen::Vector3d::Zero();
-		Eigen::Vector3d Fload = Eigen::Vector3d::Zero();
-		Eigen::Vector3d Fpull = Eigen::Vector3d::Zero();
+		double objMass{0.5};
+
+		std::vector<double> FloadLx, FloadLy, FloadLz;
+		std::vector<double> FloadRx, FloadRy, FloadRz;
+
+		Eigen::Vector3d local_FzeroL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d newThL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FinertL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FzeroL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FcloseL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FloadL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FpullL = Eigen::Vector3d::Zero();
+
+		Eigen::Vector3d local_FzeroR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d newThR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FinertR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FzeroR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FcloseR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FloadR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d FpullR = Eigen::Vector3d::Zero();
 
 	};//strcut ApproachObject
 

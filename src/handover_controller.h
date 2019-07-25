@@ -17,9 +17,9 @@
 
 #include <Eigen/Core>
 
-#include <mc_tasks/CoMTask.h>
 #include <mc_tasks/MetaTask.h>
-#include <mc_tasks/RelativeEndEffectorTask.h>
+#include <mc_tasks/CoMTask.h>
+#include <mc_tasks/EndEffectorTask.h>
 #include <mc_tasks/OrientationTask.h>
 #include <mc_tasks/ComplianceTask.h>
 #include <mc_tasks/PostureTask.h>
@@ -32,13 +32,13 @@
 #include <mc_rbdyn/Robot.h>
 #include <mc_rbdyn/RobotLoader.h>
 #include <mc_rbdyn/RobotModule.h>
+#include <mc_rbdyn/rpy_utils.h>
 #include <mc_rbdyn/Contact.h>
 
 
 #include <RBDyn/EulerIntegration.h>
 #include <RBDyn/FK.h>
 #include <RBDyn/FV.h>
-#include <RBDyn/FA.h>
 
 #include <boost/filesystem/fstream.hpp>
 
@@ -67,7 +67,6 @@ namespace mc_handover
 		virtual bool read_msg(std::string & msg) override;
 
 		virtual bool read_write_msg(std::string & msg, std::string & out) override;
-
 
 		mc_solver::ContactConstraint contactConstraint;
 		std::map<std::string, sva::ForceVecd> wrenches;

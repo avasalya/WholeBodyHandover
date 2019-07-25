@@ -1,5 +1,5 @@
 //
-/// ... handoverController ...
+/// ... handovercontroller ...
 ///
 
 #include "handover_controller.h"
@@ -15,7 +15,6 @@ namespace mc_handover
 		double dt, const mc_rtc::Configuration & config)
 	:mc_control::fsm::Controller(robot_module, dt, config)
 	{
-
 		selfCollisionConstraint.reset();
 		selfCollisionConstraint.addCollisions(solver(), {
 			mc_rbdyn::Collision("LARM_LINK2", "BODY", 0.15, 0.10, 0.),
@@ -75,7 +74,6 @@ namespace mc_handover
 
 
 		LOG_SUCCESS("mc_handover_controller init done")
-
 	}
 
 

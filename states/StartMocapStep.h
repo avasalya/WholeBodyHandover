@@ -52,18 +52,15 @@ namespace mc_handover
 			void ros_spinner();
 			void cortexCallback(const cortex_ros_bridge_msgs::Markers & msg);
 
-			double pi = 3.14;
-			double DegToRad = pi/180;
-			double RadToDeg = 180/pi;
+			double pi{3.14};
+			double DegToRad{pi/180};
+			double RadToDeg{180/pi};
 			double closeGrippers{0.13};
-			double openGrippers{0.5};
-
+			double openGrippers{0.6};
 
 			std::vector<std::string> activeJointsName = {"HEAD_JOINT0", "HEAD_JOINT1"};
 
 			bool Flag_CORTEX{false};//TRUE, otherwise use Cortex_ROS_bridge
-
-			bool Flag_oneHand{false};//TRUE, otherwise use both hands
 
 
 			/*mocap_simulaton*/
@@ -72,11 +69,10 @@ namespace mc_handover
 			std::vector<Eigen::MatrixXd> pos;
 			std::string name;
 
-
 			int fps{200};
-			int g{1};
+			int b_;
 			int dt{1};
-			int maxMarkers, markersCount, until, b_;
+			int i{0};
 
 			double leftForce_Xabs{0.0};
 			double leftForce_Yabs{0.0};
@@ -85,46 +81,60 @@ namespace mc_handover
 			double rightForce_Yabs{0.0};
 			double rightForce_Zabs{0.0};
 
-
-			double bodiesDiffX{0.0};
-			Eigen::Vector3d bodyPosR, bodyPosS;
-
 			Eigen::Vector3d move, target, initialCom = Eigen::Vector3d::Zero();
 
 			Eigen::Vector3d headVector, headTarget;
 
 			Eigen::Vector3d ltPosW, rtPosW;
-
-			sva::MotionVecd ltBodyAccW, rtBodyAccW;
 			std::vector<Eigen::Vector3d> efLPos, efLVel;
 			std::vector<Eigen::Vector3d> efRPos, efRVel;
 			Eigen::Vector3d efLAce, efRAce;
-
-
-			Eigen::Vector3d initPosL, initPosR, fingerPos;
-			Eigen::Vector3d constPosL, constPosR;
-			Eigen::Matrix3d constRotL, constRotR;
+			int g{1};
 
 			Eigen::Matrix3d ltRotW, rtRotW;
+
 			Eigen::Matrix3d initRotL, initRotR;
+			Eigen::Vector3d initPosL, initPosR;
+
+			Eigen::Matrix3d relaxRotL, relaxRotR;
+			Eigen::Vector3d relaxPosL, relaxPosR;
+
+			Eigen::Vector3d bodyPosR, bodyPosS;
+			double bodiesDiffX{0.0};
+
+			/*offsets for robot grippers to grasp object*/
+			double objLen;
+			double objLenLt;
+			double al;
+			double bl;
+			double objLenRt;
+			double ar;
+			double br;
+
+			Eigen::Vector3d offsetLt, offsetRt;
+			Eigen::Vector3d updateOffsetPosL, updateOffsetPosR;
+
+			Eigen::Vector3d vecOffsetL, vecOffsetR;
+			sva::PTransformd X_M_offset, X_M_offsetL, X_M_offsetR;
+			sva::PTransformd X_M_Obj0;
+			sva::PTransformd X_Obj0_offsetEf; //when subj has object
+			sva::PTransformd X_Obj0_offsetS; // when robot has object
 
 			Eigen::VectorXd thresh = Eigen::VectorXd::Zero(12);
-			Eigen::Vector3d leftTh, rightTh;
 			Eigen::Vector3d leftForce, rightForce;
 			Eigen::Vector3d leftForceLo, rightForceLo;
 
-
 			std::shared_ptr<mc_tasks::PositionTask> posTaskL;
-			std::shared_ptr<mc_tasks::OrientationTask> oriTaskL;
-
 			std::shared_ptr<mc_tasks::PositionTask> posTaskR;
+
+			std::shared_ptr<mc_tasks::OrientationTask> oriTaskL;
 			std::shared_ptr<mc_tasks::OrientationTask> oriTaskR;
+
+			std::shared_ptr<mc_tasks::OrientationTask> bodyOriTask;
+			std::shared_ptr<mc_tasks::PositionTask> bodyPosTask;
 
 			std::shared_ptr<mc_tasks::OrientationTask> chestOriTask;
 			std::shared_ptr<mc_tasks::PositionTask> chestPosTask;
-
-			std::shared_ptr<mc_tasks::PositionTask> bodyPosTask;
-			std::shared_ptr<mc_tasks::OrientationTask> bodyOriTask;
 
 			std::shared_ptr<mc_tasks::EndEffectorTask>objEfTask;
 
@@ -135,6 +145,7 @@ namespace mc_handover
 			std::shared_ptr<mc_handover::ApproachObject> approachObj;
 
 			std::vector<std::string> subjMarkersName, robotMarkersName;
+
 
 
 		private:
@@ -155,12 +166,8 @@ namespace mc_handover
 			double del{0};
 
 			bool startCapture{false};
-			bool startHandover{false};
-
-			bool taskOK{false};
 
 			bool restartEverything{false};
-
 
 		public://Cortex_ROS_Bridge
 			std::shared_ptr<ros::NodeHandle> m_nh_;
