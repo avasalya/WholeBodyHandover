@@ -1,4 +1,4 @@
-configure_file(datapath.h.in "${CMAKE_BINARY_DIR}/include/datapath.h")
+# configure_file(datapath.h.in "${CMAKE_BINARY_DIR}/include/datapath.h")
 
 set(FSM_STATES_INSTALL_PREFIX "${MC_RTC_LIBDIR}/mc_controller/handovercontroller/states")
 
