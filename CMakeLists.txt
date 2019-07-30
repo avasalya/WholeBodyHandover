@@ -6,15 +6,18 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 
 
 
-set(CXX_DISABLE_WERROR 1)
-include(cmake/base.cmake)
-include(cmake/boost.cmake)
+# set(CXX_DISABLE_WERROR 1)
+set(CMAKE_CXX_FLAGS "-pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# include(cmake/base.cmake)
+# include(cmake/boost.cmake)
 
 set(PROJECT_NAME handovercontroller)
 set(PROJECT_DESCRIPTION "human-robot tool handover controller for mc_rtc")
 set(PROJECT_URL https://gite.lirmm.fr/ashesh/handovercontroller)
 
-setup_project()
+# setup_project()
+project(${PROJECT_NAME} CXX)
 
 # Enable C++11
 if(NOT WIN32)
@@ -23,7 +26,7 @@ endif()
 
 # Use jrl-cmakemoduels to get mc_rtc depency
 set(PKG_CONFIG_ADDITIONAL_VARIABLES "${PKG_CONFIG_ADDITIONAL_VARIABLES} libdir")
-add_required_dependency(mc_rtc)
+# add_required_dependency(mc_rtc)
 find_package(mc_rtc REQUIRED)
 
 
@@ -47,4 +50,4 @@ configure_file(etc/Handover.in.conf ${CMAKE_CURRENT_BINARY_DIR}/etc/Handover.con
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/etc/Handover.conf
     DESTINATION ${MC_RTC_LIBDIR}/mc_controller/etc/)
 
-setup_project_finalize()
+# setup_project_finalize()
