@@ -31,7 +31,6 @@ find_package(mc_rtc REQUIRED)
 
 
 add_subdirectory(src)
-add_subdirectory(states)
 add_subdirectory(cortex)
 
 
