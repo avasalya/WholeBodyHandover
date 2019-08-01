@@ -12,9 +12,9 @@
 
 #include <mc_rbdyn/Robot.h>
 
-#include "../cortex/cortex.h"
+#include "../../cortex/cortex.h"
 
-#include "handover_approachObject.h"
+#include "../handover_approachObject.h"
 
 
 //Cortex_ROS_bridge

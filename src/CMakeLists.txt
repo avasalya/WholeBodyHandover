@@ -18,3 +18,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DMC_CONTROL_EXP
 target_link_libraries(${PROJECT_NAME} mc_rtc::mc_control_fsm)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${MC_RTC_LIBDIR}/mc_controller)
+
+add_subdirectory(states)
