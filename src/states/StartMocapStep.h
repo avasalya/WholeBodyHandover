@@ -13,7 +13,6 @@
 #include <mc_rbdyn/Robot.h>
 
 #include "../../cortex/cortex.h"
-
 #include "../handover_approachObject.h"
 
 

@@ -64,6 +64,7 @@ namespace mc_handover
 			double max,
 			bool& enableHand,
 			Eigen::Vector3d& curPosEf,
+			Eigen::Matrix3d relaxRot,
 			std::shared_ptr<mc_tasks::PositionTask>& posTask,
 			std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
 			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> handPredict,
@@ -87,8 +88,10 @@ namespace mc_handover
 
 
 		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
-
 		bool Flag_prediction{false}; //TRUE otherwise, use fingerPos
+
+		bool proactiveHandover{false}; // for proactive handover exp
+		bool passiveHandover{true};   // for passive handover exp
 
 
 		Eigen::Vector3d tuner;
@@ -146,6 +149,7 @@ namespace mc_handover
 		Eigen::Vector3d objectPosC, objectPosCx, objectPosCy;
 		sva::PTransformd virObjLeft, virObjRight;
 
+		double GlobalAvgVelSubjNorm;
 		double finR_rel_efL, finL_rel_efR;
 		double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
 		double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;
@@ -167,6 +171,7 @@ namespace mc_handover
 		bool enableHand{true};
 
 		bool pickNearestHand{true};
+		bool doThingsAfterRelease{false};
 
 		bool gOpen{false};
 		bool gClose{false};

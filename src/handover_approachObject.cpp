@@ -296,6 +296,8 @@ namespace mc_handover
 
 		ready = true;
 
+		GlobalAvgVelSubjNorm = avgVelSubj.norm();
+
 		return std::make_tuple(ready, wp, initRefPos, handoverRot);
 	}
 
@@ -305,12 +307,10 @@ namespace mc_handover
 		double max,
 		bool& enableHand,
 		Eigen::Vector3d& curPosEf,
+		Eigen::Matrix3d relaxRot,
 		std::shared_ptr<mc_tasks::PositionTask>& posTask,
 		std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
-		std::tuple<bool,
-		Eigen::MatrixXd,
-		Eigen::Vector3d,
-		Eigen::Matrix3d> handPredict,
+		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> handPredict,
 		Eigen::Vector3d offsetPos)
 	{
 		Eigen::Vector3d wp, handoverPos;
@@ -337,8 +337,22 @@ namespace mc_handover
 			)
 		{
 			sva::PTransformd new_pose(get<3>(handPredict), handoverPos);
-			posTask->position(new_pose.translation());
-			oriTask->orientation(new_pose.rotation());
+
+			if(proactiveHandover)
+			{
+				posTask->position(new_pose.translation());
+				oriTask->orientation(new_pose.rotation());
+			}
+			else if(passiveHandover)
+			{
+				if( GlobalAvgVelSubjNorm >=0.0 &&
+					GlobalAvgVelSubjNorm <=0.002 )
+				{
+					posTask->position(new_pose.translation());
+					// LOG_ERROR(GlobalAvgVelSubjNorm << " GlobalAvgVelSubjNorm ")
+				}
+				oriTask->orientation(relaxRot);
+			}
 
 			// LOG_INFO("it "<<it << "\npredictPos wp "<<handoverPos.transpose()<<"\n" << "offsetPos "<< offsetPos.transpose())
 		}
@@ -392,10 +406,28 @@ namespace mc_handover
 					FpullR[1] = abs(rightForce[1]) - abs(FinertR[1]) - abs(FzeroR[1]);
 					FpullR[2] = abs(rightForce[2]) - abs(FinertR[2]) - abs(FzeroR[2]);
 
-					/*to avoid slip-- try to check if (Fpull > Th) for cont. over 1 sec or more*/
-
-					if( (abs(FpullL[idx]) > newThL[idx]) || (abs(FpullR[idx]) > newThR[idx]) )
+					if(proactiveHandover)
 					{
+
+						/*to avoid slip-- try to check if (Fpull > Th) for cont. over 1 sec or more*/
+						if( (abs(FpullL[idx]) > newThL[idx]) || (abs(FpullR[idx]) > newThR[idx]) )
+						{
+							doThingsAfterRelease = true;
+						}
+					}
+					else if(passiveHandover)
+					{
+						// if( (abs(leftForce[idx]) > 2*newThL[idx]) || (abs(righttForce[idx]) > 2*newThR[idx]) )
+						if( (abs(FpullL[idx]) > 2*newThL[idx]) || (abs(FpullR[idx]) > 2*newThR[idx]) )
+						{
+							doThingsAfterRelease = true;
+						}
+					}
+
+					if(doThingsAfterRelease)
+					{
+						doThingsAfterRelease = false;
+
 						if(objHasContacts)
 						{
 							removeContacts = true;
@@ -420,6 +452,7 @@ namespace mc_handover
 							LOG_ERROR("robot doesn't have contacts with the object")
 						}
 					}
+
 				}
 				return false;
 			};
@@ -651,6 +684,27 @@ namespace mc_handover
 
 					bool_t1 = true;
 					bool_t6 = true;
+
+
+					local_FzeroL = Eigen::Vector3d::Zero();
+					newThL = Eigen::Vector3d::Zero();
+					FinertL = Eigen::Vector3d::Zero();
+					FzeroL = Eigen::Vector3d::Zero();
+					FcloseL = Eigen::Vector3d::Zero();
+					FloadL = Eigen::Vector3d::Zero();
+					FpullL = Eigen::Vector3d::Zero();
+
+
+					local_FzeroR = Eigen::Vector3d::Zero();
+					newThR = Eigen::Vector3d::Zero();
+					FinertR = Eigen::Vector3d::Zero();
+					FzeroR = Eigen::Vector3d::Zero();
+					FcloseR = Eigen::Vector3d::Zero();
+					FloadR = Eigen::Vector3d::Zero();
+					FpullR = Eigen::Vector3d::Zero();
+
+
+					doThingsAfterRelease = false;
 
 					LOG_SUCCESS("object returned to subject, motion enabled, restarting handover\n")
 				}
