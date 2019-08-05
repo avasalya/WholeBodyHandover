@@ -73,7 +73,7 @@ namespace mc_handover
 		// qpsolver->addConstraintSet(kinematicsConstraint);
 
 
-		LOG_SUCCESS("Stabilized_handoverController init done")
+		LOG_SUCCESS("handoverController init done")
 	}
 
 

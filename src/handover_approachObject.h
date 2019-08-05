@@ -90,8 +90,8 @@ namespace mc_handover
 		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
 		bool Flag_prediction{false}; //TRUE otherwise, use fingerPos
 
-		bool proactiveHandover{false}; // for proactive handover exp
-		bool passiveHandover{true};   // for passive handover exp
+		bool proactiveHandover{true}; // for proactive handover exp
+		bool passiveHandover{false};   // for passive handover exp
 
 
 		Eigen::Vector3d tuner;
