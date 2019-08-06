@@ -1,6 +1,6 @@
 #include "handover_approachObject.h"
 
-namespace mc_handover
+namespace lipm_walking
 {
 	ApproachObject::ApproachObject() {}
 	// { cout<<"\033[1;50mhandover object created\033[0m\n"; }
@@ -660,4 +660,4 @@ namespace mc_handover
 		return false;
 	}
 
-}//namespace mc_handover
+}//namespace lipm_walking

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+    <name>handover_walking_controller</name>
+    <version>1.1.0</version>
+    <description>Handover Controller with Walking controller based on linear inverted pendulum tracking</description>
+    <maintainer email="asheshvasalya@yahoo.in">Ashesh Vasalya</maintainer>
+    <license>LGPLv3</license>
+    <url type="repository"></url>
+    <buildtool_depend>catkin</buildtool_depend>
+    <build_depend>geometry_msgs</build_depend>
+    <build_depend>roscpp</build_depend>
+    <build_depend>roslib</build_depend>
+    <build_depend>rviz</build_depend>
+    <build_depend>std_msgs</build_depend>
+    <build_depend>tf</build_depend>
+    <build_depend>cortex_bridge</build_depend>
+    <build_depend>cortex_ros_bridge</build_depend>
+    <build_depend>cortex_ros_bridge_msgs</build_depend>
+    <run_depend>geometry_msgs</run_depend>
+    <run_depend>roscpp</run_depend>
+    <run_depend>roslib</run_depend>
+    <run_depend>rviz</run_depend>
+    <run_depend>std_msgs</run_depend>
+    <run_depend>tf</run_depend>
+    <run_depend>cortex_bridge</run_depend>
+    <run_depend>cortex_ros_bridge</run_depend>
+    <run_depend>cortex_ros_bridge_msgs</run_depend>
+</package>

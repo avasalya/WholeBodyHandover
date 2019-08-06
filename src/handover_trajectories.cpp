@@ -2,7 +2,7 @@
 #include "handover_trajectories.h"
 
 
-namespace mc_handover
+namespace lipm_walking
 {
 	HandoverTrajectory::HandoverTrajectory()
 	{
@@ -12,7 +12,7 @@ namespace mc_handover
 
     /* returns way points between xi and xf in tf time using nonZero boundary conditions */
 	std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd> HandoverTrajectory::minJerkZeroBoundary(const Eigen::Vector3d & xi, const Eigen::Vector3d & xf, double tf)
-	{ 
+	{
 		Eigen::MatrixXd a, b1, b2, b3, pos, vel, ace;
 
 		a.resize(tf,3);
@@ -57,7 +57,7 @@ namespace mc_handover
 		pos.resize(tf,3); vel.resize(tf,3); ace.resize(tf,3);
 
 		for(int i=0; i<tf; i++)
-		{	
+		{
 			D  = 1/tf;
 			tau = i*D;
 
@@ -90,12 +90,12 @@ namespace mc_handover
 	std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> HandoverTrajectory::minJerkPredictPos(const Eigen::Vector3d & xi, const Eigen::Vector3d & xc, double t0, double tc, double tf)
 	{
 		Eigen::Vector3d a, pos, vel, ace;
-		
+
 		double b1, b2, b3;
 		double t = tc-t0;
 		double d = tf-t0;
 		double T = (t/d);
-		
+
 		a  << (xc-xi);
 		b1 = (10*pow((T),3) -  15*pow((T),4) +    6*pow((T),5));
 		b2 = (30*pow((T),2) -  60*pow((T),3) +   30*pow((T),4));
@@ -104,7 +104,7 @@ namespace mc_handover
 		pos <<	xi.array() + (a.array()/b1);
 		vel <<				 (a.array()/b2);
 		ace <<				 (a.array()/b3);
-		
+
 		// cout << pos << endl<< endl;
 		// cout << vel << endl<< endl;
 		// cout << ace << endl<< endl;
@@ -115,7 +115,7 @@ namespace mc_handover
 
 	/* position based on const velocity */
 	std::tuple<Eigen::MatrixXd, Eigen::Vector3d, Eigen::Vector3d>HandoverTrajectory::constVelocity(const Eigen::Vector3d & xi, const Eigen::Vector3d & xf, double tf)
-	{	
+	{
 		MatrixXd pos;
 
 		pos.resize(3,tf);
@@ -137,7 +137,7 @@ namespace mc_handover
 
 	/* position at tf time based on const velocity */
 	Eigen::Vector3d HandoverTrajectory::constVelocityPredictPos(const Eigen::Vector3d & xdot, const Eigen::Vector3d & C, double tf)
-	{	
+	{
 		Eigen::Vector3d pos;
 		pos << xdot*tf*0.005 + C;
 		// cout << pos << endl<< endl;
@@ -203,188 +203,6 @@ namespace mc_handover
 		return mean;
 	}
 
-	// Eigen::Vector3d HandoverTrajectory::takeAverage(Eigen::MatrixXd m)
-	// {
-	// 	std::vector<double> vx, vy, vz;
-	// 	double avgx=0, avgy=0, avgz=0;
-
-	// 	Eigen::Vector3d mean;
-
-	// 	for(int i=1;i<=m.cols();i++)
-	// 	{
-	// 		//ignore 1st value
-	// 		if( (m(0,i)>-2) && (m(0,i)<2) )
-	// 		{
-	// 			vx.push_back(m(0,i));
-	// 		}
-	// 		else
-	// 		{
-	// 			vx.push_back(0.3);	
-	// 		}
-
-	// 		if( (m(1,i)>-2) && (m(1,i)<2) )
-	// 		{
-	// 			vy.push_back(m(1,i));
-	// 		}
-	// 		else
-	// 		{
-	// 			vy.push_back(0.3);	
-	// 		}
-			
-	// 		if( (m(2,i)>-2) && (m(2,i)<2) )
-	// 		{
-	// 			vz.push_back(m(2,i));
-	// 		}
-	// 		else
-	// 		{
-	// 			vz.push_back(0.3);	
-	// 		}		
-	// 	}
-
-	// 	avgx = accumulate( vx.begin(), vx.end(), 0.0)/vx.size(); 
-	// 	avgy = accumulate( vy.begin(), vy.end(), 0.0)/vy.size(); 
-	// 	avgz = accumulate( vz.begin(), vz.end(), 0.0)/vz.size(); 
-
-	// 	mean << avgx, avgy, avgz;
-	// 	return mean;
-	// }
-
-
-
-
-
-
-
-
-	// CircularTrajectory::CircularTrajectory(double radius, std::size_t nr_points, const Eigen::Vector3d& initial)
-	// : r(radius), nr_points(nr_points), x0(initial)
-	// {
-	// 	reset();
-	// }
-
-	// std::pair<Eigen::Vector3d, Eigen::Vector3d> CircularTrajectory::pop()
-	// {
-	// 	std::pair<Eigen::Vector3d, Eigen::Vector3d> pair;
-	// 	if(queue.empty())
-	// 	{
-	// 		Eigen::Vector3d zero = Eigen::Vector3d::Zero();
-	// 		pair = {x0, zero};
-	// 	}
-	// 	else
-	// 	{
-	// 		pair = queue.front();
-	// 		queue.pop();
-	// 	}
-	// 	return pair;
-	// }
-
-	// void CircularTrajectory::reset()
-	// {
-	// 	//Clear queue
-	// 	std::queue<std::pair<Eigen::Vector3d, Eigen::Vector3d> > empty;
-	// 	std::swap(empty, queue);
-	// 	for(std::size_t i = 0; i < nr_points; ++i)
-	// 	{
-	// 		double theta = 2*M_PI*(double)i/(double)nr_points;
-	// 		Eigen::Vector3d pos(0, cos(theta), sin(theta));
-	// 		Eigen::Vector3d vel(0, -sin(theta), cos(theta));
-	// 		queue.push({x0+r*pos, r*vel});
-	// 	}
-	// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// HandoverTrajectoryTask::HandoverTrajectoryTask(mc_solver::QPSolver & solver)
-	// :solver(solver)
-	// {
-	// 	auto & robot = solver.robot();
-
-	// 	positionTask = std::make_shared<tasks::qp::PositionTask>(solver.robots().mbs(), 0, "LARM_LINK6", robot.mbc().bodyPosW[robot.bodyIndexByName("LARM_LINK6")].translation());
-
-	// 	Eigen::Vector3d dimW; dimW << 1, 1, 1;
-
-	// 	trajTask = std::make_shared<tasks::qp::TrajectoryTask>(solver.robots().mbs(), 0, positionTask.get(), gainPos, gainVel, dimW, weight);
-	// 	solver.addTask(trajTask.get());
-
-	// 	/* Update position vector */
-	// 	initPos = positionTask->position();
-	// 	cout << "efL initial Pos " << initPos.transpose() << endl;
-
-
-	// 	pos = Eigen::MatrixXd(3,tunParam2);
-	// 	vel = Eigen::MatrixXd(3,tunParam2);
-	// 	ace = Eigen::MatrixXd(3,tunParam2);
-	// }
-
-
-	// HandoverTrajectoryTask::~HandoverTrajectoryTask()
-	// {
-	// 	solver.removeTask(trajTask.get());
-	// }
-
-
-	// bool HandoverTrajectoryTask::update()
-	// {
-	// 	// cout << "pos.rows() " << pos.rows() <<endl;
-	// 	// cout << "pos.cols() " << pos.cols() <<endl;
-
- // 		if(wp_index < pos.cols())
-	// 	{
-	// 		// cout << " Pos " << pos.col(wp_index).transpose() << endl;
-
-	// 		//************ change initPos after every itr *****************8
-
-	// 		positionTask->position(pos.col(wp_index) + initPos - pos.col(0));
-	// 		// positionTask->position(pos.col(wp_index) + initPos);
-	// 		// positionTask->position(pos.col(wp_index));
-
-	// 		trajTask->refVel(vel.col(wp_index));
-	// 		refVel = vel.col(wp_index);
-	// 		trajTask->refAccel(ace.col(wp_index));
-	// 		refAce = ace.col(wp_index);
-	// 		wp_index++;
-	// 		// cout << "wp_index "<< wp_index <<endl;
-
-	// 		// cout << " Pos " << positionTask->position().transpose() << endl;
-
-	// 		if(wp_index==tunParam2-1) //check if observation time is over then go to new observed pos
-	// 		{
-	// 			LOG_INFO("next iteration ")
-	// 			wp_index = 0;
-	// 			initPos = positionTask->position();
-	// 			return true;
-
-	// 		}
-	// 		return false;
-	// 	}
-	// 	else
-	// 	{	
-	// 		LOG_WARNING(" nothing to do ")
-	// 		// wpReady = true;
-
-	// 		positionTask->position(initPos);
-
-	// 		trajTask->refVel(Eigen::Vector3d::Zero());
-	// 		refVel=Eigen::Vector3d::Zero();
-			
-	// 		trajTask->refAccel(Eigen::Vector3d::Zero());
-	// 		refAce=Eigen::Vector3d::Zero();
-	// 		return false;
-	// 	}
-	// }
-
-
-
-}// namespace mc_handover
+}// namespace lipm_walking
 
 

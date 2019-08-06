@@ -20,7 +20,6 @@
 #include <Eigen/Dense>
 
 #include <mc_control/fsm/Controller.h>
-
 #include <mc_control/mc_controller.h>
 #include <mc_control/mc_global_controller.h>
 
@@ -32,15 +31,14 @@
 
 #include <Tasks/QPTasks.h>
 
-#include "handover_controller.h"
-#include "handover_trajectories.h"
-
+#include <lipm_walking/Controller.h>
+#include <handover_trajectories.h>
 
 
 using namespace std;
 using namespace Eigen;
 
-namespace mc_handover
+namespace lipm_walking
 {
 	struct ApproachObject
 	{
@@ -150,7 +148,7 @@ namespace mc_handover
 		double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
 		double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;
 
-		std::shared_ptr<mc_handover::HandoverTrajectory> handoverTraj;
+		std::shared_ptr<lipm_walking::HandoverTrajectory> handoverTraj;
 
 		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> lHandPredict, rHandPredict;
 
@@ -205,4 +203,4 @@ namespace mc_handover
 
 	};//strcut ApproachObject
 
-}//namespace mc_handover
+}//namespace lipm_walking

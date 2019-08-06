@@ -1,30 +1,16 @@
 #include "StartMocapStep.h"
 
-namespace mc_handover
+namespace lipm_walking
 {
 
 	namespace states
 	{
 
-		void StartMocapStep::ros_spinner()
+		void states::StartMocapStep::ros_spinner()
 		{ ros::spin(); }
 
 
-
-		void MyErrorMsgHandler(int iLevel, const char *szMsg)
-		{
-			const char *szLevel = NULL;
-
-			if (iLevel == VL_Debug) { szLevel = "Debug"; }
-			else if (iLevel == VL_Info) { szLevel = "Info"; }
-			else if (iLevel == VL_Warning) { szLevel = "Warning"; }
-			else if (iLevel == VL_Error) { szLevel = "Error"; }
-			printf("  %s: %s\n", szLevel, szMsg);
-		}
-
-
-
-		void StartMocapStep::cortexCallback(const cortex_ros_bridge_msgs::Markers & msg)
+		void states::StartMocapStep::cortexCallback(const cortex_ros_bridge_msgs::Markers & msg)
 		{
 			// LOG_WARNING("cortexCallback")
 			c = 0;
@@ -47,10 +33,9 @@ namespace mc_handover
 		}
 
 
-
-		void StartMocapStep::start(mc_control::fsm::Controller & controller)
+		void states::StartMocapStep::start()
 		{
-			auto & ctl = static_cast<mc_handover::HandoverController&>(controller);
+			auto & ctl = controller();
 
 			/*current time*/
 			time_t now = time(0);
@@ -59,7 +44,7 @@ namespace mc_handover
 
 
 			/*allocate memory*/
-			approachObj = std::make_shared<mc_handover::ApproachObject>();
+			approachObj = std::make_shared<lipm_walking::ApproachObject>();
 			approachObj->initials();
 
 
@@ -198,6 +183,48 @@ namespace mc_handover
 			/*reset robot pose*/
 			ctl.gui()->addElement({"Handover", "Reset Pose"},
 
+				mc_rtc::gui::Button("openGrippers", [this, &ctl]()
+				{
+					auto gripper = ctl.grippers["l_gripper"].get();
+					gripper->setTargetQ({openGrippers});
+
+					gripper = ctl.grippers["r_gripper"].get();
+					gripper->setTargetQ({openGrippers});
+				}),
+
+				mc_rtc::gui::Button("closeGrippers", [this, &ctl]()
+				{
+					auto gripper = ctl.grippers["l_gripper"].get();
+					gripper->setTargetQ({closeGrippers});
+
+					gripper = ctl.grippers["r_gripper"].get();
+					gripper->setTargetQ({closeGrippers});
+				}),
+
+				mc_rtc::gui::Button("openGripperL", [this, &ctl]()
+				{
+					auto gripper = ctl.grippers["l_gripper"].get();
+					gripper->setTargetQ({openGrippers});
+				}),
+
+				mc_rtc::gui::Button("closeGripperL", [this, &ctl]()
+				{
+					auto gripper = ctl.grippers["l_gripper"].get();
+					gripper->setTargetQ({closeGrippers});
+				}),
+
+				mc_rtc::gui::Button("openGripperR", [this, &ctl]()
+				{
+					auto gripper = ctl.grippers["r_gripper"].get();
+					gripper->setTargetQ({openGrippers});
+				}),
+
+				mc_rtc::gui::Button("closeGripperR", [this, &ctl]()
+				{
+					auto gripper = ctl.grippers["r_gripper"].get();
+					gripper->setTargetQ({closeGrippers});
+				}),
+
 				mc_rtc::gui::Button("LEFT ARM orientation", [this, &ctl]()
 				{
 					oriTaskL->orientation(relaxRotL);
@@ -283,47 +310,47 @@ namespace mc_handover
 			/*configure MOCAP*/
 			if(Flag_CORTEX)
 			{
-				cout << "\033[1;32m***MOCAP IS ENABLED*** \033[0m\n";
-				Cortex_SetVerbosityLevel(VL_Info);
-				Cortex_SetErrorMsgHandlerFunc(MyErrorMsgHandler);
+				// cout << "\033[1;32m***MOCAP IS ENABLED*** \033[0m\n";
+				// Cortex_SetVerbosityLevel(VL_Info);
+				// Cortex_SetErrorMsgHandlerFunc(MyErrorMsgHandler);
 
-				if(ctl.Flag_ROBOT)
-					{ retval = Cortex_Initialize("10.1.1.180", "10.1.1.190"); }
-				else{ retval = Cortex_Initialize("10.1.1.200", "10.1.1.190"); }
+				// if(ctl.Flag_ROBOT)
+				// 	{ retval = Cortex_Initialize("10.1.1.180", "10.1.1.190"); }
+				// else{ retval = Cortex_Initialize("10.1.1.200", "10.1.1.190"); }
 
-				if (retval != RC_Okay)
-					{ printf("Error: Unable to initialize ethernet communication\n");
-				retval = Cortex_Exit(); }
+				// if (retval != RC_Okay)
+				// 	{ printf("Error: Unable to initialize ethernet communication\n");
+				// retval = Cortex_Exit(); }
 
-				// cortex frame rate //
-				printf("\n****** Cortex_FrameRate ******\n");
-				retval = Cortex_Request("GetContextFrameRate", &pResponse, &nBytes);
-				if (retval != RC_Okay)
-					printf("ERROR, GetContextFrameRate\n");
-				float *contextFrameRate = (float*) pResponse;
-				printf("ContextFrameRate = %3.1f Hz\n", *contextFrameRate);
+				// // cortex frame rate //
+				// printf("\n****** Cortex_FrameRate ******\n");
+				// retval = Cortex_Request("GetContextFrameRate", &pResponse, &nBytes);
+				// if (retval != RC_Okay)
+				// 	printf("ERROR, GetContextFrameRate\n");
+				// float *contextFrameRate = (float*) pResponse;
+				// printf("ContextFrameRate = %3.1f Hz\n", *contextFrameRate);
 
-				// get name of bodies being tracked and its set of markers //
-				printf("\n****** Cortex_GetBodyDefs ******\n");
-				pBodyDefs = Cortex_GetBodyDefs();
-				if (pBodyDefs == NULL)
-					{ printf("Failed to get body defs\n"); }
-				else
-				{
-					totalBodies = pBodyDefs->nBodyDefs;
-					cout << "total no of bodies tracked " << totalBodies << endl;
-					for(int iBody=0; iBody<totalBodies; iBody++)
-					{
-						bodyMarkers.push_back(pBodyDefs->BodyDefs[iBody].nMarkers);
-						pBody = &pBodyDefs->BodyDefs[iBody];
-						cout << "number of markers defined in body " << iBody+1 << " (\"" << pBody->szName << "\") : " << bodyMarkers.at(iBody) << endl;
+				// // get name of bodies being tracked and its set of markers //
+				// printf("\n****** Cortex_GetBodyDefs ******\n");
+				// pBodyDefs = Cortex_GetBodyDefs();
+				// if (pBodyDefs == NULL)
+				// 	{ printf("Failed to get body defs\n"); }
+				// else
+				// {
+				// 	totalBodies = pBodyDefs->nBodyDefs;
+				// 	cout << "total no of bodies tracked " << totalBodies << endl;
+				// 	for(int iBody=0; iBody<totalBodies; iBody++)
+				// 	{
+				// 		bodyMarkers.push_back(pBodyDefs->BodyDefs[iBody].nMarkers);
+				// 		pBody = &pBodyDefs->BodyDefs[iBody];
+				// 		cout << "number of markers defined in body " << iBody+1 << " (\"" << pBody->szName << "\") : " << bodyMarkers.at(iBody) << endl;
 
-						for (int iMarker=0 ; iMarker<pBody->nMarkers; iMarker++)
-							{ cout << iMarker << " " << pBody->szMarkerNames[iMarker] << endl; }
-					}
-				}
-				printf("\n*** start live mode ***\n");
-				Cortex_Request("LiveMode", &pResponse, &nBytes);
+				// 		for (int iMarker=0 ; iMarker<pBody->nMarkers; iMarker++)
+				// 			{ cout << iMarker << " " << pBody->szMarkerNames[iMarker] << endl; }
+				// 	}
+				// }
+				// printf("\n*** start live mode ***\n");
+				// Cortex_Request("LiveMode", &pResponse, &nBytes);
 			}
 			else
 			{
@@ -334,7 +361,7 @@ namespace mc_handover
 				LOG_ERROR_AND_THROW(std::runtime_error, "This controller does not work withtout ROS")
 				}
 				m_ros_spinner_ = std::thread{[this](){ this->ros_spinner(); }};
-				l_shape_sub_ = m_nh_->subscribe("novis_markers", 1, & mc_handover::states::StartMocapStep::cortexCallback, this);
+				l_shape_sub_ = m_nh_->subscribe("novis_markers", 1, & lipm_walking::states::StartMocapStep::cortexCallback, this);
 			}
 
 
@@ -415,16 +442,13 @@ namespace mc_handover
 
 
 			LOG_SUCCESS("******** Both hands TOGETHER scenario *********")
-
 		}// start
 
 
-
-		bool StartMocapStep::run(mc_control::fsm::Controller & controller)
+		void states::StartMocapStep::runState()
 		{
-			auto & ctl = static_cast<mc_handover::HandoverController&>(controller);
+			auto & ctl = controller();
 
-			/*hand pose*/
 			ltPosW = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK7")].translation();
 			ltRotW = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK6")].rotation();
 
@@ -555,7 +579,7 @@ namespace mc_handover
 			auto open_gripper = [&](std::string gripperName)
 			{
 				auto gripper = ctl.grippers[gripperName].get();
-				gripper->setTargetQ({openGrippers});//0.5
+				gripper->setTargetQ({openGrippers});
 			};
 
 
@@ -587,21 +611,21 @@ namespace mc_handover
 			/*Get non-stop MOCAP Frame*/
 			if(Flag_CORTEX)
 			{
-				getCurFrame = Cortex_GetCurrentFrame();
-				Cortex_CopyFrame(getCurFrame, &FrameofData);
+				// getCurFrame = Cortex_GetCurrentFrame();
+				// Cortex_CopyFrame(getCurFrame, &FrameofData);
 
-				int ithFrame = FrameofData.iFrame;
-				del+=FrameofData.fDelay;
+				// int ithFrame = FrameofData.iFrame;
+				// del+=FrameofData.fDelay;
 
-				if(ithFrame == 0 || ithFrame == 1)
-					{ startCapture = true; }
-				else if(ithFrame <0)
-				{
-					Cortex_Request("Pause", &pResponse, &nBytes);
-					Cortex_Exit();
-					output("OK");
-					return true;
-				}
+				// if(ithFrame == 0 || ithFrame == 1)
+				// 	{ startCapture = true; }
+				// else if(ithFrame <0)
+				// {
+				// 	Cortex_Request("Pause", &pResponse, &nBytes);
+				// 	Cortex_Exit();
+				// 	output("OK");
+				// 	return true;
+				// }
 			}
 			else
 			{ startCapture = true; }
@@ -613,44 +637,44 @@ namespace mc_handover
 			{
 				if(Flag_CORTEX)
 				{
-					/*get markers position FrameByFrame*/
-					if(approachObj->Flag_withoutRobot)
-						{ b_ = 2; c = 8; }
-					else
-						{ b_ = 0; c = 0; }
+					// /*get markers position FrameByFrame*/
+					// if(approachObj->Flag_withoutRobot)
+					// 	{ b_ = 2; c = 8; }
+					// else
+					// 	{ b_ = 0; c = 0; }
 
-					for(int b=b_; b<totalBodies; b++)
-					{
-						/*make sure mocap template body marker's index are correct*/
-						pBody = &pBodyDefs->BodyDefs[b];
-						if(pBody->szName == approachObj->strMarkersBodyName[b])
-						{
-							// LOG_INFO("body name: "<<pBody->szName<<"\n"<<
-							// 	" pBody->nMarkers: " << pBody->nMarkers<<"\n"<<
-							// 	" & FrameofData.BodyData[b].nMarkers: " <<FrameofData.BodyData[b].nMarkers<<"\n" )
+					// for(int b=b_; b<totalBodies; b++)
+					// {
+					// 	/*make sure mocap template body marker's index are correct*/
+					// 	pBody = &pBodyDefs->BodyDefs[b];
+					// 	if(pBody->szName == approachObj->strMarkersBodyName[b])
+					// 	{
+					// 		// LOG_INFO("body name: "<<pBody->szName<<"\n"<<
+					// 		// 	" pBody->nMarkers: " << pBody->nMarkers<<"\n"<<
+					// 		// 	" & FrameofData.BodyData[b].nMarkers: " <<FrameofData.BodyData[b].nMarkers<<"\n" )
 
-							for(int m=0; m<pBody->nMarkers; m++)
-							{
-								if(b==0 && m==4)
-								{}
-								else
-								{
-									approachObj->Markers[c] <<
-									FrameofData.BodyData[b].Markers[m][0], // X
-									FrameofData.BodyData[b].Markers[m][1], // Y
-									FrameofData.BodyData[b].Markers[m][2]; // Z
-									c+=1;
-									// cout<<approachObj->Markers[c].transpose()<<"\n";
-									// cout<<*getCurFrame->BodyData[b].Markers[m]<<endl;
-								}
-							}
-						}
-						else
-							{ LOG_ERROR("approachObj->strMarkersBodyName[b] "<<approachObj->strMarkersBodyName[b]<<"\n"<<
-								"pBody->szName "<<pBody->szName<<"\n"<<
-								"pBody->nMarkers: " << pBody->nMarkers<<"\n"<<
-								" & FrameofData.BodyData[b].nMarkers: " <<FrameofData.BodyData[b].nMarkers<<"\n" ) }
-					}
+					// 		for(int m=0; m<pBody->nMarkers; m++)
+					// 		{
+					// 			if(b==0 && m==4)
+					// 			{}
+					// 			else
+					// 			{
+					// 				approachObj->Markers[c] <<
+					// 				FrameofData.BodyData[b].Markers[m][0], // X
+					// 				FrameofData.BodyData[b].Markers[m][1], // Y
+					// 				FrameofData.BodyData[b].Markers[m][2]; // Z
+					// 				c+=1;
+					// 				// cout<<approachObj->Markers[c].transpose()<<"\n";
+					// 				// cout<<*getCurFrame->BodyData[b].Markers[m]<<endl;
+					// 			}
+					// 		}
+					// 	}
+					// 	else
+					// 		{ LOG_ERROR("approachObj->strMarkersBodyName[b] "<<approachObj->strMarkersBodyName[b]<<"\n"<<
+					// 			"pBody->szName "<<pBody->szName<<"\n"<<
+					// 			"pBody->nMarkers: " << pBody->nMarkers<<"\n"<<
+					// 			" & FrameofData.BodyData[b].nMarkers: " <<FrameofData.BodyData[b].nMarkers<<"\n" ) }
+					// }
 				}
 
 				if( approachObj->handoverRun() )
@@ -1049,15 +1073,20 @@ namespace mc_handover
 					cout<<"\033[1;33m***handover fresh start***\033[0m\n";
 				}
 			}
-
-			return false;
-
-		}// run
+		}// runState
 
 
-		void StartMocapStep::teardown(mc_control::fsm::Controller & controller)
+		bool states::StartMocapStep::checkTransitions()
 		{
-			auto & ctl = static_cast<mc_handover::HandoverController&>(controller);
+			// output("restart");
+			// return true;
+			return false;
+		}// checkTransition
+
+
+		void states::StartMocapStep::teardown()
+		{
+			auto & ctl = controller();
 
 			ctl.gui()->removeCategory({"Handover"});
 
@@ -1078,4 +1107,7 @@ namespace mc_handover
 		}
 
 	} // namespace states
-} // namespace mc_handover
+
+} // namespace lipm_walking
+
+EXPORT_SINGLE_STATE("StartMocapStep", lipm_walking::states::StartMocapStep)
