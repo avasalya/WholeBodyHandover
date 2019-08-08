@@ -15,11 +15,8 @@
 #include <lipm_walking/utils/stats.h>
 
 // MC control
-#include <mc_tasks/CoMTask.h>
 #include <mc_tasks/EndEffectorTask.h>
 #include <mc_tasks/OrientationTask.h>
-#include <mc_tasks/ComplianceTask.h>
-#include <mc_tasks/PostureTask.h>
 #include <mc_tasks/LookAtTask.h>
 
 // Tasks
@@ -49,7 +46,7 @@ namespace lipm_walking
 {
 	namespace states
 	{
-		struct StartMocapStep : State
+		struct HandoverState : State
 		{
 
 		public:
@@ -70,9 +67,6 @@ namespace lipm_walking
 
 			std::vector<std::string> activeJointsName = {"HEAD_JOINT0", "HEAD_JOINT1"};
 
-			bool Flag_CORTEX{false};//TRUE, otherwise use Cortex_ROS_bridge
-
-
 			/*mocap_simulaton*/
 			double pt;
 			std::vector<double> pts;
@@ -80,9 +74,9 @@ namespace lipm_walking
 			std::string name;
 
 			int fps{200};
-			int b_;
 			int dt{1};
 			int i{0};
+			int c{0};
 
 			double leftForce_Xabs{0.0};
 			double leftForce_Yabs{0.0};
@@ -91,7 +85,6 @@ namespace lipm_walking
 			double rightForce_Yabs{0.0};
 			double rightForce_Zabs{0.0};
 
-			Eigen::Vector3d move, target, initialCom = Eigen::Vector3d::Zero();
 
 			Eigen::Vector3d headVector, headTarget;
 
@@ -140,46 +133,21 @@ namespace lipm_walking
 			std::shared_ptr<mc_tasks::OrientationTask> oriTaskL;
 			std::shared_ptr<mc_tasks::OrientationTask> oriTaskR;
 
-			std::shared_ptr<mc_tasks::OrientationTask> bodyOriTask;
 			std::shared_ptr<mc_tasks::PositionTask> bodyPosTask;
-
-			std::shared_ptr<mc_tasks::OrientationTask> chestOriTask;
-			std::shared_ptr<mc_tasks::PositionTask> chestPosTask;
 
 			std::shared_ptr<mc_tasks::EndEffectorTask>objEfTask;
 
 			std::shared_ptr<mc_tasks::LookAtTask> headTask;
-
-			std::shared_ptr<mc_tasks::CoMTask> comTask;
 
 			std::shared_ptr<lipm_walking::ApproachObject> approachObj;
 
 			std::vector<std::string> subjMarkersName, robotMarkersName;
 
 
-
-		private:
-			sBodyDefs* pBodyDefs{NULL};
-			sBodyDef* pBody{NULL};
-			sFrameOfData* getCurFrame{NULL};
-			sFrameOfData FrameofData;
-
-			std::vector<int> bodyMarkers;
-
-			void *pResponse;
-
-			int nBytes;
-			int totalBodies;
-			int retval = RC_Okay;
-			int c{0};
-
-			double del{0};
-
+		public://Cortex_ROS_Bridge
 			bool startCapture{false};
-
 			bool restartEverything{false};
 
-		public://Cortex_ROS_Bridge
 			std::shared_ptr<ros::NodeHandle> m_nh_;
 			std::thread m_ros_spinner_;
 			ros::Subscriber l_shape_sub_;

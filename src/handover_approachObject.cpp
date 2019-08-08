@@ -3,12 +3,10 @@
 namespace lipm_walking
 {
 	ApproachObject::ApproachObject() {}
-	// { cout<<"\033[1;50mhandover object created\033[0m\n"; }
 
 
 
 	ApproachObject::~ApproachObject() {}
-	// { cout<<"\033[1;50mhandover object destroyed\033[0m\n"; }
 
 
 
@@ -85,18 +83,26 @@ namespace lipm_walking
 			Markers[7] << 0.202506, -0.293441, 0.425241;
 		}
 
-
+		// LOG_INFO(" start here ")
 		for(unsigned int k=8; k<totalMarkers; k++)
 		{
-			// LOG_WARNING(k<<" "<<strMarkersName[k]<<" "<< Markers[ markers_name_index[ strMarkersName[k] ] ].transpose())
-			if( Markers[k](0)>-10 && Markers[k](0)!=0 && Markers[k](0)<10 )
-				{ checkNonZero = true; }
+			/*mostly human markers*/
+			if( Markers[k](0) < 3 && Markers[k](0) > 0.1 )
+			{
+				checkNonZero = true;
+				// LOG_WARNING("return true " << checkNonZero)
+				// LOG_ERROR(" "<<k<<" "<<strMarkersName[k]<<" "<< Markers[ markers_name_index[ strMarkersName[k] ] ].transpose())
+			}
 			else
-			{ return false; }
+			{
+				checkNonZero = false;
+				// LOG_ERROR("return false " << checkNonZero)
+				return false;
+			}
 		}
+		// LOG_SUCCESS("return true or false ? " << checkNonZero)
 		return checkNonZero;
 	}
-
 
 
 	bool ApproachObject::handoverRun()
@@ -109,6 +115,8 @@ namespace lipm_walking
 		/*check for non zero frame only and store them*/
 		if( checkFrameOfData(Markers) )
 		{
+			// LOG_SUCCESS("Handover run GO")
+
 			i+=1;
 			for(int m=0; m<totalMarkers; m++)
 				{ markersPos[m].col(i) << Markers[m]; }

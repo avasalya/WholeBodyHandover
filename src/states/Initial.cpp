@@ -79,7 +79,6 @@ namespace lipm_walking
     if (startStanding_ && !postureTaskIsActive_)
     {
       output("Standing");
-      // output("StartMocapStep");
       return true;
     }
     return false;
