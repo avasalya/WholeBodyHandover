@@ -173,6 +173,13 @@ namespace lipm_walking
   {
     auto & ctl = controller();
 
+    bool triggerWalk_ = ctl.config()("triggerWalk", false);
+    if(triggerWalk_)
+    {
+      startWalking();
+      ctl.config().add("triggerWalk", false);
+    }
+
     if (isMakingFootContact_)
     {
       auto & leftFootTask = stabilizer().leftFootTask;

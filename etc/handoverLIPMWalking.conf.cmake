@@ -1,5 +1,6 @@
 {
 	"initial_plan": "ashibumi",
+	// "initial_plan": "forward_20cm_steps",
 	"mpc":
 	{
 		"weights":
@@ -157,6 +158,7 @@
 				{ "pose": { "translation": [0.035,  0.09, 0.0] }, "surface": "LeftFootCenter" }
 			]
 		},
+
 		"ashibumi_fast":
 		{
 			"double_support_duration": 0.1,
@@ -242,7 +244,6 @@
 		},
 
 
-
 		"backward_15cm_steps":
 		{
 			"double_support_duration": 0.2,
@@ -277,7 +278,6 @@
 				{ "pose": { "translation": [-1.0,  0.1, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "LeftFootCenter"  }
 				]
 		},
-
 
 		"comanoid_airbus_staircase": // 1st part of Sep 10, 2019 experiment video (on YouTube)
 		{
@@ -578,6 +578,8 @@
 	// Tasks
 	//
 
+	"contacts": [],
+
 	"constraints":
 	[
 		{
@@ -610,8 +612,6 @@
 		}
 	],
 
-	"contacts": [],
-
 	"robots":
 	{
 		"ground":
@@ -632,9 +632,16 @@
 	//
 
 	"init": "Initial",
-	"configs": {},
 
-	// "states": {},
+	"configs": {
+
+		// "HandoverState":
+		// {
+		// 	"StepFwd": false,
+		// 	"StepBck": false,
+		// },
+	},
+
 	"states": {
 
 		"Walking":
@@ -646,7 +653,7 @@
 				["DoubleSupport", "SingleSupport", "SingleSupport"],
 				["DoubleSupport", "Standing", "Standing"],
 				["SingleSupport", "DoubleSupport", "DoubleSupport"]
-				]
+			]
 		},
 
 		"walkingHandover":
@@ -657,10 +664,14 @@
 
 	},
 
+	"triggerWalk" : false,
+
 	"transitions":
 	[
-		["Initial", "Standing", "Standing"],
-		["Standing", "walkingHandover", "walkingHandover"],
+		// ["Initial", "Standing", "Standing"],
+		// ["Standing", "walkingHandover", "walkingHandover"],
+
+		["Initial", "walkingHandover", "walkingHandover"],
 	],
 
 	// Disable floating-base update from MCGlobalController
@@ -681,9 +692,11 @@
 
 
 	// When true, state factory will be more verbose
-	"VerboseStateFactory": true,
+	"VerboseStateFactory": false,
+
 
 	// Controller is created in a sandbox, which in between a thread and a fork;
 	// try to keep it to false, as it can create weird conflicts with threads
-	"UseSandbox" : false
+	"UseSandbox" : false,
+
 }

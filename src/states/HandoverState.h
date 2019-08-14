@@ -40,6 +40,7 @@
 // handover related
 #include "handover_approachObject.h"
 
+
 using namespace sva;
 
 namespace lipm_walking
@@ -56,8 +57,18 @@ namespace lipm_walking
 			bool checkTransitions() override;
 			void teardown() override;
 
+			// void startWalking();
+
 			void ros_spinner();
 			void cortexCallback(const cortex_ros_bridge_msgs::Markers & msg);
+
+
+			bool Flag_ROSMOCAP{true};
+			bool Flag_HandoverInit{true};
+			bool Flag_HandoverTasks{true};
+			bool Flag_HandoverGUI{true};
+			bool Flag_HandoverLogs{true};
+
 
 			double pi{3.14};
 			double DegToRad{pi/180};
@@ -77,6 +88,8 @@ namespace lipm_walking
 			int dt{1};
 			int i{0};
 			int c{0};
+			int runCount{0};
+			double timeStep{0.005};
 
 			double leftForce_Xabs{0.0};
 			double leftForce_Yabs{0.0};
@@ -85,6 +98,10 @@ namespace lipm_walking
 			double rightForce_Yabs{0.0};
 			double rightForce_Zabs{0.0};
 
+
+			sva::PTransformd X_0_rel;
+			sva::PTransformd X_relPos_efL, X_relOri_efL, X_desPos_efL, X_desOri_efL;
+			sva::PTransformd X_relPos_efR, X_relOri_efR, X_desPos_efR, X_desOri_efR;
 
 			Eigen::Vector3d headVector, headTarget;
 
@@ -133,20 +150,20 @@ namespace lipm_walking
 			std::shared_ptr<mc_tasks::OrientationTask> oriTaskL;
 			std::shared_ptr<mc_tasks::OrientationTask> oriTaskR;
 
-			std::shared_ptr<mc_tasks::PositionTask> bodyPosTask;
-
 			std::shared_ptr<mc_tasks::EndEffectorTask>objEfTask;
-
 			std::shared_ptr<mc_tasks::LookAtTask> headTask;
 
 			std::shared_ptr<lipm_walking::ApproachObject> approachObj;
-
 			std::vector<std::string> subjMarkersName, robotMarkersName;
 
 
 		public://Cortex_ROS_Bridge
 			bool startCapture{false};
 			bool restartEverything{false};
+
+			bool startWalking_{false};
+			bool stepFwd;
+			bool stepBck;
 
 			std::shared_ptr<ros::NodeHandle> m_nh_;
 			std::thread m_ros_spinner_;
