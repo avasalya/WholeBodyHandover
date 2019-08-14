@@ -1,6 +1,6 @@
 {
-	"initial_plan": "ashibumi",
-	// "initial_plan": "forward_20cm_steps",
+	// "initial_plan": "ashibumi",
+	"initial_plan": "forward_20cm_steps",
 	"mpc":
 	{
 		"weights":
@@ -633,14 +633,7 @@
 
 	"init": "Initial",
 
-	"configs": {
-
-		// "HandoverState":
-		// {
-		// 	"StepFwd": false,
-		// 	"StepBck": false,
-		// },
-	},
+	"configs": {},
 
 	"states": {
 
@@ -649,9 +642,9 @@
 			"base":"Meta",
 			"transitions":
 			[
-				["Standing", "DoubleSupport", "DoubleSupport"],
+				["Standing",      "DoubleSupport", "DoubleSupport"],
 				["DoubleSupport", "SingleSupport", "SingleSupport"],
-				["DoubleSupport", "Standing", "Standing"],
+				["DoubleSupport", "Standing",      "Standing"],
 				["SingleSupport", "DoubleSupport", "DoubleSupport"]
 			]
 		},
@@ -665,6 +658,8 @@
 	},
 
 	"triggerWalk" : false,
+	// "StepBack": false,
+	// "StepFwd": false,
 
 	"transitions":
 	[

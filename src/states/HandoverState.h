@@ -161,9 +161,8 @@ namespace lipm_walking
 			bool startCapture{false};
 			bool restartEverything{false};
 
-			bool startWalking_{false};
 			bool stepFwd;
-			bool stepBck;
+			bool stepBack;
 
 			std::shared_ptr<ros::NodeHandle> m_nh_;
 			std::thread m_ros_spinner_;
@@ -174,3 +173,38 @@ namespace lipm_walking
 	} // namespace states
 
 } // namespace lipm_walking
+
+
+
+
+// mc_rtc::gui::ArrayInput("Left ef pos", {"x", "y", "z"},
+// 	[this]() { return relaxPosL; },
+// 	[this, &ctl](const Eigen::Vector3d & to){
+
+// 		relaxPosL = to;
+// 		posTaskL->position(relaxPosL);
+
+// 		stepFwd = true;
+// 		if(stepFwd)
+// 		{
+// 			ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
+// 			ctl.config().add("stepFwd", false);
+// 			ctl.config().add("stepBack", true);
+// 		}
+// 	}),
+
+// mc_rtc::gui::ArrayInput("Right ef pos", {"x", "y", "z"},
+// 	[this]() { return relaxPosR; },
+// 	[this, &ctl](const Eigen::Vector3d & to){
+
+// 		relaxPosR = to;
+// 		posTaskR->position(relaxPosR);
+
+// 		stepBack = true;
+// 		if(stepBack)
+// 		{
+// 			ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
+// 			ctl.config().add("stepBack", false);
+// 			ctl.config().add("stepFwd", true);
+// 		}
+// 	}) );

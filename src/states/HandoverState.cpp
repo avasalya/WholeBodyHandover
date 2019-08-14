@@ -38,6 +38,9 @@ namespace lipm_walking
 		{
 			auto & ctl = controller();
 
+			stepFwd = true;
+			stepBack = true;
+
 			if(Flag_ROSMOCAP)
 			{
 				/*configure MOCAP*/
@@ -382,18 +385,28 @@ namespace lipm_walking
 						[this]() { return relaxPosL; },
 						[this, &ctl](const Eigen::Vector3d & to){
 							relaxPosL = to;
-
-							startWalking_ = false;
 							posTaskL->position(relaxPosL);
-							ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
-							ctl.config().add("triggerWalk", true);
+							if(stepFwd)
+							{
+								stepFwd = false;
+								stepBack = true;
+								ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
+								ctl.config().add("triggerWalk", true);
+							}
 						}),
 
 					mc_rtc::gui::ArrayInput("Right ef pos", {"x", "y", "z"},
 						[this]() { return relaxPosR; },
-						[this](const Eigen::Vector3d & to){
+						[this, &ctl](const Eigen::Vector3d & to){
 							relaxPosR = to;
 							posTaskR->position(relaxPosR);
+							if(stepBack)
+							{
+								stepBack = false;
+								stepFwd = true;
+								ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
+								ctl.config().add("triggerWalk", true);
+							}
 						}) );
 
 			}
@@ -421,11 +434,11 @@ namespace lipm_walking
 			/* X_rel_ef = X_0_ef * X_rel_0 */
 			X_relPos_efL = X_0Pos_efL * (X_0_rel.inv());
 			// X_relOri_efL = X_0Ori_efL * (X_0_rel.inv());
-			X_relOri_efL = sva::PTransformd(relaxRotL, X_0Ori_efL.translation()) * (X_0_rel.inv());
+			X_relOri_efL = sva::PTransformd(relaxRotL, relaxPosL) * (X_0_rel.inv());
 
 			X_relPos_efR = X_0Pos_efR * (X_0_rel.inv());
 			// X_relOri_efR = X_0Ori_efR * (X_0_rel.inv());
-			X_relOri_efR = sva::PTransformd(relaxRotR, X_0Ori_efR.translation()) * (X_0_rel.inv());
+			X_relOri_efR = sva::PTransformd(relaxRotR, relaxPosR) * (X_0_rel.inv());
 
 
 
@@ -448,13 +461,13 @@ namespace lipm_walking
 			posTaskL->refVel(pendulum_.comd());
 			posTaskL->position( X_desPos_efL.translation() );
 			// posTaskL->position( objEfTask->get_ef_pose().translation() );
-			// posTaskL->position( relaxPosL );
 
 
 			X_desPos_efR = X_relPos_efR * X_0_rel;
 			posTaskR->refAccel(pendulum_.comdd());
 			posTaskR->refVel(pendulum_.comd());
 			posTaskR->position( X_desPos_efR.translation() );
+			// posTaskR->position( objEfTask->get_ef_pose().translation() );
 
 
 
@@ -464,12 +477,6 @@ namespace lipm_walking
 			X_desOri_efR = X_relOri_efR * X_0_rel;
 			oriTaskR->orientation( X_desOri_efR.rotation() );
 
-
-			// auto rotThisL = X_relOri_efL * X_0_rel;
-			// oriTaskL->orientation( rotThisL.rotation() );
-
-			// X_desOri_efR = X_relOri_efR * X_0_rel;
-			// oriTaskR->orientation( X_desOri_efR.rotation() );
 
 
 
