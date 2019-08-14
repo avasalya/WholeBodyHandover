@@ -1,0 +1,457 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 0
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /TF1/Frames1
+        - /HRP-4 control1
+      Splitter Ratio: 0.677506983
+    Tree Height: 437
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /Interact1
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.588679016
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: ""
+  - Class: mc_rtc_rviz_panel/mc_rtc panel
+    Name: mc_rtc panel
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.0299999993
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Class: rviz/TF
+      Enabled: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+      Marker Scale: 0.419999987
+      Name: TF
+      Show Arrows: false
+      Show Axes: true
+      Show Names: false
+      Tree:
+        {}
+      Update Interval: 0
+      Value: false
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        Accelerometer:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        All Links Enabled: true
+        BODY:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        CHEST_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        CHEST_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        HEAD_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        HEAD_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LARM_LINK7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LHAND_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LHAND_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LHAND_LINK2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LHAND_LINK3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LHAND_LINK4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LLEG_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LLEG_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LLEG_LINK2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LLEG_LINK3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LLEG_LINK4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LLEG_LINK5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        LeftFootForceSensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        LeftHandForceSensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        Link Tree Style: Links in Alphabetic Order
+        RARM_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RARM_LINK7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RHAND_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RHAND_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RHAND_LINK2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RHAND_LINK3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RHAND_LINK4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RLEG_LINK0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RLEG_LINK1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RLEG_LINK2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RLEG_LINK3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RLEG_LINK4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RLEG_LINK5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        RightFootForceSensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        RightHandForceSensor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        l_gripper:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        r_gripper:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        xtion_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Name: HRP-4 control
+      Robot Description: robot_description
+      TF Prefix: /control
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 0.800000012
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: false
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+      Name: HRP-4 real
+      Robot Description: robot_description
+      TF Prefix: /real
+      Update Interval: 0
+      Value: false
+      Visual Enabled: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: mc_rtc InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /mc_rtc_rviz_interactive_markers/update
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /mc_rtc_rviz
+      Name: mc_rtc Markers
+      Namespaces:
+        Tasks/com_hrp2_drc/com_point3d: true
+        Tasks/look_at_hrp2_drc_HEAD_LINK1/Actual: true
+        Tasks/look_at_hrp2_drc_HEAD_LINK1/Target: true
+        Tasks/position_hrp2_drc_BODY/pos_point3d: true
+        Tasks/position_hrp2_drc_LARM_LINK7/pos_point3d: true
+        Tasks/position_hrp2_drc_RARM_LINK7/pos_point3d: true
+        Walking/Markers/Contacts/FootstepPlan: true
+        Walking/Markers/Contacts/SupportContact: true
+        Walking/Markers/Contacts/TargetContact: true
+        Walking/Markers/Force/LeftCoPForce: true
+        Walking/Markers/Force/LeftCoPForce_force_start_point: true
+        Walking/Markers/Force/NetWrenchForce: true
+        Walking/Markers/Force/NetWrenchForce_start_point: true
+        Walking/Markers/Force/NetWrenchZMP_point3d: true
+        Walking/Markers/Force/RefPendulum: true
+        Walking/Markers/Force/RefPendulumForce: true
+        Walking/Markers/Force/RefPendulum_end_point: true
+        Walking/Markers/Force/RefPendulum_start_point: true
+        Walking/Markers/Force/RightCoPForce: true
+        Walking/Markers/Force/RightCoPForce_force_start_point: true
+        Walking/Markers/Force/StabilizerCoP_LeftFootCenter_point3d: true
+        Walking/Markers/Force/StabilizerCoP_RightFootCenter_point3d: true
+        Walking/Markers/Force/StabilizerZMP_point3d: true
+        Walking/Markers/Pendulum/PendulumDCM_point3d: true
+        Walking/Markers/Pendulum/RealCoM_point3d: true
+        Walking/Markers/Pendulum/RealDCM_point3d: true
+      Queue Size: 100
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: robot_map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 4.73962688
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.0599999987
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0.358500093
+        Y: 0.390924931
+        Z: -0.055446282
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.0500000007
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.00999999978
+      Pitch: 0.410203904
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 1.60575569
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1025
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd000000040000000000000173000002e1fc020000000dfb0000001200530065006c0065006300740069006f006e000000001d000003e40000006100fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730000000000000002e1000000d700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000012005200650061006c005800740069006f006e0000000208000001b60000000000000000fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000000c00430061006d0065007200610100000282000000fa0000000000000000fb0000001000530069006d005800740069006f006e00000002be000000e40000000000000000fb0000001a0047005500490043006f006e00740072006f006c006c006500720200000503000000b40000025d000002fafb00000014005400610073006b002000500061006e0065006c000000014f0000026a0000000000000000000000010000043d000003e3fc0200000004fb00000018006d0063005f007200740063002000700061006e0065006c0100000000000003e30000007600fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000045000003bc0000006100fffffffc0000001d000003e40000000000fffffffa000000000100000002fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000000ffffffff0000000000000000fb0000000a0056006900650077007300000002af0000010f0000010f00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000003be00000042fc0100000002fb0000000800540069006d00650000000000000003be0000030000fffffffb0000000800540069006d006501000000000000045000000000000000000000033d000003e300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1920
+  X: 0
+  Y: 24
+  mc_rtc panel:
+    collapsed: false

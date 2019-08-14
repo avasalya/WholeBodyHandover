@@ -1,0 +1,210 @@
+#pragma once
+
+// global std
+#include <iostream>
+#include <fstream>
+#include <ctime>
+
+// FSM realated
+#include <mc_control/fsm/Controller.h>
+#include <mc_control/fsm/State.h>
+
+// Walking controller
+#include <lipm_walking/Controller.h>
+#include <lipm_walking/State.h>
+#include <lipm_walking/utils/stats.h>
+
+// MC control
+#include <mc_tasks/EndEffectorTask.h>
+#include <mc_tasks/OrientationTask.h>
+#include <mc_tasks/LookAtTask.h>
+
+// Tasks
+#include "Tasks/QPTasks.h"
+
+// RBD
+#include <mc_rbdyn/Robot.h>
+
+// ROS
+#include <ros/ros.h>
+#include <thread>
+#include <mc_rtc/ros.h>
+#include <std_msgs/Float64.h>
+#include <ros/callback_queue.h>
+
+// Cortex_ROS_bridge
+#include "cortex/cortex.h"
+#include <cortex_ros_bridge_msgs/Marker.h>
+#include <cortex_ros_bridge_msgs/Markers.h>
+
+// handover related
+#include "handover_approachObject.h"
+
+
+using namespace sva;
+
+namespace lipm_walking
+{
+	namespace states
+	{
+		struct HandoverState : State
+		{
+
+		public:
+
+			void start() override;
+			void runState() override;
+			bool checkTransitions() override;
+			void teardown() override;
+
+			// void startWalking();
+
+			void ros_spinner();
+			void cortexCallback(const cortex_ros_bridge_msgs::Markers & msg);
+
+
+			bool Flag_ROSMOCAP{true};
+			bool Flag_HandoverInit{true};
+			bool Flag_HandoverTasks{true};
+			bool Flag_HandoverGUI{true};
+			bool Flag_HandoverLogs{true};
+
+
+			double pi{3.14};
+			double DegToRad{pi/180};
+			double RadToDeg{180/pi};
+			double closeGrippers{0.13};
+			double openGrippers{0.6};
+
+			std::vector<std::string> activeJointsName = {"HEAD_JOINT0", "HEAD_JOINT1"};
+
+			/*mocap_simulaton*/
+			double pt;
+			std::vector<double> pts;
+			std::vector<Eigen::MatrixXd> pos;
+			std::string name;
+
+			int fps{200};
+			int dt{1};
+			int i{0};
+			int c{0};
+			int runCount{0};
+			double timeStep{0.005};
+
+			double leftForce_Xabs{0.0};
+			double leftForce_Yabs{0.0};
+			double leftForce_Zabs{0.0};
+			double rightForce_Xabs{0.0};
+			double rightForce_Yabs{0.0};
+			double rightForce_Zabs{0.0};
+
+
+			sva::PTransformd X_0_rel;
+			sva::PTransformd X_relPos_efL, X_relOri_efL, X_desPos_efL, X_desOri_efL;
+			sva::PTransformd X_relPos_efR, X_relOri_efR, X_desPos_efR, X_desOri_efR;
+
+			Eigen::Vector3d headVector, headTarget;
+
+			Eigen::Vector3d ltPosW, rtPosW;
+			std::vector<Eigen::Vector3d> efLPos, efLVel;
+			std::vector<Eigen::Vector3d> efRPos, efRVel;
+			Eigen::Vector3d efLAce, efRAce;
+			int g{1};
+
+			Eigen::Matrix3d ltRotW, rtRotW;
+
+			Eigen::Matrix3d initRotL, initRotR;
+			Eigen::Vector3d initPosL, initPosR;
+
+			Eigen::Matrix3d relaxRotL, relaxRotR;
+			Eigen::Vector3d relaxPosL, relaxPosR;
+
+			Eigen::Vector3d bodyPosR, bodyPosS;
+			double bodiesDiffX{0.0};
+
+			/*offsets for robot grippers to grasp object*/
+			double objLen;
+			double objLenLt;
+			double al;
+			double bl;
+			double objLenRt;
+			double ar;
+			double br;
+
+			Eigen::Vector3d offsetLt, offsetRt;
+			Eigen::Vector3d updateOffsetPosL, updateOffsetPosR;
+
+			Eigen::Vector3d vecOffsetL, vecOffsetR;
+			sva::PTransformd X_M_offset, X_M_offsetL, X_M_offsetR;
+			sva::PTransformd X_M_Obj0;
+			sva::PTransformd X_Obj0_offsetEf; //when subj has object
+			sva::PTransformd X_Obj0_offsetS; // when robot has object
+
+			Eigen::VectorXd thresh = Eigen::VectorXd::Zero(12);
+			Eigen::Vector3d leftForce, rightForce;
+			Eigen::Vector3d leftForceLo, rightForceLo;
+
+			std::shared_ptr<mc_tasks::PositionTask> posTaskL;
+			std::shared_ptr<mc_tasks::PositionTask> posTaskR;
+
+			std::shared_ptr<mc_tasks::OrientationTask> oriTaskL;
+			std::shared_ptr<mc_tasks::OrientationTask> oriTaskR;
+
+			std::shared_ptr<mc_tasks::EndEffectorTask>objEfTask;
+			std::shared_ptr<mc_tasks::LookAtTask> headTask;
+
+			std::shared_ptr<lipm_walking::ApproachObject> approachObj;
+			std::vector<std::string> subjMarkersName, robotMarkersName;
+
+
+		public://Cortex_ROS_Bridge
+			bool startCapture{false};
+			bool restartEverything{false};
+
+			bool stepFwd;
+			bool stepBack;
+
+			std::shared_ptr<ros::NodeHandle> m_nh_;
+			std::thread m_ros_spinner_;
+			ros::Subscriber l_shape_sub_;
+
+		};
+
+	} // namespace states
+
+} // namespace lipm_walking
+
+
+
+
+// mc_rtc::gui::ArrayInput("Left ef pos", {"x", "y", "z"},
+// 	[this]() { return relaxPosL; },
+// 	[this, &ctl](const Eigen::Vector3d & to){
+
+// 		relaxPosL = to;
+// 		posTaskL->position(relaxPosL);
+
+// 		stepFwd = true;
+// 		if(stepFwd)
+// 		{
+// 			ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
+// 			ctl.config().add("stepFwd", false);
+// 			ctl.config().add("stepBack", true);
+// 		}
+// 	}),
+
+// mc_rtc::gui::ArrayInput("Right ef pos", {"x", "y", "z"},
+// 	[this]() { return relaxPosR; },
+// 	[this, &ctl](const Eigen::Vector3d & to){
+
+// 		relaxPosR = to;
+// 		posTaskR->position(relaxPosR);
+
+// 		stepBack = true;
+// 		if(stepBack)
+// 		{
+// 			ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
+// 			ctl.config().add("stepBack", false);
+// 			ctl.config().add("stepFwd", true);
+// 		}
+// 	}) );
