@@ -38,31 +38,6 @@ namespace lipm_walking
 		{
 			auto & ctl = controller();
 
-			LOG_SUCCESS("******** Both hands TOGETHER scenario *********")
-
-
-			// Relative transformation X_b1_b2 from body b1 to body b2
-			// sva::PTransformd X_b1_b2(const std::string & b1, const std::string & b2) const;
-
-
-			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
-			// X_0_rel = X_0_body;
-			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
-
-
-			sva::PTransformd X_0Pos_efL = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK7")];
-			sva::PTransformd X_0Ori_efL = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK6")];
-
-			sva::PTransformd X_0Pos_efR = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("RARM_LINK7")];
-			sva::PTransformd X_0Ori_efR = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("RARM_LINK6")];
-
-			/* X_rel_ef = X_0_ef * X_rel_0 */
-			X_relPos_efL = X_0Pos_efL * (X_0_rel.inv());
-			X_relOri_efL = X_0Ori_efL * (X_0_rel.inv());
-
-			X_relPos_efR = X_0Pos_efR * (X_0_rel.inv());
-			X_relOri_efR = X_0Ori_efR * (X_0_rel.inv());
-
 			if(Flag_ROSMOCAP)
 			{
 				/*configure MOCAP*/
@@ -423,15 +398,38 @@ namespace lipm_walking
 
 			}
 
+
+
+			LOG_SUCCESS("******** Both hands TOGETHER scenario *********")
+
+
+			// Relative transformation X_b1_b2 from body b1 to body b2
+			// sva::PTransformd X_b1_b2(const std::string & b1, const std::string & b2) const;
+
+
+			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
+			// X_0_rel = X_0_body;
+			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
+
+
+			sva::PTransformd X_0Pos_efL = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK7")];
+			sva::PTransformd X_0Ori_efL = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK6")];
+
+			sva::PTransformd X_0Pos_efR = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("RARM_LINK7")];
+			sva::PTransformd X_0Ori_efR = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("RARM_LINK6")];
+
+			/* X_rel_ef = X_0_ef * X_rel_0 */
+			X_relPos_efL = X_0Pos_efL * (X_0_rel.inv());
+			// X_relOri_efL = X_0Ori_efL * (X_0_rel.inv());
+			X_relOri_efL = sva::PTransformd(relaxRotL, X_0Ori_efL.translation()) * (X_0_rel.inv());
+
+			X_relPos_efR = X_0Pos_efR * (X_0_rel.inv());
+			// X_relOri_efR = X_0Ori_efR * (X_0_rel.inv());
+			X_relOri_efR = sva::PTransformd(relaxRotR, X_0Ori_efR.translation()) * (X_0_rel.inv());
+
+
+
 		}// start
-
-
-		bool states::HandoverState::checkTransitions()
-		{
-			auto & ctl = controller();
-
-			return false;
-		}// checkTransition
 
 
 		void states::HandoverState::runState()
@@ -446,22 +444,32 @@ namespace lipm_walking
 
 
 			X_desPos_efL = X_relPos_efL * X_0_rel;
-			// posTaskL->position( X_desPos_efL.translation() );
-			// posTaskL->position( objEfTask->get_ef_pose().translation() );
-			posTaskL->position( relaxPosL );
-			posTaskL->refVel(pendulum_.comd());
 			posTaskL->refAccel(pendulum_.comdd());
+			posTaskL->refVel(pendulum_.comd());
+			posTaskL->position( X_desPos_efL.translation() );
+			// posTaskL->position( objEfTask->get_ef_pose().translation() );
+			// posTaskL->position( relaxPosL );
+
 
 			X_desPos_efR = X_relPos_efR * X_0_rel;
-			posTaskR->position( X_desPos_efR.translation() );
-			posTaskR->refVel(pendulum_.comd());
 			posTaskR->refAccel(pendulum_.comdd());
+			posTaskR->refVel(pendulum_.comd());
+			posTaskR->position( X_desPos_efR.translation() );
+
+
 
 			X_desOri_efL = X_relOri_efL * X_0_rel;
 			oriTaskL->orientation( X_desOri_efL.rotation() );
 
 			X_desOri_efR = X_relOri_efR * X_0_rel;
 			oriTaskR->orientation( X_desOri_efR.rotation() );
+
+
+			// auto rotThisL = X_relOri_efL * X_0_rel;
+			// oriTaskL->orientation( rotThisL.rotation() );
+
+			// X_desOri_efR = X_relOri_efR * X_0_rel;
+			// oriTaskR->orientation( X_desOri_efR.rotation() );
 
 
 
@@ -995,6 +1003,14 @@ namespace lipm_walking
 			runCount+=1;
 		}// runState
 
+
+
+		bool states::HandoverState::checkTransitions()
+		{
+			auto & ctl = controller();
+
+			return false;
+		}// checkTransition
 
 
 		void states::HandoverState::teardown()
