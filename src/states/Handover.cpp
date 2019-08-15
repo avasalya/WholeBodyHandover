@@ -796,6 +796,7 @@ namespace lipm_walking
 				};
 
 
+				/*as long as object is within robot's reachable space*/
 				if( (approachObj->startNow)  &&
 					approachObj->objectPosC(0)<=1.0 &&
 					approachObj->objectPosC(0)>0.1 )
@@ -945,16 +946,24 @@ namespace lipm_walking
 					ctl.solver().addTask(headTask);
 					headTask->selectActiveJoints(ctl.solver(), activeJointsName);
 
-					/*ef pos*/
-					posTaskL->position(initPosL + X_0_rel.translation());
-					posTaskR->position(initPosR + X_0_rel.translation());
+
+					/*move back to (0,0,0)*/
+					if(X_0_rel.translation()(0) > 0.0)
+					{
+						ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
+						ctl.config().add("triggerWalk", true);
+					}
+					else if(X_0_rel.translation()(0) < 0.0)
+					{
+						ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
+						ctl.config().add("triggerWalk", true);
+					}
 
 					approachObj->enableHand = true;
 
 					gripperL->setTargetQ({closeGrippers});
 					gripperR->setTargetQ({closeGrippers});
 
-					restartEverything = false;
 
 					bodyPosR = Eigen::Vector3d::Zero();
 					bodyPosS = Eigen::Vector3d::Zero();
@@ -1005,6 +1014,15 @@ namespace lipm_walking
 					cout<<"\033[1;33m***handover fresh start***\033[0m\n";
 				}
 			} // restartEverything
+
+			if(ctl.isLastSSP() && restartEverything)
+			{
+				/*ef pos*/
+				posTaskL->position(initPosL + X_0_rel.translation());
+				posTaskR->position(initPosR + X_0_rel.translation());
+				restartEverything = false;
+			}
+
 
 			runCount+=1;
 		}// runState
