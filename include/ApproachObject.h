@@ -32,7 +32,7 @@
 #include <Tasks/QPTasks.h>
 
 #include <lipm_walking/Controller.h>
-#include <handover_trajectories.h>
+#include "Trajectories.h"
 
 
 using namespace std;
@@ -185,7 +185,7 @@ namespace lipm_walking
 		std::vector<double> FloadLx, FloadLy, FloadLz;
 		std::vector<double> FloadRx, FloadRy, FloadRz;
 
-		Eigen::Vector3d local_FzeroL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d localSurf_FzeroL = Eigen::Vector3d::Zero();
 		Eigen::Vector3d newThL = Eigen::Vector3d::Zero();
 		Eigen::Vector3d FinertL = Eigen::Vector3d::Zero();
 		Eigen::Vector3d FzeroL = Eigen::Vector3d::Zero();
@@ -193,7 +193,7 @@ namespace lipm_walking
 		Eigen::Vector3d FloadL = Eigen::Vector3d::Zero();
 		Eigen::Vector3d FpullL = Eigen::Vector3d::Zero();
 
-		Eigen::Vector3d local_FzeroR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d localSurf_FzeroR = Eigen::Vector3d::Zero();
 		Eigen::Vector3d newThR = Eigen::Vector3d::Zero();
 		Eigen::Vector3d FinertR = Eigen::Vector3d::Zero();
 		Eigen::Vector3d FzeroR = Eigen::Vector3d::Zero();

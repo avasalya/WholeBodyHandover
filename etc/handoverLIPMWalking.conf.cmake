@@ -652,7 +652,7 @@
 		"walkingHandover":
 		{
 			"base":"Parallel",
-			"states": ["Walking", "HandoverState"]
+			"states": ["Walking", "Handover"]
 		},
 
 	},

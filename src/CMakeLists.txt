@@ -26,8 +26,8 @@ set(CONTROLLER_SRC
     Stabilizer.cpp
     SwingFoot.cpp
 
-    handover_trajectories.cpp
-    handover_approachObject.cpp
+    Trajectories.cpp
+    ApproachObject.cpp
 )
 
 set(CONTROLLER_HDR
@@ -51,8 +51,8 @@ set(CONTROLLER_HDR
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/rotations.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/stats.h
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/handover_trajectories.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/handover_approachObject.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/Trajectories.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/ApproachObject.h
 )
 
 set(FSM_CONTROLLER_LIB mc_control_fsm)

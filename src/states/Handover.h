@@ -38,7 +38,7 @@
 #include <cortex_ros_bridge_msgs/Markers.h>
 
 // handover related
-#include "handover_approachObject.h"
+#include "ApproachObject.h"
 
 
 using namespace sva;
@@ -47,7 +47,7 @@ namespace lipm_walking
 {
 	namespace states
 	{
-		struct HandoverState : State
+		struct Handover : State
 		{
 
 		public:
@@ -57,13 +57,11 @@ namespace lipm_walking
 			bool checkTransitions() override;
 			void teardown() override;
 
-			// void startWalking();
-
 			void ros_spinner();
 			void cortexCallback(const cortex_ros_bridge_msgs::Markers & msg);
 
 
-			bool Flag_ROSMOCAP{true};
+			bool Flag_RosMocap{true};
 			bool Flag_HandoverInit{true};
 			bool Flag_HandoverTasks{true};
 			bool Flag_HandoverGUI{true};
@@ -142,7 +140,7 @@ namespace lipm_walking
 
 			Eigen::VectorXd thresh = Eigen::VectorXd::Zero(12);
 			Eigen::Vector3d leftForce, rightForce;
-			Eigen::Vector3d leftForceLo, rightForceLo;
+			Eigen::Vector3d leftForceSurf, rightForceSurf;
 
 			std::shared_ptr<mc_tasks::PositionTask> posTaskL;
 			std::shared_ptr<mc_tasks::PositionTask> posTaskR;
@@ -173,38 +171,3 @@ namespace lipm_walking
 	} // namespace states
 
 } // namespace lipm_walking
-
-
-
-
-// mc_rtc::gui::ArrayInput("Left ef pos", {"x", "y", "z"},
-// 	[this]() { return relaxPosL; },
-// 	[this, &ctl](const Eigen::Vector3d & to){
-
-// 		relaxPosL = to;
-// 		posTaskL->position(relaxPosL);
-
-// 		stepFwd = true;
-// 		if(stepFwd)
-// 		{
-// 			ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
-// 			ctl.config().add("stepFwd", false);
-// 			ctl.config().add("stepBack", true);
-// 		}
-// 	}),
-
-// mc_rtc::gui::ArrayInput("Right ef pos", {"x", "y", "z"},
-// 	[this]() { return relaxPosR; },
-// 	[this, &ctl](const Eigen::Vector3d & to){
-
-// 		relaxPosR = to;
-// 		posTaskR->position(relaxPosR);
-
-// 		stepBack = true;
-// 		if(stepBack)
-// 		{
-// 			ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
-// 			ctl.config().add("stepBack", false);
-// 			ctl.config().add("stepFwd", true);
-// 		}
-// 	}) );

@@ -1,4 +1,4 @@
-#include "HandoverState.h"
+#include "Handover.h"
 
 namespace lipm_walking
 {
@@ -6,11 +6,11 @@ namespace lipm_walking
 	namespace states
 	{
 
-		void states::HandoverState::ros_spinner()
+		void states::Handover::ros_spinner()
 		{ ros::spin(); }
 
 
-		void states::HandoverState::cortexCallback(const cortex_ros_bridge_msgs::Markers & msg)
+		void states::Handover::cortexCallback(const cortex_ros_bridge_msgs::Markers & msg)
 		{
 			// LOG_WARNING("cortexCallback")
 			c = 0;
@@ -34,14 +34,14 @@ namespace lipm_walking
 
 
 
-		void states::HandoverState::start()
+		void states::Handover::start()
 		{
 			auto & ctl = controller();
 
 			stepFwd = true;
 			stepBack = true;
 
-			if(Flag_ROSMOCAP)
+			if(Flag_RosMocap)
 			{
 				/*configure MOCAP*/
 				cout << "\033[1;32m***ROS_MOCAP_BRIDGE IS ENABLED*** \033[0m\n";
@@ -51,7 +51,7 @@ namespace lipm_walking
 				LOG_ERROR_AND_THROW(std::runtime_error, "This controller does not work withtout ROS")
 				}
 				m_ros_spinner_ = std::thread{[this](){ this->ros_spinner(); }};
-				l_shape_sub_ = m_nh_->subscribe("novis_markers", 1, & lipm_walking::states::HandoverState::cortexCallback, this);
+				l_shape_sub_ = m_nh_->subscribe("novis_markers", 1, & lipm_walking::states::Handover::cortexCallback, this);
 			}
 
 			if(Flag_HandoverInit)
@@ -89,12 +89,6 @@ namespace lipm_walking
 
 				/*initial force/torque threshold*/
 				thresh << 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10;
-
-
-				/*object geometric properties*/
-				objLen = 0.9;
-				objLenLt = objLen/2;
-				objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
 
 				efLPos.resize(3);
 				efLVel.resize(2);
@@ -136,7 +130,7 @@ namespace lipm_walking
 				/*handover endEffectorTask*/
 				objEfTask = make_shared<mc_tasks::EndEffectorTask>("base_link", ctl.robots(), 2, 2.0, 1e3);
 				ctl.solver().addTask(objEfTask);
-				objEfTask->set_ef_pose(Eigen::Vector3d(0.18, 0.0, 0.845));
+				objEfTask->set_ef_pose(Eigen::Vector3d(0.35, 0.0, 0.845));
 			}
 
 			if(Flag_HandoverLogs)
@@ -211,9 +205,39 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_bodies-distX",[this]() -> double { return bodiesDiffX; });
 			}
 
-
 			if(Flag_HandoverGUI)
 			{
+
+				/*publish wrench*/
+				ctl.gui()->addElement({"Handover", "wrench"},
+
+					mc_rtc::gui::Button("publish_current_wrench", [&ctl]() {
+						cout << "left hand Forces " <<
+						ctl.robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force().transpose()<<endl;
+						cout << "right hand Forces " <<
+						ctl.robot().forceSensor("RightHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force().transpose()<<endl;
+					}),
+
+					mc_rtc::gui::Button("Norm_Force",[this, &ctl](){
+						Eigen::Vector3d v = ctl.robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force();
+						Eigen::Vector3d v2 = ctl.robot().forceSensor("RightHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force();
+						cout<<"Norm Fl "<< v.norm() <<endl;
+						cout<<"Norm Fr "<< v2.norm() <<endl; }),
+
+					mc_rtc::gui::ArrayInput("set Threshold %",
+						{"Left cx", "cy", "cz", "fx", "fy", "fz", "Right cx", "cy", "cz", "fx", "fy", "fz"},
+						[this]() { return thresh; },
+						[this](const Eigen::VectorXd & t)
+						{
+							LOG_INFO("Changed threshold to:\nLeft: " << t.head(6).transpose() << "\nRight: " << t.tail(6).transpose() << "\n")
+							thresh = t;
+						}));
+
+				/*change prediction_ settings*/
+				ctl.gui()->addElement({"Handover", "tuner"},
+					mc_rtc::gui::ArrayInput("t_predict/t_observe", {"t_predict", "t_observe", "it"},
+						[this]() { return approachObj->tuner; },
+						[this](const Eigen::Vector3d & to){approachObj->tuner = to;cout<< "t_predict = " << approachObj->tuner(0)*1/fps<< "sec, t_observe = "<<approachObj->tuner(1)*1/fps<< "sec"<<endl;}));
 
 				/*restart mocapStep*/
 				ctl.gui()->addElement({"Handover", "Restart"},
@@ -324,68 +348,41 @@ namespace lipm_walking
 
 					mc_rtc::gui::Button("LEFT ARM object-rest pose", [this, &ctl]()
 					{
-						posTaskL->position(relaxPosL);
+						posTaskL->position(relaxPosL + X_0_rel.translation());
 						oriTaskL->orientation(relaxRotL);
 					}),
 
 					mc_rtc::gui::Button("RIGHT ARM object-rest pose", [this, &ctl]()
 					{
-						posTaskR->position(relaxPosR);
+						posTaskR->position(relaxPosR + X_0_rel.translation());
 						oriTaskR->orientation(relaxRotR);
 					}),
 
 					mc_rtc::gui::Button("LEFT ARM half-sit pose", [this, &ctl]()
 					{
-						posTaskL->position(initPosL);
+						posTaskL->position(initPosL + X_0_rel.translation());
 						oriTaskL->orientation(initRotL);
 					}),
 
 					mc_rtc::gui::Button("RIGHT ARM half-sit pose", [this, &ctl]()
 					{
-						posTaskR->position(initPosR);
+						posTaskR->position(initPosR + X_0_rel.translation());
 						oriTaskR->orientation(initRotR);
 					})
 
 					);
 
-				/*publish wrench*/
-				ctl.gui()->addElement({"Handover", "wrench"},
-
-					mc_rtc::gui::Button("publish_current_wrench", [&ctl]() {
-						cout << "left hand Forces " <<
-						ctl.robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force().transpose()<<endl;
-						cout << "right hand Forces " <<
-						ctl.robot().forceSensor("RightHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force().transpose()<<endl;
-					}),
-
-					mc_rtc::gui::Button("Norm_Force",[this, &ctl](){
-						Eigen::Vector3d v = ctl.robot().forceSensor("LeftHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force();
-						Eigen::Vector3d v2 = ctl.robot().forceSensor("RightHandForceSensor").worldWrenchWithoutGravity(ctl.robot()).force();
-						cout<<"Norm Fl "<< v.norm() <<endl;
-						cout<<"Norm Fr "<< v2.norm() <<endl; }),
-
-					mc_rtc::gui::ArrayInput("set Threshold %",
-						{"Left cx", "cy", "cz", "fx", "fy", "fz", "Right cx", "cy", "cz", "fx", "fy", "fz"},
-						[this]() { return thresh; },
-						[this](const Eigen::VectorXd & t)
-						{
-							LOG_INFO("Changed threshold to:\nLeft: " << t.head(6).transpose() << "\nRight: " << t.tail(6).transpose() << "\n")
-							thresh = t;
-						}));
-
-				/*change prediction_ settings*/
-				ctl.gui()->addElement({"Handover", "tuner"},
-					mc_rtc::gui::ArrayInput("t_predict/t_observe", {"t_predict", "t_observe", "it"},
-						[this]() { return approachObj->tuner; },
-						[this](const Eigen::Vector3d & to){approachObj->tuner = to;cout<< "t_predict = " << approachObj->tuner(0)*1/fps<< "sec, t_observe = "<<approachObj->tuner(1)*1/fps<< "sec"<<endl;}));
-
-				ctl.gui()->addElement({"Handover", "SetRelaxPos"},
+				/*manually move ef with walking*/
+				ctl.gui()->addElement({"Handover", "RelaxPos-stepWalk"},
 
 					mc_rtc::gui::ArrayInput("Left ef pos", {"x", "y", "z"},
 						[this]() { return relaxPosL; },
 						[this, &ctl](const Eigen::Vector3d & to){
+
 							relaxPosL = to;
 							posTaskL->position(relaxPosL);
+							oriTaskL->orientation(relaxRotL);
+
 							if(stepFwd)
 							{
 								stepFwd = false;
@@ -398,8 +395,11 @@ namespace lipm_walking
 					mc_rtc::gui::ArrayInput("Right ef pos", {"x", "y", "z"},
 						[this]() { return relaxPosR; },
 						[this, &ctl](const Eigen::Vector3d & to){
+
 							relaxPosR = to;
 							posTaskR->position(relaxPosR);
+							oriTaskR->orientation(relaxRotR);
+
 							if(stepBack)
 							{
 								stepBack = false;
@@ -408,7 +408,6 @@ namespace lipm_walking
 								ctl.config().add("triggerWalk", true);
 							}
 						}) );
-
 			}
 
 
@@ -416,9 +415,8 @@ namespace lipm_walking
 			LOG_SUCCESS("******** Both hands TOGETHER scenario *********")
 
 
-			// Relative transformation X_b1_b2 from body b1 to body b2
+			/*Relative transformation X_b1_b2 from body b1 to body b2*/
 			// sva::PTransformd X_b1_b2(const std::string & b1, const std::string & b2) const;
-
 
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
 			// X_0_rel = X_0_body;
@@ -440,12 +438,11 @@ namespace lipm_walking
 			// X_relOri_efR = X_0Ori_efR * (X_0_rel.inv());
 			X_relOri_efR = sva::PTransformd(relaxRotR, relaxPosR) * (X_0_rel.inv());
 
-
-
 		}// start
 
 
-		void states::HandoverState::runState()
+
+		void states::Handover::runState()
 		{
 			auto & ctl = controller();
 			auto & pendulum_ = ctl.pendulum();
@@ -456,26 +453,24 @@ namespace lipm_walking
 			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
 
 
-			X_desPos_efL = X_relPos_efL * X_0_rel;
-			posTaskL->refAccel(pendulum_.comdd());
-			posTaskL->refVel(pendulum_.comd());
-			posTaskL->position( X_desPos_efL.translation() );
+			// /*left ef relative pos to body*/
+			// // X_desPos_efL = X_relPos_efL * X_0_rel; posTaskL->position( X_desPos_efL.translation() );
+			// posTaskL->refAccel(pendulum_.comdd());
+			// posTaskL->refVel(pendulum_.comd());
 			// posTaskL->position( objEfTask->get_ef_pose().translation() );
 
+			// X_desOri_efL = X_relOri_efL * X_0_rel; oriTaskL->orientation( X_desOri_efL.rotation() );
+			// // oriTaskL->orientation( objEfTask->get_ef_pose().rotation() );
 
-			X_desPos_efR = X_relPos_efR * X_0_rel;
-			posTaskR->refAccel(pendulum_.comdd());
-			posTaskR->refVel(pendulum_.comd());
-			posTaskR->position( X_desPos_efR.translation() );
+
+			// /*right ef relative pos to body*/
+			// // X_desPos_efR = X_relPos_efR * X_0_rel; posTaskR->position( X_desPos_efR.translation() );
+			// posTaskR->refAccel(pendulum_.comdd());
+			// posTaskR->refVel(pendulum_.comd());
 			// posTaskR->position( objEfTask->get_ef_pose().translation() );
 
-
-
-			X_desOri_efL = X_relOri_efL * X_0_rel;
-			oriTaskL->orientation( X_desOri_efL.rotation() );
-
-			X_desOri_efR = X_relOri_efR * X_0_rel;
-			oriTaskR->orientation( X_desOri_efR.rotation() );
+			// X_desOri_efR = X_relOri_efR * X_0_rel; oriTaskR->orientation( X_desOri_efR.rotation() );
+			// // oriTaskR->orientation( objEfTask->get_ef_pose().rotation() );
 
 
 
@@ -489,7 +484,7 @@ namespace lipm_walking
 
 
 			/*get ef(s) acceleration*/
-			if( /*approachObj->i*/ runCount > 3 )
+			if( approachObj->i )
 			{
 				efLPos[3-g] = ltPosW;
 				efRPos[3-g] = rtPosW;
@@ -525,8 +520,8 @@ namespace lipm_walking
 			rightForce_Zabs = abs(rightForce(2));
 
 
-			leftForceLo = ctl.robot().surfaceWrench("InternLeftHand").force();
-			rightForceLo = ctl.robot().surfaceWrench("InternRightHand").force();
+			leftForceSurf = ctl.robot().surfaceWrench("InternLeftHand").force();
+			rightForceSurf = ctl.robot().surfaceWrench("InternRightHand").force();
 
 
 			/*human robot body distance*/
@@ -624,9 +619,14 @@ namespace lipm_walking
 
 
 
+			/*object geometric properties*/
+			objLen = 0.9;
+			objLenLt = objLen/2;
+			objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
+
+
 			if( approachObj->handoverRun() )
 			{
-				// cout<<"I am in RUN"<<endl;
 
 				auto robotRtHandOnObj = [&]()-> sva::PTransformd
 				{
@@ -836,30 +836,22 @@ namespace lipm_walking
 						}
 					}
 
-
 					/*check both gripper forces together*/
 					approachObj->forceController(
 						approachObj->enableHand,
-						initPosR, initRotR,
-						initPosL, initRotL,
-						relaxPosR, relaxRotR,
-						relaxPosL, relaxRotL,
+						(initPosR + X_0_rel.translation()), initRotR,
+						(initPosL + X_0_rel.translation()), initRotL,
+						(relaxPosR + X_0_rel.translation()), relaxRotR,
+						(relaxPosL + X_0_rel.translation()), relaxRotL,
 						thresh,
 						leftForce, rightForce,
-						leftForceLo, rightForceLo,
+						leftForceSurf, rightForceSurf,
 						efLAce, efRAce,
 						posTaskL, oriTaskL,
 						posTaskR, oriTaskR);
 
 					gripperControl();
 				}
-
-
-				/*head visual tracking*/
-				if(approachObj->subjHasObject)
-				{ headTask->target(approachObj->objectPosC); }
-				else
-				{ headTask->target(approachObj->fingerPosR); }
 
 
 				/*START HANDOVER ROUTINE*/
@@ -872,6 +864,12 @@ namespace lipm_walking
 						(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 2.0) )
 					{ approachObj->startNow = true; }
 				}
+
+				/*head visual tracking*/
+				if(approachObj->subjHasObject)
+				{ headTask->target(approachObj->objectPosC); }
+				else
+				{ headTask->target(approachObj->fingerPosR); }
 
 			}// handoverRun
 
@@ -904,10 +902,10 @@ namespace lipm_walking
 				gripperL->setTargetQ({openGrippers});
 				gripperR->setTargetQ({openGrippers});
 
-				posTaskL->position(relaxPosL);
+				posTaskL->position(relaxPosL + X_0_rel.translation());
 				oriTaskL->orientation(initRotL);
 
-				posTaskR->position(relaxPosR);
+				posTaskR->position(relaxPosR + X_0_rel.translation());
 				oriTaskR->orientation(initRotR);
 
 				approachObj->pickNearestHand = true;
@@ -948,8 +946,8 @@ namespace lipm_walking
 					headTask->selectActiveJoints(ctl.solver(), activeJointsName);
 
 					/*ef pos*/
-					posTaskL->position(initPosL);
-					posTaskR->position(initPosR);
+					posTaskL->position(initPosL + X_0_rel.translation());
+					posTaskR->position(initPosR + X_0_rel.translation());
 
 					approachObj->enableHand = true;
 
@@ -984,7 +982,7 @@ namespace lipm_walking
 					approachObj->bool_t1 = true;
 					approachObj->bool_t6 = true;
 
-					approachObj->local_FzeroL = Eigen::Vector3d::Zero();
+					approachObj->localSurf_FzeroL = Eigen::Vector3d::Zero();
 					approachObj->newThL = Eigen::Vector3d::Zero();
 					approachObj->FinertL = Eigen::Vector3d::Zero();
 					approachObj->FzeroL = Eigen::Vector3d::Zero();
@@ -993,7 +991,7 @@ namespace lipm_walking
 					approachObj->FpullL = Eigen::Vector3d::Zero();
 
 
-					approachObj->local_FzeroR = Eigen::Vector3d::Zero();
+					approachObj->localSurf_FzeroR = Eigen::Vector3d::Zero();
 					approachObj->newThR = Eigen::Vector3d::Zero();
 					approachObj->FinertR = Eigen::Vector3d::Zero();
 					approachObj->FzeroR = Eigen::Vector3d::Zero();
@@ -1007,12 +1005,12 @@ namespace lipm_walking
 					cout<<"\033[1;33m***handover fresh start***\033[0m\n";
 				}
 			} // restartEverything
+
 			runCount+=1;
 		}// runState
 
 
-
-		bool states::HandoverState::checkTransitions()
+		bool states::Handover::checkTransitions()
 		{
 			auto & ctl = controller();
 
@@ -1020,11 +1018,11 @@ namespace lipm_walking
 		}// checkTransition
 
 
-		void states::HandoverState::teardown()
+		void states::Handover::teardown()
 		{
 			auto & ctl = controller();
 
-				cout << "teardown HandoverState\n";
+			cout << "teardown Handover\n";
 
 			if(Flag_HandoverGUI)
 			{
@@ -1033,12 +1031,12 @@ namespace lipm_walking
 
 			if(Flag_HandoverTasks)
 			{
+				ctl.solver().removeTask(headTask);
 				ctl.solver().removeTask(posTaskL);
 				ctl.solver().removeTask(posTaskR);
 				ctl.solver().removeTask(oriTaskL);
 				ctl.solver().removeTask(oriTaskR);
 				ctl.solver().removeTask(objEfTask);
-				ctl.solver().removeTask(headTask);
 			}
 
 			if(Flag_HandoverLogs)
@@ -1098,4 +1096,4 @@ namespace lipm_walking
 
 } // namespace lipm_walking
 
-EXPORT_SINGLE_STATE("HandoverState", lipm_walking::states::HandoverState)
+EXPORT_SINGLE_STATE("Handover", lipm_walking::states::Handover)

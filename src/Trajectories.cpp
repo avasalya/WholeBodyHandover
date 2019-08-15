@@ -1,5 +1,5 @@
 
-#include "handover_trajectories.h"
+#include "Trajectories.h"
 
 
 namespace lipm_walking

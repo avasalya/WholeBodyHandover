@@ -1,4 +1,4 @@
-#include "handover_approachObject.h"
+#include "ApproachObject.h"
 
 namespace lipm_walking
 {
@@ -362,7 +362,7 @@ namespace lipm_walking
 		Eigen::Vector3d relaxPosL, Eigen::Matrix3d relaxRotL,
 		Eigen::VectorXd thresh,
 		Eigen::Vector3d leftForce, Eigen::Vector3d rightForce,
-		Eigen::Vector3d leftForceLo, Eigen::Vector3d rightForceLo,
+		Eigen::Vector3d leftForceSurf, Eigen::Vector3d rightForceSurf,
 		Eigen::Vector3d efLAce, Eigen::Vector3d efRAce,
 		std::shared_ptr<mc_tasks::PositionTask>& posTaskL,
 		std::shared_ptr<mc_tasks::OrientationTask>& oriTaskL,
@@ -458,8 +458,8 @@ namespace lipm_walking
 					FzeroL = leftForce;
 					FzeroR = rightForce;
 
-					local_FzeroL = leftForceLo;
-					local_FzeroR = rightForceLo;
+					localSurf_FzeroL = leftForceSurf;
+					localSurf_FzeroR = rightForceSurf;
 
 					enableHand = false;
 					t3 = difftime( time(0), start);
@@ -469,8 +469,8 @@ namespace lipm_walking
 				/*closed WITH object*/
 				else if( (!enableHand) &&
 						(graspObject) && /*along localY direction*/
-						( abs( (leftForceLo - local_FzeroL)(2) ) >4.0 ) &&
-						( abs( (rightForceLo - local_FzeroR)(2) ) > 4.0 ) )
+						( abs( (leftForceSurf - localSurf_FzeroL)(2) ) >4.0 ) &&
+						( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > 4.0 ) )
 				{
 					gClose = true;
 					closeGripper = true;
