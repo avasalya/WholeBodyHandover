@@ -180,6 +180,7 @@ namespace lipm_walking
       ctl.config().add("triggerWalk", false);
     }
 
+
     if (isMakingFootContact_)
     {
       auto & leftFootTask = stabilizer().leftFootTask;
@@ -328,6 +329,9 @@ namespace lipm_walking
   void states::Standing::startWalking()
   {
     auto & ctl = controller();
+
+    ctl.triggerState = 2;
+
     if (ctl.isLastSSP())
     {
       LOG_ERROR("No footstep in contact plan");

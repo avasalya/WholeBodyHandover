@@ -4,10 +4,7 @@ namespace lipm_walking
 {
 	ApproachObject::ApproachObject() {}
 
-
-
 	ApproachObject::~ApproachObject() {}
-
 
 
 	/*allocate memory*/
@@ -61,7 +58,6 @@ namespace lipm_walking
 		/*timing of handover phases*/
 		start = time(0);
 	}
-
 
 
 	bool ApproachObject::checkFrameOfData(std::vector<Eigen::Vector3d>)

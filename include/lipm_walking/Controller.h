@@ -352,5 +352,8 @@ namespace lipm_walking
     std::string segmentName_ = "";
     unsigned nbLogSegments_ = 100;
     unsigned nbMPCFailures_ = 0;
+
+    public:
+    double triggerState = 0;
   };
 }

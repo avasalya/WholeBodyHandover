@@ -33,7 +33,6 @@ namespace lipm_walking
 		}
 
 
-
 		void states::Handover::start()
 		{
 			auto & ctl = controller();
@@ -86,6 +85,7 @@ namespace lipm_walking
 				relaxPosL << 0.20, 0.35, 0.8;
 				relaxPosR << 0.20, -0.35, 0.8;
 
+				relaxPos << 0.20, 0.35, 0.8, 0.20, -0.35, 0.8;
 
 				/*initial force/torque threshold*/
 				thresh << 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10;
@@ -373,41 +373,109 @@ namespace lipm_walking
 					);
 
 				/*manually move ef with walking*/
-				ctl.gui()->addElement({"Handover", "RelaxPos-stepWalk"},
+				ctl.gui()->addElement({"Handover", "1-step Walk Cycle"},
 
-					mc_rtc::gui::ArrayInput("Left ef pos", {"x", "y", "z"},
-						[this]() { return relaxPosL; },
-						[this, &ctl](const Eigen::Vector3d & to){
+					mc_rtc::gui::Label("move this direction->", [this]() { return walkThisDir; }),
 
-							relaxPosL = to;
-							posTaskL->position(relaxPosL);
-							oriTaskL->orientation(relaxRotL);
+					mc_rtc::gui::ArrayInput("move Forward 30cm", {"efLx", "efLy", "efLz", "efRx", "efRy", "efRz"},
+						[this]() { return relaxPos; },
+						[this, &ctl](const Eigen::Vector6d & to){
 
 							if(stepFwd)
 							{
+								walkThisDir  = "Backward only";
+								relaxPos << to;
+
+								relaxPosL = to.head(3);
+								posTaskL->position(relaxPosL);
+								oriTaskL->orientation(relaxRotL);
+
+								relaxPosR = to.tail(3);
+								posTaskR->position(relaxPosR);
+								oriTaskR->orientation(relaxRotR);
+
 								stepFwd = false;
 								stepBack = true;
-								ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
+								ctl.loadFootstepPlan("HANDOVER_fwd_30cm_in_1stepCycle");
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
 
-					mc_rtc::gui::ArrayInput("Right ef pos", {"x", "y", "z"},
-						[this]() { return relaxPosR; },
-						[this, &ctl](const Eigen::Vector3d & to){
+					mc_rtc::gui::ArrayInput("move Backward 30cm", {"efLx", "efLy", "efLz", "efRx", "efRy", "efRz"},
+						[this]() { return relaxPos; },
+						[this, &ctl](const Eigen::Vector6d & to){
 
-							relaxPosR = to;
-							posTaskR->position(relaxPosR);
-							oriTaskR->orientation(relaxRotR);
 
 							if(stepBack)
 							{
+								walkThisDir  = "Forward only";
+								relaxPos << to;
+
+								relaxPosL = to.head(3);
+								posTaskL->position(relaxPosL);
+								oriTaskL->orientation(relaxRotL);
+
+								relaxPosR = to.tail(3);
+								posTaskR->position(relaxPosR);
+								oriTaskR->orientation(relaxRotR);
+
 								stepBack = false;
 								stepFwd = true;
-								ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
+								ctl.loadFootstepPlan("HANDOVER_back_30cm_in_1stepCycle");
 								ctl.config().add("triggerWalk", true);
 							}
-						}) );
+						}),
+
+
+
+					mc_rtc::gui::ArrayInput("move Forward 40cm", {"efLx", "efLy", "efLz", "efRx", "efRy", "efRz"},
+						[this]() { return relaxPos; },
+						[this, &ctl](const Eigen::Vector6d & to){
+
+							if(stepFwd)
+							{
+								walkThisDir  = "Backward only";
+								relaxPos << to;
+
+								relaxPosL = to.head(3);
+								posTaskL->position(relaxPosL);
+								oriTaskL->orientation(relaxRotL);
+
+								relaxPosR = to.tail(3);
+								posTaskR->position(relaxPosR);
+								oriTaskR->orientation(relaxRotR);
+
+								stepFwd = false;
+								stepBack = true;
+								ctl.loadFootstepPlan("HANDOVER_fwd_40cm_in_1stepCycle");
+								ctl.config().add("triggerWalk", true);
+							}
+						}),
+
+					mc_rtc::gui::ArrayInput("move Backward 40cm", {"efLx", "efLy", "efLz", "efRx", "efRy", "efRz"},
+						[this]() { return relaxPos; },
+						[this, &ctl](const Eigen::Vector6d & to){
+
+
+							if(stepBack)
+							{
+								walkThisDir  = "Forward only";
+								relaxPos << to;
+
+								relaxPosL = to.head(3);
+								posTaskL->position(relaxPosL);
+								oriTaskL->orientation(relaxRotL);
+
+								relaxPosR = to.tail(3);
+								posTaskR->position(relaxPosR);
+								oriTaskR->orientation(relaxRotR);
+
+								stepBack = false;
+								stepFwd = true;
+								ctl.loadFootstepPlan("HANDOVER_back_40cm_in_1stepCycle");
+								ctl.config().add("triggerWalk", true);
+							}
+						}));
 			}
 
 
@@ -419,7 +487,6 @@ namespace lipm_walking
 			// sva::PTransformd X_b1_b2(const std::string & b1, const std::string & b2) const;
 
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
-			// X_0_rel = X_0_body;
 			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
 
 
@@ -447,9 +514,13 @@ namespace lipm_walking
 			auto & ctl = controller();
 			auto & pendulum_ = ctl.pendulum();
 
+    		ctl.triggerState = 1;
+
+    		relaxPosL << relaxPos(0,3);
+    		relaxPosR << relaxPos(3,3);
+
 			/*relative to pelvis*/
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
-			// X_0_rel = X_0_body;
 			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
 
 
@@ -527,7 +598,7 @@ namespace lipm_walking
 			/*human robot body distance*/
 			if(approachObj->i>1)
 			{
-				bodyPosR = X_0_body.translation();
+				bodyPosR = X_0_rel.translation();
 				bodyPosS = approachObj->headPos;
 
 				bodiesDiffX = bodyPosS(0)-bodyPosR(0);
@@ -796,11 +867,18 @@ namespace lipm_walking
 				};
 
 
-				/*as long as object is within robot's reachable space*/
-				if( (approachObj->startNow)  &&
-					approachObj->objectPosC(0)<=1.0 &&
-					approachObj->objectPosC(0)>0.1 )
+
+
+				/*as long as object is within robot's reachable space*/ //--- this should be relative to "robot body"
+				// if( (approachObj->startNow)  &&
+				// 	approachObj->objectPosC(0)<=1.0 &&
+				// 	approachObj->objectPosC(0)>0.1 )
+				// { obj_rel_robot(); }
+
+				auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
+				if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.0) && (objBody_rel_robotBody >0.1) )
 				{ obj_rel_robot(); }
+
 
 
 				/*feed Ef pose*/
@@ -888,6 +966,10 @@ namespace lipm_walking
 				/*remove contacts*/
 				ctl.removeContact({"hrp2_drc", "handoverObjects", "RightGripper", "handoverPipe"});
 				ctl.removeContact({"hrp2_drc", "handoverObjects", "LeftGripper", "handoverPipe"});
+
+
+				relaxPosL << 0.20, 0.35, 0.8;
+				relaxPosR << 0.20, -0.35, 0.8;
 
 				ctl.solver().addTask(objEfTask);
 
@@ -1021,8 +1103,7 @@ namespace lipm_walking
 				posTaskL->position(initPosL + X_0_rel.translation());
 				posTaskR->position(initPosR + X_0_rel.translation());
 				restartEverything = false;
-			}
-
+			}// move feet to origin
 
 			runCount+=1;
 		}// runState

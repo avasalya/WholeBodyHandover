@@ -109,11 +109,15 @@ namespace lipm_walking
 			Eigen::Vector3d efLAce, efRAce;
 			int g{1};
 
+
+			std::string walkThisDir = "can move either forward or backward";
+
 			Eigen::Matrix3d ltRotW, rtRotW;
 
 			Eigen::Matrix3d initRotL, initRotR;
 			Eigen::Vector3d initPosL, initPosR;
 
+			Eigen::Vector6d relaxPos;
 			Eigen::Matrix3d relaxRotL, relaxRotR;
 			Eigen::Vector3d relaxPosL, relaxPosR;
 
