@@ -58,8 +58,9 @@ namespace lipm_walking
 			std::vector<std::string> subjMarkersName);
 
 		void goToHandoverPose(
-			double min,
-			double max,
+			double Xmax,
+			double Ymin,
+			double Ymax,
 			bool& enableHand,
 			Eigen::Vector3d& curPosEf,
 			std::shared_ptr<mc_tasks::PositionTask>& posTask,
@@ -87,6 +88,11 @@ namespace lipm_walking
 		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
 
 		bool Flag_prediction{false}; //TRUE otherwise, use fingerPos
+
+		bool Flag_walk{true};//TRUE for walking, else only stabilizer
+
+		bool walkFwd{false};
+		bool walkBack{false};
 
 
 		Eigen::Vector3d tuner;
@@ -123,6 +129,9 @@ namespace lipm_walking
 		bool bool_t1{true};
 		bool bool_t6{true};
 
+
+		double GlobalAvgVelSubjNorm;
+
 		std::vector<Eigen::Vector3d> Markers;
 		std::vector<Eigen::MatrixXd> markersPos;
 
@@ -140,8 +149,10 @@ namespace lipm_walking
 		Eigen::Vector3d gripperLtEfB, gripperRtEfB;
 
 		Eigen::Vector3d headPos, headPos1, headPos2;
-		Eigen::Vector3d fingerPosL, fingerPosR;
-		Eigen::Vector3d objectPosC, objectPosCx, objectPosCy;
+		Eigen::Vector3d fingerPosL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d fingerPosR = Eigen::Vector3d::Zero();
+		Eigen::Vector3d objectPosC = Eigen::Vector3d::Zero();
+		Eigen::Vector3d objectPosCx, objectPosCy;
 		sva::PTransformd virObjLeft, virObjRight;
 
 		double finR_rel_efL, finL_rel_efR;

@@ -300,13 +300,16 @@ namespace lipm_walking
 
 		ready = true;
 
+		GlobalAvgVelSubjNorm = avgVelSubj.norm();
+
 		return std::make_tuple(ready, wp, initRefPos, handoverRot);
 	}
 
 
 	void ApproachObject::goToHandoverPose(
-		double min,
-		double max,
+		double Xmax,
+		double Ymin,
+		double Ymax,
 		bool& enableHand,
 		Eigen::Vector3d& curPosEf,
 		std::shared_ptr<mc_tasks::PositionTask>& posTask,
@@ -331,21 +334,34 @@ namespace lipm_walking
 		else
 		{
 			handoverPos = offsetPos;
+			// if(i%300 == 0)
+			// {
+				// LOG_ERROR(Xmax << "   handoverPos   " << handoverPos(0))
+			// }
 		}
 
 		/*robot constraint*/
 		if(enableHand &&
-			(handoverPos(0)>= 0.10) && (handoverPos(0)<= 0.8)
-			&& (handoverPos(1)>= min)  && (handoverPos(1)<= max)
+			(handoverPos(0)>= 0.10) && (handoverPos(0)<= Xmax)
+			&& (handoverPos(1)>= Ymin)  && (handoverPos(1)<= Ymax)
 			&& (handoverPos(2)>= 0.80) /*&& (handoverPos(2)<= 1.4)*/
 			)
 		{
+
 			sva::PTransformd new_pose(get<3>(handPredict), handoverPos);
 			posTask->position(new_pose.translation());
 			oriTask->orientation(new_pose.rotation());
 
 			// LOG_INFO("it "<<it << "\npredictPos wp "<<handoverPos.transpose()<<"\n" << "offsetPos "<< offsetPos.transpose())
 		}
+
+
+		// if( GlobalAvgVelSubjNorm >=0.0 && GlobalAvgVelSubjNorm <=0.002 )
+		// {
+		// 	posTask->position(new_pose.translation());
+		// 	// LOG_ERROR(GlobalAvgVelSubjNorm << " GlobalAvgVelSubjNorm ")
+		// }
+
 	}
 
 
@@ -517,6 +533,8 @@ namespace lipm_walking
 		{
 			if(!goBackInit)
 			{
+				walkBack = true;
+
 				posTaskL->position(relaxPosL);
 				oriTaskL->orientation(initRotL);
 

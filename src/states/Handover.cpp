@@ -202,7 +202,7 @@ namespace lipm_walking
 
 				ctl.logger().addLogEntry("HANDOVER_bodyPosRobot",[this]() -> Eigen::Vector3d { return bodyPosR; });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosSubj",[this]() -> Eigen::Vector3d { return bodyPosS; });
-				ctl.logger().addLogEntry("HANDOVER_bodies-distX",[this]() -> double { return bodiesDiffX; });
+				ctl.logger().addLogEntry("HANDOVER_interPersonalDist_X",[this]() -> double { return ID; });
 			}
 
 			if(Flag_HandoverGUI)
@@ -383,7 +383,7 @@ namespace lipm_walking
 
 							if(stepFwd)
 							{
-								walkThisDir  = "Backward only";
+								walkThisDir  = "only BACKWARD allowed";
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
@@ -408,7 +408,7 @@ namespace lipm_walking
 
 							if(stepBack)
 							{
-								walkThisDir  = "Forward only";
+								walkThisDir  = "only FORWARD allowed";
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
@@ -555,7 +555,7 @@ namespace lipm_walking
 
 
 			/*get ef(s) acceleration*/
-			if( approachObj->i )
+			if( approachObj->i > 3 )
 			{
 				efLPos[3-g] = ltPosW;
 				efRPos[3-g] = rtPosW;
@@ -594,15 +594,6 @@ namespace lipm_walking
 			leftForceSurf = ctl.robot().surfaceWrench("InternLeftHand").force();
 			rightForceSurf = ctl.robot().surfaceWrench("InternRightHand").force();
 
-
-			/*human robot body distance*/
-			if(approachObj->i>1)
-			{
-				bodyPosR = X_0_rel.translation();
-				bodyPosS = approachObj->headPos;
-
-				bodiesDiffX = bodyPosS(0)-bodyPosR(0);
-			}
 
 
 			/*robot object contacts*/
@@ -689,15 +680,34 @@ namespace lipm_walking
 			};
 
 
-
-			/*object geometric properties*/
-			objLen = 0.9;
-			objLenLt = objLen/2;
-			objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
-
-
+			/*everything dependent on markers goes inside here*/
 			if( approachObj->handoverRun() )
 			{
+				/*object geometric properties*/
+				objLen = 0.9;
+				objLenLt = objLen/2;
+				objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
+
+				/*human robot body distance*/
+				bodyPosR = X_0_rel.translation();
+				bodyPosS = approachObj->headPos;
+				ID = bodyPosS(0)-bodyPosR(0);
+
+				// runCount+=1;
+				// if(runCount % 199 == 0)
+				// {
+				// 	subjHeadPos0 << approachObj->headPos;
+				// }
+				// if(runCount % 399 == 0)
+				// {
+				// 	runCount=0;
+
+				// 	subjHeadPos1 << approachObj->headPos;
+
+				// 	subjHeadVel << (subjHeadPos1 - subjHeadPos0)/0.005;
+				// 	// LOG_INFO("at 400 subjHeadVel " << subjHeadVel.norm())
+				// }
+
 
 				auto robotRtHandOnObj = [&]()-> sva::PTransformd
 				{
@@ -870,28 +880,76 @@ namespace lipm_walking
 
 
 				/*as long as object is within robot's reachable space*/ //--- this should be relative to "robot body"
+
+				auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
+				if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.5) && (objBody_rel_robotBody >0.1) )
+				{ obj_rel_robot(); }
+
 				// if( (approachObj->startNow)  &&
-				// 	approachObj->objectPosC(0)<=1.0 &&
+				// 	approachObj->objectPosC(0)<=1.3 &&
 				// 	approachObj->objectPosC(0)>0.1 )
 				// { obj_rel_robot(); }
 
-				auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
-				if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.0) && (objBody_rel_robotBody >0.1) )
-				{ obj_rel_robot(); }
 
 
 
 				/*feed Ef pose*/
 				if( (approachObj->useLeftEf) || (approachObj->useRightEf) )
 				{
+					if(approachObj->Flag_walk)
+					{
+						if(approachObj->walkFwd)
+						{
+							if( (ID < 1.8) && (ID >= 1.65) )
+							{
+								stepSize = "40";
+								Xmax = 0.80 +  .40 + 0.1; //0.1 as offset
+							}
+							if( (ID < 1.65) && (ID >= 1.50) )
+							{
+								stepSize = "30";
+								Xmax = 0.80 +  .30 + 0.1; //0.1 as offset
+							}
+							if( (ID < 1.50) && (ID >= 1.35) )
+							{
+								stepSize = "20";
+								Xmax = 0.80 +  .20 + 0.1; //0.1 as offset
+							}
+							if( (ID < 1.35) && (ID >= 1.20) )
+							{
+								stepSize = "10";
+								Xmax = 0.80 +  .10 + 0.1; //0.1 as offset
+							}
+
+							std::string walkPlan = "HANDOVER_fwd_" + stepSize + "cm_in_1stepCycle";
+							ctl.loadFootstepPlan(walkPlan);
+							ctl.config().add("triggerWalk", true);
+							approachObj->walkFwd = false;
+						}
+
+						if( approachObj->walkBack)
+						{
+							std::string walkPlan = "HANDOVER_back_" + stepSize + "cm_in_1stepCycle";
+							ctl.loadFootstepPlan(walkPlan);
+							ctl.config().add("triggerWalk", true);
+							approachObj->walkBack = false;
+						}
+					}
+					else
+					{
+						Xmax = 0.8;
+						cout<< "should not be here\n";
+					}
+
+
 					if(approachObj->subjHasObject)
 					{
-						updateOffsetPosL = X_M_offsetL.translation();
-						approachObj->goToHandoverPose(-0.15, 0.75, approachObj->enableHand, ltPosW, posTaskL, oriTaskL, approachObj->lHandPredict, updateOffsetPosL);
+						updateOffsetPosL = X_M_offsetL.translation() /*+ X_0_rel.translation()*/;
+						approachObj->goToHandoverPose(Xmax, -0.15, 0.75, approachObj->enableHand, ltPosW, posTaskL, oriTaskL, approachObj->lHandPredict, updateOffsetPosL);
 
 
-						updateOffsetPosR = X_M_offsetR.translation();
-						approachObj->goToHandoverPose(-0.75, 0.15, approachObj->enableHand, rtPosW, posTaskR, oriTaskR, approachObj->rHandPredict, updateOffsetPosR);
+						updateOffsetPosR = X_M_offsetR.translation() /*+ X_0_rel.translation()*/;
+						approachObj->goToHandoverPose(Xmax, -0.75, 0.15, approachObj->enableHand, rtPosW, posTaskR, oriTaskR, approachObj->rHandPredict, updateOffsetPosR);
 					}
 					else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
 					{
@@ -900,18 +958,18 @@ namespace lipm_walking
 							// robotLtHandOnObj();
 							// updateOffsetPosL = X_M_offsetL.translation();
 
-							updateOffsetPosL = approachObj->fingerPosR;
+							updateOffsetPosL = approachObj->fingerPosR; /*+ X_0_rel.translation();*/
 
-							approachObj->goToHandoverPose(-0.15, 0.75, approachObj->enableHand, ltPosW, posTaskL, oriTaskL, approachObj->lHandPredict, updateOffsetPosL);
+							approachObj->goToHandoverPose(Xmax, -0.15, 0.75, approachObj->enableHand, ltPosW, posTaskL, oriTaskL, approachObj->lHandPredict, updateOffsetPosL);
 						}
 						else if(approachObj->useRightEf)
 						{
 							// robotRtHandOnObj();
 							// updateOffsetPosR = X_M_offsetR.translation();
 
-							updateOffsetPosR = approachObj->fingerPosL;
+							updateOffsetPosR = approachObj->fingerPosL; /*+ X_0_rel.translation()*/;
 
-							approachObj->goToHandoverPose(-0.75, 0.15, approachObj->enableHand, rtPosW, posTaskR, oriTaskR, approachObj->rHandPredict, updateOffsetPosR);
+							approachObj->goToHandoverPose(Xmax, -0.75, 0.15, approachObj->enableHand, rtPosW, posTaskR, oriTaskR, approachObj->rHandPredict, updateOffsetPosR);
 						}
 					}
 
@@ -938,10 +996,13 @@ namespace lipm_walking
 				{
 					/* start only if object is within robot constraint space*/
 					if( (!approachObj->startNow) &&
-						(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 2.0) &&
-						(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 2.0) &&
-						(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 2.0) )
-					{ approachObj->startNow = true; }
+						(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 1.8) &&
+						(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 1.8) &&
+						(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 1.8) )
+					{
+						approachObj->startNow = true;
+						approachObj->walkFwd = true;
+					}
 				}
 
 				/*head visual tracking*/
@@ -1049,8 +1110,12 @@ namespace lipm_walking
 
 					bodyPosR = Eigen::Vector3d::Zero();
 					bodyPosS = Eigen::Vector3d::Zero();
+					subjHeadVel = Eigen::Vector3d::Zero();
 
-					bodiesDiffX = 0.0;
+					ID = 0.0;
+					approachObj->walkFwd = false;
+					approachObj->walkBack = false;
+
 
 					leftForce_Xabs = 0.0;
 					leftForce_Yabs = 0.0;
@@ -1105,7 +1170,6 @@ namespace lipm_walking
 				restartEverything = false;
 			}// move feet to origin
 
-			runCount+=1;
 		}// runState
 
 

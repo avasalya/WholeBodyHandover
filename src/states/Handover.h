@@ -109,9 +109,6 @@ namespace lipm_walking
 			Eigen::Vector3d efLAce, efRAce;
 			int g{1};
 
-
-			std::string walkThisDir = "can move either forward or backward";
-
 			Eigen::Matrix3d ltRotW, rtRotW;
 
 			Eigen::Matrix3d initRotL, initRotR;
@@ -121,8 +118,11 @@ namespace lipm_walking
 			Eigen::Matrix3d relaxRotL, relaxRotR;
 			Eigen::Vector3d relaxPosL, relaxPosR;
 
-			Eigen::Vector3d bodyPosR, bodyPosS;
-			double bodiesDiffX{0.0};
+			Eigen::Vector3d bodyPosR, bodyPosS, subjHeadPos0, subjHeadPos1, subjHeadVel;
+			double Xmax{0.8};
+			double ID{0.0}; //interpersonal distance
+			std::string stepSize;
+			std::string walkThisDir = "can move either forward or backward";
 
 			/*offsets for robot grippers to grasp object*/
 			double objLen;
