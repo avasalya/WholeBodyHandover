@@ -1,6 +1,5 @@
 {
-	// "initial_plan": "ashibumi",
-	"initial_plan": "forward_20cm_steps",
+	"initial_plan": "ashibumi",
 	"mpc":
 	{
 		"weights":
@@ -182,8 +181,7 @@
 		},
 
 
-
-		"HANDOVER_fwd_10cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_fwd_10cm":
 		{
 			"double_support_duration": 0.1,
 			"single_support_duration": 0.7,
@@ -198,7 +196,7 @@
 		},
 
 
-		"HANDOVER_back_10cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_back_10cm":
 		{
 			"double_support_duration": 0.2,
 			"single_support_duration": 0.8,
@@ -213,7 +211,7 @@
 		},
 
 
-		"HANDOVER_fwd_20cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_fwd_20cm":
 		{
 			"double_support_duration": 0.1,
 			"single_support_duration": 0.7,
@@ -228,7 +226,7 @@
 		},
 
 
-		"HANDOVER_back_20cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_back_20cm":
 		{
 			"double_support_duration": 0.2,
 			"single_support_duration": 0.8,
@@ -243,7 +241,7 @@
 		},
 
 
-		"HANDOVER_fwd_30cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_fwd_30cm":
 		{
 			"double_support_duration": 0.1,
 			"single_support_duration": 0.7,
@@ -258,7 +256,7 @@
 		},
 
 
-		"HANDOVER_back_30cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_back_30cm":
 		{
 			"double_support_duration": 0.2,
 			"single_support_duration": 0.8,
@@ -274,7 +272,7 @@
 
 
 
-		"HANDOVER_fwd_40cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_fwd_40cm":
 		{
 			"double_support_duration": 0.1,
 			"single_support_duration": 0.7,
@@ -289,7 +287,7 @@
 		},
 
 
-		"HANDOVER_back_40cm_in_1stepCycle":
+		"HANDOVER_1stepCycle_back_40cm":
 		{
 			"double_support_duration": 0.2,
 			"single_support_duration": 0.8,
@@ -789,15 +787,16 @@
 
 	"triggerWalk" : false,
 
-	// "StepBack": false,
-	// "StepFwd": false,
-
 	"transitions":
 	[
-		// ["Initial", "Standing", "Standing"],
-		// ["Standing", "walkingHandover", "walkingHandover"],
-
 		["Initial", "walkingHandover", "walkingHandover"],
+
+
+		["Initial",       "Standing",      "Standing"],
+		["Standing",      "DoubleSupport", "DoubleSupport"],
+		["DoubleSupport", "SingleSupport", "SingleSupport"],
+		["DoubleSupport", "Standing",      "Standing"],
+		["SingleSupport", "DoubleSupport", "DoubleSupport"]
 	],
 
 	// Disable floating-base update from MCGlobalController

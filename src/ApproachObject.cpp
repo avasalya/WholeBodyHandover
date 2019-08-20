@@ -92,11 +92,9 @@ namespace lipm_walking
 			else
 			{
 				checkNonZero = false;
-				// LOG_ERROR("return false " << checkNonZero)
 				return false;
 			}
 		}
-		// LOG_SUCCESS("return true or false ? " << checkNonZero)
 		return checkNonZero;
 	}
 
@@ -111,8 +109,6 @@ namespace lipm_walking
 		/*check for non zero frame only and store them*/
 		if( checkFrameOfData(Markers) )
 		{
-			// LOG_SUCCESS("Handover run GO")
-
 			i+=1;
 			for(int m=0; m<totalMarkers; m++)
 				{ markersPos[m].col(i) << Markers[m]; }
@@ -335,9 +331,7 @@ namespace lipm_walking
 		{
 			handoverPos = offsetPos;
 			// if(i%300 == 0)
-			// {
-				// LOG_ERROR(Xmax << "   handoverPos   " << handoverPos(0))
-			// }
+			// { LOG_ERROR(Xmax << "   handoverPos   " << handoverPos(0)) }
 		}
 
 		/*robot constraint*/
@@ -361,7 +355,6 @@ namespace lipm_walking
 		// 	posTask->position(new_pose.translation());
 		// 	// LOG_ERROR(GlobalAvgVelSubjNorm << " GlobalAvgVelSubjNorm ")
 		// }
-
 	}
 
 

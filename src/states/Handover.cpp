@@ -191,6 +191,8 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_elapsed_t8",[this]() -> double { return approachObj->t8; });
 				ctl.logger().addLogEntry("HANDOVER_elapsed_t9",[this]() -> double { return approachObj->t9; });
 
+				ctl.logger().addLogEntry("HANDOVER_objAboveWaist",[this]() -> double { return objAboveWaist; });
+
 				ctl.logger().addLogEntry("HANDOVER_Trials_hr-success",[this]() -> double { return approachObj->count_hr_success; });
 				ctl.logger().addLogEntry("HANDOVER_Trials_hr-fail",[this]() -> double { return approachObj->count_hr_fail; });
 
@@ -237,12 +239,13 @@ namespace lipm_walking
 				ctl.gui()->addElement({"Handover", "tuner"},
 					mc_rtc::gui::ArrayInput("t_predict/t_observe", {"t_predict", "t_observe", "it"},
 						[this]() { return approachObj->tuner; },
-						[this](const Eigen::Vector3d & to){approachObj->tuner = to;cout<< "t_predict = " << approachObj->tuner(0)*1/fps<< "sec, t_observe = "<<approachObj->tuner(1)*1/fps<< "sec"<<endl;}));
+						[this](const Eigen::Vector3d & to){approachObj->tuner = to;cout<< "t_predict = " << approachObj->tuner(0)*1/fps<< "sec, t_observe = "<<approachObj->tuner(1)*1/fps<< "sec"<<endl;}),
 
-				/*restart mocapStep*/
-				ctl.gui()->addElement({"Handover", "Restart"},
-					mc_rtc::gui::Button("restartHandover",
-						[this]() { restartEverything = true; }));
+					mc_rtc::gui::NumberInput("subject waist height",
+						[this]() { return objAboveWaist; },
+						[this](double waist)
+						{	objAboveWaist = waist;
+						cout << "current subject waist height is " << objAboveWaist << endl; }));
 
 				/*add remove contact*/
 				ctl.gui()->addElement({"Handover", "Contacts"},
@@ -290,6 +293,13 @@ namespace lipm_walking
 					})
 
 					);
+
+				/*restart mocapStep*/
+				ctl.gui()->addElement({"Handover", "Restart"},
+					mc_rtc::gui::Button("restartHandover",
+						[this]() { restartEverything = true; }),
+					mc_rtc::gui::Button("Kill above restartHandover",
+						[this]() { restartEverything = false; }));
 
 				/*reset robot pose*/
 				ctl.gui()->addElement({"Handover", "Reset Pose"},
@@ -396,7 +406,10 @@ namespace lipm_walking
 
 								stepFwd = false;
 								stepBack = true;
-								ctl.loadFootstepPlan("HANDOVER_fwd_30cm_in_1stepCycle");
+
+								stepSize = "30";
+								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
+								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
@@ -421,7 +434,10 @@ namespace lipm_walking
 
 								stepBack = false;
 								stepFwd = true;
-								ctl.loadFootstepPlan("HANDOVER_back_30cm_in_1stepCycle");
+
+								stepSize = "30";
+								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
@@ -434,7 +450,7 @@ namespace lipm_walking
 
 							if(stepFwd)
 							{
-								walkThisDir  = "Backward only";
+								walkThisDir  = "only BACKWARD allowed";
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
@@ -447,7 +463,10 @@ namespace lipm_walking
 
 								stepFwd = false;
 								stepBack = true;
-								ctl.loadFootstepPlan("HANDOVER_fwd_40cm_in_1stepCycle");
+
+								stepSize = "40";
+								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
+								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
@@ -459,7 +478,7 @@ namespace lipm_walking
 
 							if(stepBack)
 							{
-								walkThisDir  = "Forward only";
+								walkThisDir  = "only FORWARD allowed";
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
@@ -472,7 +491,10 @@ namespace lipm_walking
 
 								stepBack = false;
 								stepFwd = true;
-								ctl.loadFootstepPlan("HANDOVER_back_40cm_in_1stepCycle");
+
+								stepSize = "40";
+								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}));
@@ -514,10 +536,10 @@ namespace lipm_walking
 			auto & ctl = controller();
 			auto & pendulum_ = ctl.pendulum();
 
-    		ctl.triggerState = 1;
+			ctl.triggerState = 1;
 
-    		relaxPosL << relaxPos(0,3);
-    		relaxPosR << relaxPos(3,3);
+			relaxPosL << relaxPos(0,3);
+			relaxPosR << relaxPos(3,3);
 
 			/*relative to pelvis*/
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
@@ -542,8 +564,6 @@ namespace lipm_walking
 
 			// X_desOri_efR = X_relOri_efR * X_0_rel; oriTaskR->orientation( X_desOri_efR.rotation() );
 			// // oriTaskR->orientation( objEfTask->get_ef_pose().rotation() );
-
-
 
 
 
@@ -593,7 +613,6 @@ namespace lipm_walking
 
 			leftForceSurf = ctl.robot().surfaceWrench("InternLeftHand").force();
 			rightForceSurf = ctl.robot().surfaceWrench("InternRightHand").force();
-
 
 
 			/*robot object contacts*/
@@ -692,21 +711,6 @@ namespace lipm_walking
 				bodyPosR = X_0_rel.translation();
 				bodyPosS = approachObj->headPos;
 				ID = bodyPosS(0)-bodyPosR(0);
-
-				// runCount+=1;
-				// if(runCount % 199 == 0)
-				// {
-				// 	subjHeadPos0 << approachObj->headPos;
-				// }
-				// if(runCount % 399 == 0)
-				// {
-				// 	runCount=0;
-
-				// 	subjHeadPos1 << approachObj->headPos;
-
-				// 	subjHeadVel << (subjHeadPos1 - subjHeadPos0)/0.005;
-				// 	// LOG_INFO("at 400 subjHeadVel " << subjHeadVel.norm())
-				// }
 
 
 				auto robotRtHandOnObj = [&]()-> sva::PTransformd
@@ -898,7 +902,8 @@ namespace lipm_walking
 				{
 					if(approachObj->Flag_walk)
 					{
-						if(approachObj->walkFwd)
+						/*when subject carries object above his/her waist*/
+						if(approachObj->walkFwd && (approachObj->objectPosC(2) >= objAboveWaist) )
 						{
 							if( (ID < 1.8) && (ID >= 1.65) )
 							{
@@ -921,7 +926,7 @@ namespace lipm_walking
 								Xmax = 0.80 +  .10 + 0.1; //0.1 as offset
 							}
 
-							std::string walkPlan = "HANDOVER_fwd_" + stepSize + "cm_in_1stepCycle";
+							walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
 							ctl.loadFootstepPlan(walkPlan);
 							ctl.config().add("triggerWalk", true);
 							approachObj->walkFwd = false;
@@ -929,7 +934,7 @@ namespace lipm_walking
 
 						if( approachObj->walkBack)
 						{
-							std::string walkPlan = "HANDOVER_back_" + stepSize + "cm_in_1stepCycle";
+							walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
 							ctl.loadFootstepPlan(walkPlan);
 							ctl.config().add("triggerWalk", true);
 							approachObj->walkBack = false;
@@ -938,17 +943,16 @@ namespace lipm_walking
 					else
 					{
 						Xmax = 0.8;
-						cout<< "should not be here\n";
 					}
 
 
 					if(approachObj->subjHasObject)
 					{
-						updateOffsetPosL = X_M_offsetL.translation() /*+ X_0_rel.translation()*/;
+						updateOffsetPosL = X_M_offsetL.translation();
 						approachObj->goToHandoverPose(Xmax, -0.15, 0.75, approachObj->enableHand, ltPosW, posTaskL, oriTaskL, approachObj->lHandPredict, updateOffsetPosL);
 
 
-						updateOffsetPosR = X_M_offsetR.translation() /*+ X_0_rel.translation()*/;
+						updateOffsetPosR = X_M_offsetR.translation();
 						approachObj->goToHandoverPose(Xmax, -0.75, 0.15, approachObj->enableHand, rtPosW, posTaskR, oriTaskR, approachObj->rHandPredict, updateOffsetPosR);
 					}
 					else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
@@ -958,7 +962,7 @@ namespace lipm_walking
 							// robotLtHandOnObj();
 							// updateOffsetPosL = X_M_offsetL.translation();
 
-							updateOffsetPosL = approachObj->fingerPosR; /*+ X_0_rel.translation();*/
+							updateOffsetPosL = approachObj->fingerPosR;
 
 							approachObj->goToHandoverPose(Xmax, -0.15, 0.75, approachObj->enableHand, ltPosW, posTaskL, oriTaskL, approachObj->lHandPredict, updateOffsetPosL);
 						}
@@ -967,7 +971,7 @@ namespace lipm_walking
 							// robotRtHandOnObj();
 							// updateOffsetPosR = X_M_offsetR.translation();
 
-							updateOffsetPosR = approachObj->fingerPosL; /*+ X_0_rel.translation()*/;
+							updateOffsetPosR = approachObj->fingerPosL;
 
 							approachObj->goToHandoverPose(Xmax, -0.75, 0.15, approachObj->enableHand, rtPosW, posTaskR, oriTaskR, approachObj->rHandPredict, updateOffsetPosR);
 						}
@@ -1028,7 +1032,6 @@ namespace lipm_walking
 				ctl.removeContact({"hrp2_drc", "handoverObjects", "RightGripper", "handoverPipe"});
 				ctl.removeContact({"hrp2_drc", "handoverObjects", "LeftGripper", "handoverPipe"});
 
-
 				relaxPosL << 0.20, 0.35, 0.8;
 				relaxPosR << 0.20, -0.35, 0.8;
 
@@ -1085,22 +1088,20 @@ namespace lipm_walking
 
 					/*reset head*/
 					ctl.solver().removeTask(headTask);
-					headTask.reset(new mc_tasks::LookAtTask("HEAD_LINK1", headVector, headTarget, ctl.robots(), ctl.robots().robotIndex(), 2., 500.));
+					headTask.reset(new mc_tasks::LookAtTask(
+						"HEAD_LINK1", headVector, headTarget, ctl.robots(), ctl.robots().robotIndex(), 2., 500.));
 					ctl.solver().addTask(headTask);
 					headTask->selectActiveJoints(ctl.solver(), activeJointsName);
 
 
-					/*move back to (0,0,0)*/
+					/*move feets back to X(0)*/
 					if(X_0_rel.translation()(0) > 0.0)
 					{
-						ctl.loadFootstepPlan("HANDOVER_back_15cm_steps_30cm_dist");
+						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+						ctl.loadFootstepPlan(walkPlan);
 						ctl.config().add("triggerWalk", true);
 					}
-					else if(X_0_rel.translation()(0) < 0.0)
-					{
-						ctl.loadFootstepPlan("HANDOVER_fwd_15cm_steps_30cm_dist");
-						ctl.config().add("triggerWalk", true);
-					}
+
 
 					approachObj->enableHand = true;
 
@@ -1110,7 +1111,6 @@ namespace lipm_walking
 
 					bodyPosR = Eigen::Vector3d::Zero();
 					bodyPosS = Eigen::Vector3d::Zero();
-					subjHeadVel = Eigen::Vector3d::Zero();
 
 					ID = 0.0;
 					approachObj->walkFwd = false;
@@ -1160,16 +1160,21 @@ namespace lipm_walking
 
 					cout<<"\033[1;33m***handover fresh start***\033[0m\n";
 				}
+
+				stepFwd = true;
+				stepBack = true;
+
+				if(ctl.isLastSSP())
+				{
+					posTaskL->position(initPosL + X_0_rel.translation());
+					posTaskR->position(initPosR + X_0_rel.translation());
+
+					LOG_WARNING("Go to  'Reset Pose'  column and set arms to half-set")
+
+					restartEverything = false;
+				}
+
 			} // restartEverything
-
-			if(ctl.isLastSSP() && restartEverything)
-			{
-				/*ef pos*/
-				posTaskL->position(initPosL + X_0_rel.translation());
-				posTaskR->position(initPosR + X_0_rel.translation());
-				restartEverything = false;
-			}// move feet to origin
-
 		}// runState
 
 
