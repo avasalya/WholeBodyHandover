@@ -52,7 +52,7 @@ namespace lipm_walking
     Eigen::VectorXd biasVector = Eigen::VectorXd::Zero(6);
     initState_ = Eigen::VectorXd::Zero(6);
     previewSystem_ = std::make_shared<copra::PreviewSystem>(
-        stateMatrix, inputMatrix, biasVector, initState_, NB_STEPS);
+        stateMatrix, inputMatrix, biasVector, initState_, 16);
     LOG_SUCCESS("Initialized new ModelPredictiveControl solver");
   }
 
@@ -136,21 +136,21 @@ namespace lipm_walking
     unsigned nbStepsSoFar = 0;
     nbInitSupportSteps_ = std::min(
         static_cast<unsigned>(std::round(initSupportDuration / T)),
-        NB_STEPS - nbStepsSoFar);
+        16 - nbStepsSoFar);
     nbStepsSoFar += nbInitSupportSteps_;
     nbDoubleSupportSteps_ = std::min(
         static_cast<unsigned>(std::round(doubleSupportDuration / T)),
-        NB_STEPS - nbStepsSoFar);
+        16 - nbStepsSoFar);
     nbStepsSoFar += nbDoubleSupportSteps_;
     nbTargetSupportSteps_ = std::min(
         static_cast<unsigned>(std::round(targetSupportDuration / T)),
-        NB_STEPS - nbStepsSoFar);
+        16 - nbStepsSoFar);
     nbStepsSoFar += nbTargetSupportSteps_;
     if (nbTargetSupportSteps_ > 0) // full preview
     {
-      nbNextDoubleSupportSteps_ = NB_STEPS - nbStepsSoFar; // always positive
+      nbNextDoubleSupportSteps_ = 16 - nbStepsSoFar; // always positive
     }
-    for (long i = 0; i <= NB_STEPS; i++)
+    for (long i = 0; i <= 16; i++)
     {
       // NB: SSP constraint is enforced at the very first step of DSP
       if (i < nbInitSupportSteps_ || (0 < i && i == nbInitSupportSteps_))
@@ -193,7 +193,7 @@ namespace lipm_walking
     {
       p_1 = 0.5 * (initContact_.anklePos() + targetContact_.anklePos()).head<2>();
     }
-    for (long i = 0; i <= NB_STEPS; i++)
+    for (long i = 0; i <= 16; i++)
     {
       if (indexToHrep_[i] <= 1)
       {
@@ -214,8 +214,8 @@ namespace lipm_walking
 
   void ModelPredictiveControl::updateTerminalConstraint()
   {
-    Eigen::MatrixXd E_dcm = Eigen::MatrixXd::Zero(2, STATE_SIZE * (NB_STEPS + 1));
-    Eigen::MatrixXd E_zmp = Eigen::MatrixXd::Zero(2, STATE_SIZE * (NB_STEPS + 1));
+    Eigen::MatrixXd E_dcm = Eigen::MatrixXd::Zero(2, STATE_SIZE * (16 + 1));
+    Eigen::MatrixXd E_zmp = Eigen::MatrixXd::Zero(2, STATE_SIZE * (16 + 1));
     if (nbTargetSupportSteps_ < 1) // half preview
     {
       unsigned i = nbInitSupportSteps_ + nbDoubleSupportSteps_;
@@ -240,7 +240,7 @@ namespace lipm_walking
     //hreps_[1] = getDoubleSupportHrep(initContact_, targetContact_);
     //hreps_[3] = getDoubleSupportHrep(targetContact_, nextContact_);
     unsigned totalRows = 0;
-    for (long i = 0; i <= NB_STEPS; i++)
+    for (long i = 0; i <= 16; i++)
     {
       unsigned hrepIndex = indexToHrep_[i];
       if (hrepIndex % 2 == 0)
@@ -249,11 +249,11 @@ namespace lipm_walking
         totalRows += static_cast<unsigned>(hrep.first.rows());
       }
     }
-    Eigen::MatrixXd A{totalRows, STATE_SIZE * (NB_STEPS + 1)};
+    Eigen::MatrixXd A{totalRows, STATE_SIZE * (16 + 1)};
     Eigen::VectorXd b{totalRows};
     A.setZero();
     long nextRow = 0;
-    for (long i = 0; i <= NB_STEPS; i++)
+    for (long i = 0; i <= 16; i++)
     {
       unsigned hrepIndex = indexToHrep_[i];
       if (hrepIndex % 2 == 0)
@@ -291,7 +291,7 @@ namespace lipm_walking
     }
     Eigen::Matrix2d R;
     Eigen::Vector2d v;
-    for (long i = 0; i <= NB_STEPS; i++)
+    for (long i = 0; i <= 16; i++)
     {
       if (indexToHrep_[i] <= 1)
       {
@@ -375,14 +375,13 @@ namespace lipm_walking
   {
     constexpr double SAMPLING_PERIOD = ModelPredictiveControl::SAMPLING_PERIOD;
     constexpr unsigned INPUT_SIZE = ModelPredictiveControl::INPUT_SIZE;
-    constexpr unsigned NB_STEPS = ModelPredictiveControl::NB_STEPS;
     constexpr unsigned STATE_SIZE = ModelPredictiveControl::STATE_SIZE;
   }
 
   ModelPredictiveControlSolution::ModelPredictiveControlSolution(const Eigen::VectorXd & initState)
   {
-    jerkTraj_ = Eigen::VectorXd::Zero(NB_STEPS * INPUT_SIZE);
-    stateTraj_ = Eigen::VectorXd::Zero((NB_STEPS + 1) * STATE_SIZE);
+    jerkTraj_ = Eigen::VectorXd::Zero(16 * INPUT_SIZE);
+    stateTraj_ = Eigen::VectorXd::Zero((16 + 1) * STATE_SIZE);
     stateTraj_.head<STATE_SIZE>() = initState;
   }
 
@@ -398,11 +397,11 @@ namespace lipm_walking
 
   void ModelPredictiveControlSolution::integrate(Pendulum & pendulum, double dt)
   {
-    if (playbackStep_ < NB_STEPS)
+    if (playbackStep_ < 16)
     {
       integratePlayback(pendulum, dt);
     }
-    else // (playbackStep_ >= NB_STEPS)
+    else // (playbackStep_ >= 16)
     {
       integratePostPlayback(pendulum, dt);
     }
@@ -424,7 +423,7 @@ namespace lipm_walking
   void ModelPredictiveControlSolution::integratePostPlayback(Pendulum & pendulum, double dt)
   {
     Eigen::Vector3d comddd;
-    Eigen::VectorXd lastState = stateTraj_.segment<STATE_SIZE>(STATE_SIZE * NB_STEPS);
+    Eigen::VectorXd lastState = stateTraj_.segment<STATE_SIZE>(STATE_SIZE * 16);
     Eigen::Vector2d comd_f = lastState.segment<2>(2);
     Eigen::Vector2d comdd_f = lastState.segment<2>(4);
     if (std::abs(comd_f.x() * comdd_f.y() - comd_f.y() * comdd_f.x()) > 1e-4)

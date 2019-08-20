@@ -44,8 +44,8 @@ project(${PROJECT_NAME} CXX)  # because setup_project() is not called
 
 # Enable C++14
 if(NOT WIN32)
-  add_definitions(-std=c++14)
-#   add_definitions(-std=c++11)
+ # add_definitions(-std=c++14)
+   add_definitions(-std=c++11)
 endif()
 
 # Use jrl-cmakemodules to get mc_rtc depency
