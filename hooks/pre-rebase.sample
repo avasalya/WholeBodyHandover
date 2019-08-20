@@ -58,7 +58,11 @@ then
 	not_in_topic=`git rev-list "^$topic" master`
 	if test -z "$not_in_topic"
 	then
+<<<<<<< HEAD
 		echo >&2 "$topic is already up-to-date with master"
+=======
+		echo >&2 "$topic is already up to date with master"
+>>>>>>> 71f840f96d8fa92171704bbf73ee842f39607517
 		exit 1 ;# we could allow it, but there is no point.
 	else
 		exit 0
