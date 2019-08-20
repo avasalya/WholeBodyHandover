@@ -36,7 +36,10 @@ macro(add_fsm_state_simple state_name)
 endmacro()
 
 add_subdirectory(cortex)
+
 find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge)
+# find_package(catkin REQUIRED COMPONENTS cortex_ros_bridge)
+
 include_directories(${catkin_INCLUDE_DIRS})
 add_fsm_state_simple(Handover)
 target_link_libraries(Handover cortex_sdk pthread m)
