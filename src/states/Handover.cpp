@@ -205,6 +205,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_bodyPosRobot",[this]() -> Eigen::Vector3d { return bodyPosR; });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosSubj",[this]() -> Eigen::Vector3d { return bodyPosS; });
 				ctl.logger().addLogEntry("HANDOVER_interPersonalDist_X",[this]() -> double { return ID; });
+				ctl.logger().addLogEntry("HANDOVER_stepSize",[this]() -> double { return logStepSize; });
 			}
 
 			if(Flag_HandoverGUI)
@@ -408,6 +409,7 @@ namespace lipm_walking
 								stepBack = true;
 
 								stepSize = "30";
+								logStepSize = 30;
 								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
 								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
@@ -436,6 +438,7 @@ namespace lipm_walking
 								stepFwd = true;
 
 								stepSize = "30";
+								logStepSize = 30;
 								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
 								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
@@ -465,6 +468,7 @@ namespace lipm_walking
 								stepBack = true;
 
 								stepSize = "40";
+								logStepSize = 40;
 								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
 								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
@@ -493,6 +497,7 @@ namespace lipm_walking
 								stepFwd = true;
 
 								stepSize = "40";
+								logStepSize = 40;
 								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
 								ctl.loadFootstepPlan(walkPlan);
 								ctl.config().add("triggerWalk", true);
@@ -906,21 +911,25 @@ namespace lipm_walking
 							if( (ID < 1.8) && (ID >= 1.65) )
 							{
 								stepSize = "40";
+								logStepSize = 40;
 								Xmax = 0.80 +  .40 + 0.1; //0.1 as offset
 							}
 							if( (ID < 1.65) && (ID >= 1.50) )
 							{
 								stepSize = "30";
+								logStepSize = 30;
 								Xmax = 0.80 +  .30 + 0.1; //0.1 as offset
 							}
 							if( (ID < 1.50) && (ID >= 1.35) )
 							{
 								stepSize = "20";
+								logStepSize = 20;
 								Xmax = 0.80 +  .20 + 0.1; //0.1 as offset
 							}
 							if( (ID < 1.35) && (ID >= 1.20) )
 							{
 								stepSize = "10";
+								logStepSize = 10;
 								Xmax = 0.80 +  .10 + 0.1; //0.1 as offset
 							}
 
@@ -998,9 +1007,9 @@ namespace lipm_walking
 				{
 					/* start only if object is within robot constraint space*/
 					if( (!approachObj->startNow) &&
-						(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 1.8) &&
-						(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 1.8) &&
-						(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 1.8) )
+						(approachObj->objectPosC(0) > 1.6) && (approachObj->objectPosC(0) < 1.8) &&
+						(approachObj->fingerPosL(0) > 1.6) && (approachObj->fingerPosL(0) < 1.8) &&
+						(approachObj->fingerPosR(0) > 1.6) && (approachObj->fingerPosR(0) < 1.8) )
 					{
 						approachObj->startNow = true;
 						approachObj->walkFwd = true;
