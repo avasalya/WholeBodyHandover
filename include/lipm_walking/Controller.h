@@ -63,7 +63,7 @@ namespace lipm_walking
    */
   struct MC_CONTROL_DLLAPI Controller : public mc_control::fsm::Controller
   {
-    /** Initialization of the controller.
+    /** Initialization of the controller. 
      *
      * \param robot Robot model.
      *
@@ -352,8 +352,5 @@ namespace lipm_walking
     std::string segmentName_ = "";
     unsigned nbLogSegments_ = 100;
     unsigned nbMPCFailures_ = 0;
-
-    public:
-    double triggerState = 0;
   };
 }

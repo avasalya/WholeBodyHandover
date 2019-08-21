@@ -23,8 +23,6 @@
 
 #include <lipm_walking/Stabilizer.h>
 #include <lipm_walking/utils/clamp.h>
-#include <lipm_walking/Controller.h>
-
 
 namespace lipm_walking
 {
@@ -38,9 +36,8 @@ namespace lipm_walking
     }
   }
 
-  Stabilizer::Stabilizer(Controller & ctl, const mc_rbdyn::Robot & controlRobot, const Pendulum & pendulum, double dt)
+  Stabilizer::Stabilizer(const mc_rbdyn::Robot & controlRobot, const Pendulum & pendulum, double dt)
     : dcmIntegrator_(dt, /* timeConstant = */ 5.),
-      controller_(ctl),
       pendulum_(pendulum),
       controlRobot_(controlRobot),
       dt_(dt),
@@ -348,18 +345,6 @@ namespace lipm_walking
     footTask->setGains(contactStiffness_, contactDamping_);
     footTask->targetPose(contact.pose);
     footTask->weight(contactWeight_);
-
-    auto & robot = controller_.robot();
-    auto & env = controller_.env();
-    Eigen::Vector6d dof = Eigen::Vector6d::Ones();
-    /** Allow roll/pitch rotation and z translation in the contact frame */
-    dof(0) = 0; dof(1) = 0; dof(5) = 0;
-    mc_control::fsm::Contact c{robot.name(), env.name(), footTask->surface(), "AllGround", dof};
-    if(!controller_.hasContact(c))
-    {
-      controller_.addContact(c);
-    }
-
     if (footTask->surface() == "LeftFootCenter")
     {
       leftFootContact = contact;
@@ -376,10 +361,6 @@ namespace lipm_walking
 
   void Stabilizer::setSwingFoot(std::shared_ptr<mc_tasks::force::CoPTask> footTask)
   {
-    auto & robot = controller_.robot();
-    auto & env = controller_.env();
-    controller_.removeContact({robot.name(), env.name(), footTask->surface(), "AllGround"});
-
     footTask->reset();
     footTask->stiffness(swingFootStiffness_); // sets damping as well
     footTask->weight(swingFootWeight_);

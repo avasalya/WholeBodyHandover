@@ -30,16 +30,11 @@
 #include <lipm_walking/Sole.h>
 #include <lipm_walking/defs.h>
 #include <lipm_walking/utils/LeakyIntegrator.h>
-#include <lipm_walking/utils/clamp.h>
 #include <lipm_walking/utils/rotations.h>
 #include <lipm_walking/utils/stats.h>
 
 namespace lipm_walking
 {
-
-   struct Controller;
-
-
   /** Walking stabilization based on linear inverted pendulum tracking.
    *
    * Stabilization bridges the gap between the open-loop behavior of the
@@ -61,10 +56,10 @@ namespace lipm_walking
 
     /* Maximum gains for HRP4LIRMM in standing static equilibrium. */
     static constexpr double MAX_COM_ADMITTANCE = 20;
-    static constexpr double MAX_COP_ADMITTANCE = 0.05;
-    static constexpr double MAX_DCM_I_GAIN = 20.;
+    static constexpr double MAX_COP_ADMITTANCE = 0.1;
+    static constexpr double MAX_DCM_I_GAIN = 30.;
     static constexpr double MAX_DCM_P_GAIN = 10.;
-    static constexpr double MAX_DFZ_ADMITTANCE = 1.75e-4;
+    static constexpr double MAX_DFZ_ADMITTANCE = 5e-4;
     static constexpr double MAX_ZMP_GAIN = 20.;
 
     /* Avoid low-pressure targets too close to contact switches */
@@ -78,12 +73,12 @@ namespace lipm_walking
      *
      * \param robot Robot model.
      *
-     * \param pendulum CoM state reference placeholder.
+     * \param ref CoM state reference placeholder.
      *
      * \param dt Controller timestep.
      *
      */
-    Stabilizer(Controller & ctl, const mc_rbdyn::Robot & robot, const Pendulum & pendulum, double dt);
+    Stabilizer(const mc_rbdyn::Robot & robot, const Pendulum & ref, double dt);
 
     /** Add GUI panel.
      *
@@ -172,7 +167,7 @@ namespace lipm_walking
     /** Configure foot task for contact at a given location.
      *
      * \param footTask One of leftFootTask or rightFootTask.
-     *
+     * 
      * \param contact Target contact location.
      *
      */
@@ -441,9 +436,6 @@ namespace lipm_walking
     LeakyIntegrator zmpccIntegrator_;
     bool inTheAir_ = false; /**< Is the robot in the air? */
     bool zmpccOnlyDS_ = true;
-
-    Controller & controller_;
-
     const Pendulum & pendulum_; /**< Reference to desired reduced-model state */
     const mc_rbdyn::Robot & controlRobot_; /**< Control robot model (input to joint position controllers) */
     double comWeight_ = 1000.; /**< Weight of CoM IK task */

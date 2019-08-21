@@ -536,8 +536,6 @@ namespace lipm_walking
 			auto & ctl = controller();
 			auto & pendulum_ = ctl.pendulum();
 
-			ctl.triggerState = 1;
-
 			relaxPosL << relaxPos(0,3);
 			relaxPosR << relaxPos(3,3);
 

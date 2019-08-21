@@ -330,8 +330,6 @@ namespace lipm_walking
   {
     auto & ctl = controller();
 
-    ctl.triggerState = 2;
-
     if (ctl.isLastSSP())
     {
       LOG_ERROR("No footstep in contact plan");

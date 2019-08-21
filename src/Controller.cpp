@@ -32,7 +32,7 @@ namespace lipm_walking
       floatingBaseObs_(controlRobot()),
       comVelFilter_(dt, /* cutoff period = */ 0.01),
       netWrenchObs_(),
-      stabilizer_(*this, controlRobot(), pendulum_, dt)
+      stabilizer_(controlRobot(), pendulum_, dt)
   {
     std::string robotName = controlRobot().name();
 
@@ -220,8 +220,6 @@ namespace lipm_walking
     logger.addLogEntry("realRobot_posW", [this]() { return realRobot().posW(); });
     logger.addLogEntry("realRobot_wrench", [this]() { return netWrenchObs_.wrench(); });
     logger.addLogEntry("realRobot_zmp", [this]() { return netWrenchObs_.zmp(); });
-
-    logger.addLogEntry("HANDOVER_StandingStatesSwitch",[this]() { return triggerState; });
   }
 
   void Controller::addGUIElements(std::shared_ptr<mc_rtc::gui::StateBuilder> gui)
