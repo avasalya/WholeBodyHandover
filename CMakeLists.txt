@@ -18,25 +18,15 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-#set(ROS_BUILD_TYPE Debug) # remove for Release
-#set(CXX_DISABLE_WERROR 1)
-
 set(CMAKE_CXX_FLAGS "-pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/base.cmake)
 include(cmake/boost.cmake)
 
-
-# set(PROJECT_NAME handovercontroller)
-# set(PROJECT_DESCRIPTION "human-robot tool handover controller for mc_rtc")
-# set(PROJECT_URL https://gite.lirmm.fr/ashesh/handovercontroller)
-
-
 set(PROJECT_NAME handover_walking_controller)
 set(PROJECT_DESCRIPTION "Handover Controller with Walking controller based on linear inverted pendulum tracking")
 set(PROJECT_URL https://gite.lirmm.fr/ashesh/handovercontroller)
-# set(PROJECT_URL https://github.com/stephane-caron/lipm_walking_controller/)
 
 set(PROJECT_VERSION 1.1.0)
 
@@ -44,8 +34,8 @@ project(${PROJECT_NAME} CXX)  # because setup_project() is not called
 
 # Enable C++14
 if(NOT WIN32)
- # add_definitions(-std=c++14)
-   add_definitions(-std=c++11)
+ add_definitions(-std=c++14)  # on ashesh pc
+#    add_definitions(-std=c++11)  # on robot pc
 endif()
 
 # Use jrl-cmakemodules to get mc_rtc depency

@@ -29,16 +29,14 @@ macro(add_fsm_state state_name state_SRC state_HDR)
   install(FILES ${state_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/mc_control/fsm/states)
 endmacro()
 
-# install(DIRECTORY data DESTINATION ${FSM_STATES_INSTALL_PREFIX} FILES_MATCHING PATTERN "*.json")
-
 macro(add_fsm_state_simple state_name)
   add_fsm_state(${state_name} ${state_name}.cpp ${state_name}.h)
 endmacro()
 
 add_subdirectory(cortex)
 
-#find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge)
- find_package(catkin REQUIRED COMPONENTS cortex_ros_bridge)
+find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge) # on ashesh pc
+#  find_package(catkin REQUIRED COMPONENTS cortex_ros_bridge) # on robot pc
 
 include_directories(${catkin_INCLUDE_DIRS})
 add_fsm_state_simple(Handover)
