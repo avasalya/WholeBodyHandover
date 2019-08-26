@@ -49,6 +49,7 @@ namespace lipm_walking
 	{
 		struct Handover : State
 		{
+			// EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 		public:
 
@@ -66,6 +67,7 @@ namespace lipm_walking
 			bool Flag_HandoverTasks{true};
 			bool Flag_HandoverGUI{true};
 			bool Flag_HandoverLogs{true};
+			bool Flag_Walk{true};//TRUE for walking, else only stabilizer
 
 
 			double pi{3.14};
@@ -109,8 +111,9 @@ namespace lipm_walking
 			Eigen::Vector3d efLAce, efRAce;
 			int g{1};
 
-			Eigen::Matrix3d ltRotW, rtRotW;
+			Eigen::Vector3d fingerPos = Eigen::Vector3d::Zero();
 
+			Eigen::Matrix3d ltRotW, rtRotW;
 			Eigen::Matrix3d initRotL, initRotR;
 			Eigen::Vector3d initPosL, initPosR;
 
@@ -146,6 +149,7 @@ namespace lipm_walking
 			sva::PTransformd X_Obj0_offsetS; // when robot has object
 
 			Eigen::VectorXd thresh = Eigen::VectorXd::Zero(12);
+			Eigen::Vector3d leftTh, rightTh;
 			Eigen::Vector3d leftForce, rightForce;
 			Eigen::Vector3d leftForceSurf, rightForceSurf;
 
@@ -162,13 +166,14 @@ namespace lipm_walking
 			std::vector<std::string> subjMarkersName, robotMarkersName;
 
 
-		public://Cortex_ROS_Bridge
+		public:
 			bool startCapture{false};
 			bool restartEverything{false};
 
 			bool stepFwd;
 			bool stepBack;
 
+		public://Cortex_ROS_Bridge
 			std::shared_ptr<ros::NodeHandle> m_nh_;
 			std::thread m_ros_spinner_;
 			ros::Subscriber l_shape_sub_;

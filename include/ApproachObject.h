@@ -68,9 +68,25 @@ namespace lipm_walking
 			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> handPredict,
 			Eigen::Vector3d offsetPos);
 
-		bool forceController(
+		bool forceControllerIndividual(
 			bool& enableHand,
+			Eigen::Vector3d relaxPos,
+			Eigen::Vector3d initPos,
+			Eigen::Matrix3d initRot,
+			Eigen::Vector3d handForce,
+			Eigen::Vector3d ForceSurf,
+			Eigen::Vector3d thresh,
+			Eigen::Vector3d efAce,
+			std::shared_ptr<mc_tasks::PositionTask>& posTask,
+			std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
+			std::string gripperName,
+			std::vector<std::string> robotMarkersName,
+			std::vector<std::string> lShpMarkersName,
+			double obj_rel_robotHand);
 
+
+		bool forceControllerTogether(
+			bool& enableHand,
 			Eigen::Vector3d initPosR, Eigen::Matrix3d initRotR,
 			Eigen::Vector3d initPosL, Eigen::Matrix3d initRotL,
 			Eigen::Vector3d relaxPosR, Eigen::Matrix3d relaxRotR,
@@ -85,11 +101,12 @@ namespace lipm_walking
 			std::shared_ptr<mc_tasks::OrientationTask>& oriTaskR);
 
 
+
 		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
 
-		bool Flag_prediction{false}; //TRUE otherwise, use fingerPos
+		bool Flag_prediction{false}; //TRUE otherwise, use finger Position
 
-		bool Flag_walk{true};//TRUE for walking, else only stabilizer
+		bool FlAG_INDIVIDUAL{false}; // TRUE for using individual hand, otherwise use both hands together
 
 		bool walkFwd{false};
 		bool walkBack{false};
@@ -128,6 +145,7 @@ namespace lipm_walking
 
 		bool bool_t1{true};
 		bool bool_t6{true};
+		bool rh_fail{true};
 
 
 		double GlobalAvgVelSubjNorm;
@@ -141,7 +159,7 @@ namespace lipm_walking
 		std::vector<std::string> objMarkers, subjRtMarkers, subjLtMarkers, subjMarkers, subjHeadMarkers;
 
 		Eigen::Matrix3d idtMat = Eigen::Matrix3d::Identity();
-
+		Eigen::Matrix3d handRot= idtMat;
 		Eigen::Matrix3d subjLHandRot, subjRHandRot, objRot;
 
 		Eigen::Vector3d gripperEfL, gripperEfR;
@@ -153,6 +171,7 @@ namespace lipm_walking
 		Eigen::Vector3d fingerPosR = Eigen::Vector3d::Zero();
 		Eigen::Vector3d objectPosC = Eigen::Vector3d::Zero();
 		Eigen::Vector3d objectPosCx, objectPosCy;
+
 		sva::PTransformd virObjLeft, virObjRight;
 
 		double finR_rel_efL, finL_rel_efR;
@@ -162,20 +181,6 @@ namespace lipm_walking
 		std::shared_ptr<lipm_walking::HandoverTrajectory> handoverTraj;
 
 		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> lHandPredict, rHandPredict;
-
-		bool addContacts{false};
-		bool removeContacts{false};
-		bool objHasContacts{false};
-
-		bool useLeftEf{false};
-		bool useRightEf{false};
-
-		bool subjHasObject{true};
-		bool robotHasObject{false};
-
-		bool enableHand{true};
-
-		bool pickNearestHand{true};
 
 		bool gOpen{false};
 		bool gClose{false};
@@ -190,8 +195,45 @@ namespace lipm_walking
 
 		bool startNow{false};
 
-	public:
-		double objMass{0.5};
+		double objMass{0.0};
+
+	public: // individual hand
+
+		bool useLtEf{true};
+		bool stopLtEf{true};
+
+		bool useRtEf{true};
+		bool stopRtEf{true};
+
+		bool enableLHand{true};
+		bool enableRHand{true};
+
+		bool pickaHand{false};
+
+		std::vector<double> Floadx, Floady, Floadz;
+		Eigen::Vector3d localSurf_Fzero = Eigen::Vector3d::Zero();
+		Eigen::Vector3d newTh = Eigen::Vector3d::Zero();
+		Eigen::Vector3d Finert = Eigen::Vector3d::Zero();
+		Eigen::Vector3d Fzero = Eigen::Vector3d::Zero();
+		Eigen::Vector3d Fclose = Eigen::Vector3d::Zero();
+		Eigen::Vector3d Fload = Eigen::Vector3d::Zero();
+		Eigen::Vector3d Fpull = Eigen::Vector3d::Zero();
+
+	public: // together hands
+
+		bool addContacts{false};
+		bool removeContacts{false};
+		bool objHasContacts{false};
+
+		bool useLeftEf{false};
+		bool useRightEf{false};
+
+		bool subjHasObject{true};
+		bool robotHasObject{false};
+
+		bool enableHand{true};
+
+		bool pickNearestHand{true};
 
 		std::vector<double> FloadLx, FloadLy, FloadLz;
 		std::vector<double> FloadRx, FloadRy, FloadRz;
