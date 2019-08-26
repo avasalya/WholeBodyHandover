@@ -1087,9 +1087,9 @@ namespace lipm_walking
 						// }
 						if( (ID < 1.50) && (ID >= 1.35) )
 						{
-							stepSize = "20";
-							logStepSize = 20;
-							Xmax = 0.80 +  .20 + 0.1; //0.1 as addition offset
+							stepSize = "10";
+							logStepSize = 10;
+							Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
 						}
 						if( (ID < 1.35) && (ID >= 1.20) )
 						{
@@ -1099,9 +1099,9 @@ namespace lipm_walking
 						}
 						else
 						{
-							stepSize = "20";
+							stepSize = "10";
 							logStepSize = 10;
-							Xmax = 0.80 +  .20 + 0.1; //0.1 as offset
+							Xmax = 0.80 +  .10 + 0.1; //0.1 as offset
 						}
 
 						walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
