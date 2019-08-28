@@ -1283,9 +1283,9 @@ namespace lipm_walking
 				/*TRIGGER HANDOVER ROUTINE*/
 				/* start only if object is within robot constraint space*/
 				if( (!approachObj->startNow) &&
-					(approachObj->objectPosC(0) > 1.5) && (approachObj->objectPosC(0) < 1.8) &&
-					(approachObj->fingerPosL(0) > 1.5) && (approachObj->fingerPosL(0) < 1.8) &&
-					(approachObj->fingerPosR(0) > 1.5) && (approachObj->fingerPosR(0) < 1.8) )
+					(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 1.5) &&
+					(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 1.5) &&
+					(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 1.5) )
 				{
 					if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
 					{
@@ -1297,73 +1297,74 @@ namespace lipm_walking
 
 				// /*CHECK once every prediction cycle*/
 				// if( (approachObj->i)%(approachObj->t_observe) == 0 )
-				// {
-					/*as long as object is within robot's reachable space*/
-					auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
-					if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.5) && (objBody_rel_robotBody >0.1) )
-					{
-						obj_rel_robot();
-					}
-				// }
+				// {}
 
-
-				/*trigger step-walk*/
-				if(Flag_Walk)
+				/*as long as object is within robot's reachable space*/
+				auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
+				if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >0.1) )
 				{
+					obj_rel_robot();
 
-					/*when subject carries object above his/her waist*/
-					if(approachObj->walkFwd)
+					/*trigger step-walk*/
+					if(Flag_Walk)
 					{
-						// if( (ID < 1.8) && (ID >= 1.65) )
-						// {
-						// 	stepSize = "40";
-						// 	logStepSize = 40;
-						// 	Xmax = 0.80 +  .40 + 0.1;
-						// }
-						// if( (ID < 1.65) && (ID >= 1.50) )
-						// {
-						// 	stepSize = "30";
-						// 	logStepSize = 30;
-						// 	Xmax = 0.80 +  .30 + 0.1;
-						// }
-						if( (ID < 1.50) && (ID >= 1.35) )
+
+						/*when subject carries object above his/her waist*/
+						if(approachObj->walkFwd)
 						{
-							stepSize = "10";
-							logStepSize = 10;
-							Xmax = 0.80 +  .10 + 0.1;
-						}
-						if( (ID < 1.35) && (ID >= 1.20) )
-						{
-							stepSize = "10";
-							logStepSize = 10;
-							Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
-						}
-						else
-						{
-							stepSize = "10";
-							logStepSize = 10;
-							Xmax = 0.80 +  .10 + 0.1;
+							// if( (ID < 1.8) && (ID >= 1.65) )
+							// {
+							// 	stepSize = "40";
+							// 	logStepSize = 40;
+							// 	Xmax = 0.80 +  .40 + 0.1;
+							// }
+							// if( (ID < 1.65) && (ID >= 1.50) )
+							// {
+							// 	stepSize = "30";
+							// 	logStepSize = 30;
+							// 	Xmax = 0.80 +  .30 + 0.1;
+							// }
+							if( (ID < 1.50) && (ID >= 1.35) )
+							{
+								stepSize = "10";
+								logStepSize = 10;
+								Xmax = 0.80 +  .10 + 0.1;
+							}
+							if( (ID < 1.35) && (ID >= 1.20) )
+							{
+								stepSize = "10";
+								logStepSize = 10;
+								Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
+							}
+							else
+							{
+								stepSize = "10";
+								logStepSize = 10;
+								Xmax = 0.80 +  .10 + 0.1;
+							}
+
+							walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
+							LOG_ERROR("selected WALK PLAN "<< walkPlan)
+							ctl.loadFootstepPlan(walkPlan);
+							ctl.config().add("triggerWalk", true);
+							approachObj->walkFwd = false;
 						}
 
-						walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
-						LOG_ERROR("selected WALK PLAN "<< walkPlan)
-						ctl.loadFootstepPlan(walkPlan);
-						ctl.config().add("triggerWalk", true);
-						approachObj->walkFwd = false;
+						if( approachObj->walkBack)
+						{
+							walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+							LOG_ERROR("selected WALK PLAN "<< walkPlan)
+							ctl.loadFootstepPlan(walkPlan);
+							ctl.config().add("triggerWalk", true);
+							approachObj->walkBack = false;
+						}
+
+					}
+					else
+					{
+						Xmax = 0.8;
 					}
 
-					if( approachObj->walkBack)
-					{
-						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-						LOG_ERROR("selected WALK PLAN "<< walkPlan)
-						ctl.loadFootstepPlan(walkPlan);
-						ctl.config().add("triggerWalk", true);
-						approachObj->walkBack = false;
-					}
-				}
-				else
-				{
-					Xmax = 0.8;
 				}
 
 			}// handoverRun
