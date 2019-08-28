@@ -40,10 +40,12 @@ using namespace Eigen;
 
 namespace lipm_walking
 {
+	struct Controller;
+
 	struct ApproachObject
 	{
 	public:
-		ApproachObject();
+		ApproachObject(Controller & controller_);
 		~ApproachObject();
 
 		void initials();
@@ -52,7 +54,7 @@ namespace lipm_walking
 
 		bool handoverRun();
 
-		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> predictionController(
+		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d, Eigen::Vector3d> predictionController(
 			const Eigen::Vector3d& curPosEf,
 			const Eigen::Matrix3d & constRotLink6,
 			std::vector<std::string> subjMarkersName);
@@ -65,7 +67,7 @@ namespace lipm_walking
 			Eigen::Vector3d& curPosEf,
 			std::shared_ptr<mc_tasks::PositionTask>& posTask,
 			std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
-			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> handPredict,
+			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d, Eigen::Vector3d> handPredict,
 			Eigen::Vector3d offsetPos);
 
 		bool forceControllerIndividual(
@@ -87,6 +89,7 @@ namespace lipm_walking
 
 		bool forceControllerTogether(
 			bool& enableHand,
+			sva::PTransformd X_0_rel,
 			Eigen::Vector3d initPosR, Eigen::Matrix3d initRotR,
 			Eigen::Vector3d initPosL, Eigen::Matrix3d initRotL,
 			Eigen::Vector3d relaxPosR, Eigen::Matrix3d relaxRotR,
@@ -101,6 +104,8 @@ namespace lipm_walking
 			std::shared_ptr<mc_tasks::OrientationTask>& oriTaskR);
 
 
+	    Controller & ctl;
+
 
 		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
 
@@ -109,8 +114,9 @@ namespace lipm_walking
 		bool FlAG_INDIVIDUAL{false}; // TRUE for using individual hand, otherwise use both hands together
 
 		bool walkFwd{false};
-		bool walkBack{false};
+		bool walkFwdAgain{true};
 
+		bool walkBack{false};
 
 		Eigen::Vector3d tuner;
 
@@ -162,7 +168,17 @@ namespace lipm_walking
 		Eigen::Matrix3d handRot= idtMat;
 		Eigen::Matrix3d subjLHandRot, subjRHandRot, objRot;
 
-		Eigen::Vector3d gripperEfL, gripperEfR;
+		Eigen::Vector3d efLPosOfHandover = Eigen::Vector3d::Zero();
+		Eigen::Vector3d efRPosOfHandover = Eigen::Vector3d::Zero();
+		Eigen::Vector3d hLPosOfHandover  = Eigen::Vector3d::Zero();
+		Eigen::Vector3d hRPosOfHandover  = Eigen::Vector3d::Zero();
+
+		Eigen::Vector3d predictPosL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d predictPosR = Eigen::Vector3d::Zero();
+
+		Eigen::Vector3d gripperEfL = Eigen::Vector3d::Zero();
+		Eigen::Vector3d gripperEfR = Eigen::Vector3d::Zero();
+
 		Eigen::Vector3d gripperLtEfA, gripperRtEfA;
 		Eigen::Vector3d gripperLtEfB, gripperRtEfB;
 
@@ -170,17 +186,19 @@ namespace lipm_walking
 		Eigen::Vector3d fingerPosL = Eigen::Vector3d::Zero();
 		Eigen::Vector3d fingerPosR = Eigen::Vector3d::Zero();
 		Eigen::Vector3d objectPosC = Eigen::Vector3d::Zero();
-		Eigen::Vector3d objectPosCx, objectPosCy;
+		Eigen::Vector3d objectPosCx = Eigen::Vector3d::Zero();
+		Eigen::Vector3d objectPosCy = Eigen::Vector3d::Zero();
 
 		sva::PTransformd virObjLeft, virObjRight;
 
+		double objAboveWaist{0.9};
 		double finR_rel_efL, finL_rel_efR;
 		double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
 		double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;
 
 		std::shared_ptr<lipm_walking::HandoverTrajectory> handoverTraj;
 
-		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d> lHandPredict, rHandPredict;
+		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d, Eigen::Vector3d> lHandPredict, rHandPredict;
 
 		bool gOpen{false};
 		bool gClose{false};
@@ -190,7 +208,7 @@ namespace lipm_walking
 		bool graspObject{true};
 		bool takeBackObject{false};
 
-		bool goBackInit{true};
+		bool goBackInitPose{true};
 		bool restartHandover{false};
 
 		bool startNow{false};

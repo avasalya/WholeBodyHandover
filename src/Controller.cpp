@@ -126,49 +126,49 @@ namespace lipm_walking
 
     selfCollisionConstraint.reset();
     selfCollisionConstraint.addCollisions(solver(), {
-      mc_rbdyn::Collision("LARM_LINK2", "BODY", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK3", "BODY", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK4", "BODY", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK5", "BODY", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK6", "BODY", 0.15, 0.10, 0.),
+      mc_rbdyn::Collision("LARM_LINK2", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK3", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK4", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK5", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK6", "BODY", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("RARM_LINK2", "BODY", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK3", "BODY", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK4", "BODY", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK5", "BODY", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK6", "BODY", 0.1, 0.05, 0.),
+      mc_rbdyn::Collision("RARM_LINK2", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK3", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK4", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK5", "BODY", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK6", "BODY", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("LARM_LINK4", "LLEG_LINK2", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK5", "LLEG_LINK2", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK6", "LLEG_LINK2", 0.15, 0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK7", "LLEG_LINK2", 0.15, 0.10, 0.),
+      mc_rbdyn::Collision("LARM_LINK4", "LLEG_LINK2", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK5", "LLEG_LINK2", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK6", "LLEG_LINK2", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK7", "LLEG_LINK2", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("RARM_LINK4", "RLEG_LINK2", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK5", "RLEG_LINK2", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK6", "RLEG_LINK2", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK7", "RLEG_LINK2", 0.1, 0.05, 0.),
+      mc_rbdyn::Collision("RARM_LINK4", "RLEG_LINK2", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK5", "RLEG_LINK2", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK6", "RLEG_LINK2", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK7", "RLEG_LINK2", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("LARM_LINK2", "CHEST_LINK0", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("LARM_LINK3", "CHEST_LINK0", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("LARM_LINK4", "CHEST_LINK0", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("LARM_LINK5", "CHEST_LINK0", 0.1, 0.05, 0.),
+      mc_rbdyn::Collision("LARM_LINK2", "CHEST_LINK0", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK3", "CHEST_LINK0", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK4", "CHEST_LINK0", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK5", "CHEST_LINK0", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("RARM_LINK2", "CHEST_LINK0", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK3", "CHEST_LINK0", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK4", "CHEST_LINK0", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK5", "CHEST_LINK0", 0.1, 0.05, 0.),
+      mc_rbdyn::Collision("RARM_LINK2", "CHEST_LINK0", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK3", "CHEST_LINK0", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK4", "CHEST_LINK0", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK5", "CHEST_LINK0", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("LARM_LINK4", "CHEST_LINK1", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("LARM_LINK5", "CHEST_LINK1", 0.1, 0.05, 0.),
+      mc_rbdyn::Collision("LARM_LINK4", "CHEST_LINK1", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK5", "CHEST_LINK1", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("RARM_LINK4", "CHEST_LINK1", 0.1, 0.05, 0.),
-      mc_rbdyn::Collision("RARM_LINK5", "CHEST_LINK1", 0.1, 0.05, 0.),
+      mc_rbdyn::Collision("RARM_LINK4", "CHEST_LINK1", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("RARM_LINK5", "CHEST_LINK1", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("LARM_LINK6", "RARM_LINK6", 0.15,0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK7", "RARM_LINK6", 0.15,0.10, 0.),
+      mc_rbdyn::Collision("LARM_LINK6", "RARM_LINK6", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK7", "RARM_LINK6", 0.08, 0.04, 0.),
 
-      mc_rbdyn::Collision("LARM_LINK6", "RARM_LINK7", 0.15,0.10, 0.),
-      mc_rbdyn::Collision("LARM_LINK7", "RARM_LINK7", 0.15,0.10, 0.),
+      mc_rbdyn::Collision("LARM_LINK6", "RARM_LINK7", 0.08, 0.04, 0.),
+      mc_rbdyn::Collision("LARM_LINK7", "RARM_LINK7", 0.08, 0.04, 0.),
     });
     qpsolver->addConstraintSet(selfCollisionConstraint);
 

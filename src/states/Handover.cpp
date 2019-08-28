@@ -12,47 +12,27 @@ namespace lipm_walking
 
 		void states::Handover::cortexCallback(const cortex_ros_bridge_msgs::Markers & msg)
 		{
-			// LOG_WARNING("cortexCallback")
+
 			c = 0;
 			for(unsigned int d=0; d<msg.markers.size(); d++)
 			{
-				if(approachObj->FlAG_INDIVIDUAL)
+
+				if(msg.markers.at(d).marker_name== "dummy")
+				{}
+				else if(msg.markers.at(d).marker_name== "dummyleft")
+				{}
+				else if(msg.markers.at(d).marker_name== "dummyHead")
+				{}
+				else if( c < approachObj->totalMarkers)/*used markers count*/
 				{
-					if(msg.markers.at(d).marker_name== "dummy")
-					{}
-					else if(msg.markers.at(d).marker_name== "dummyObj1")
-					{}
-					else if(msg.markers.at(d).marker_name== "dummyObj2")
-					{}
-					else if(msg.markers.at(d).marker_name== "dummyObj3")
-					{}
-					else if(msg.markers.at(d).marker_name== "dummyHead")
-					{}
-					else if( c < approachObj->totalMarkers)/*used markers count*/
-					{
-						approachObj->Markers[c] <<
-						msg.markers.at(d).translation.x, msg.markers.at(d).translation.y, msg.markers.at(d).translation.z;
-						// LOG_INFO(msg.markers.at(d).marker_name <<" "<<c <<"    "<< approachObj->Markers[c].transpose())
-						c+=1;
-					}
+					approachObj->Markers[c] <<
+					msg.markers.at(d).translation.x, msg.markers.at(d).translation.y, msg.markers.at(d).translation.z;
+					// LOG_INFO(msg.markers.at(d).marker_name <<" "<<c <<"    "<< approachObj->Markers[c].transpose())
+					c+=1;
 				}
-				else //TOGETHER
-				{
-					if(msg.markers.at(d).marker_name== "dummy")
-					{}
-					else if(msg.markers.at(d).marker_name== "dummyObj")
-					{}
-					else if(msg.markers.at(d).marker_name== "dummyHead")
-					{}
-					else if( c < approachObj->totalMarkers)/*used markers count*/
-					{
-						approachObj->Markers[c] <<
-						msg.markers.at(d).translation.x, msg.markers.at(d).translation.y, msg.markers.at(d).translation.z;
-						// LOG_INFO(msg.markers.at(d).marker_name <<" "<<c <<"    "<< approachObj->Markers[c].transpose())
-						c+=1;
-					}
-				}
+
 			}
+
 		}
 
 
@@ -84,7 +64,7 @@ namespace lipm_walking
 				stepBack = true;
 
 				/*allocate memory*/
-				approachObj = std::make_shared<lipm_walking::ApproachObject>();
+				approachObj = std::make_shared<lipm_walking::ApproachObject>(ctl);
 				approachObj->initials();
 
 
@@ -175,67 +155,79 @@ namespace lipm_walking
 				if(approachObj->FlAG_INDIVIDUAL)
 				{
 
-					ctl.logger().addLogEntry("HANDOVER_Indiv_bool enableLHand",[this]() -> double { return approachObj->enableLHand; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_bool enableRHand",[this]() -> double { return approachObj->enableRHand; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_enableLHand",[this]() -> double { return approachObj->enableLHand; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_enableRHand",[this]() -> double { return approachObj->enableRHand; });
 
-					ctl.logger().addLogEntry("HANDOVER_Indiv_bool useLtEf",[this]() -> double { return approachObj->useLtEf; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_bool stopLtEf",[this]() -> double { return approachObj->stopLtEf; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_useLtEf",[this]() -> double { return approachObj->useLtEf; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_stopLtEf",[this]() -> double { return approachObj->stopLtEf; });
 
-					ctl.logger().addLogEntry("HANDOVER_Indiv_bool useRtEf",[this]() -> double { return approachObj->useRtEf; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_bool stopRtEf",[this]() -> double { return approachObj->stopRtEf; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_useRtEf",[this]() -> double { return approachObj->useRtEf; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_stopRtEf",[this]() -> double { return approachObj->stopRtEf; });
 
-					ctl.logger().addLogEntry("HANDOVER_Indiv_Fzero",[this]() -> Eigen::Vector3d { return approachObj->Fzero; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_Fclose",[this]() -> Eigen::Vector3d { return approachObj->Fclose; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_Finert",[this]() -> Eigen::Vector3d { return approachObj->Finert; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_Fload",[this]() -> Eigen::Vector3d { return approachObj->Fload; });
-					ctl.logger().addLogEntry("HANDOVER_Indiv_Fpull",[this]() -> Eigen::Vector3d { return approachObj->Fpull; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_Fzero",[this]() -> Eigen::Vector3d { return approachObj->Fzero; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_Fclose",[this]() -> Eigen::Vector3d { return approachObj->Fclose; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_Finert",[this]() -> Eigen::Vector3d { return approachObj->Finert; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_Fload",[this]() -> Eigen::Vector3d { return approachObj->Fload; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_Fpull",[this]() -> Eigen::Vector3d { return approachObj->Fpull; });
 				}
 				else // TOGETHER
 				{
-					ctl.logger().addLogEntry("HANDOVER_Together_bool enableHand",[this]() -> double { return approachObj->enableHand; });
+					ctl.logger().addLogEntry("HANDOVER_together_enableHand",[this]() -> double { return approachObj->enableHand; });
 
-					ctl.logger().addLogEntry("HANDOVER_Together_efL Ace",[this]() -> Eigen::Vector3d { return efLAce; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FzeroL",[this]() -> Eigen::Vector3d { return approachObj->FzeroL; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FcloseL",[this]() -> Eigen::Vector3d { return approachObj->FcloseL; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FinertL",[this]() -> Eigen::Vector3d { return approachObj->FinertL; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FloadL",[this]() -> Eigen::Vector3d { return approachObj->FloadL; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FpullL",[this]() -> Eigen::Vector3d { return approachObj->FpullL; });
-					ctl.logger().addLogEntry("HANDOVER_Together_new threshL",[this]() -> Eigen::Vector3d { return approachObj->newThL; });
+					ctl.logger().addLogEntry("HANDOVER_together_efLAce",[this]() -> Eigen::Vector3d { return efLAce; });
+					ctl.logger().addLogEntry("HANDOVER_together_FzeroL",[this]() -> Eigen::Vector3d { return approachObj->FzeroL; });
+					ctl.logger().addLogEntry("HANDOVER_together_FcloseL",[this]() -> Eigen::Vector3d { return approachObj->FcloseL; });
+					ctl.logger().addLogEntry("HANDOVER_together_FinertL",[this]() -> Eigen::Vector3d { return approachObj->FinertL; });
+					ctl.logger().addLogEntry("HANDOVER_together_FloadL",[this]() -> Eigen::Vector3d { return approachObj->FloadL; });
+					ctl.logger().addLogEntry("HANDOVER_together_FpullL",[this]() -> Eigen::Vector3d { return approachObj->FpullL; });
+					ctl.logger().addLogEntry("HANDOVER_together_newThL",[this]() -> Eigen::Vector3d { return approachObj->newThL; });
 
 
-					ctl.logger().addLogEntry("HANDOVER_Together_efR Ace",[this]() -> Eigen::Vector3d { return efRAce; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FzeroR",[this]() -> Eigen::Vector3d { return approachObj->FzeroR; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FcloseR",[this]() -> Eigen::Vector3d { return approachObj->FcloseR; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FinertR",[this]() -> Eigen::Vector3d { return approachObj->FinertR; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FloadR",[this]() -> Eigen::Vector3d { return approachObj->FloadR; });
-					ctl.logger().addLogEntry("HANDOVER_Together_FpullR",[this]() -> Eigen::Vector3d { return approachObj->FpullR; });
-					ctl.logger().addLogEntry("HANDOVER_Together_new threshR",[this]() -> Eigen::Vector3d { return approachObj->newThR; });
+					ctl.logger().addLogEntry("HANDOVER_together_efRAce",[this]() -> Eigen::Vector3d { return efRAce; });
+					ctl.logger().addLogEntry("HANDOVER_together_FzeroR",[this]() -> Eigen::Vector3d { return approachObj->FzeroR; });
+					ctl.logger().addLogEntry("HANDOVER_together_FcloseR",[this]() -> Eigen::Vector3d { return approachObj->FcloseR; });
+					ctl.logger().addLogEntry("HANDOVER_together_FinertR",[this]() -> Eigen::Vector3d { return approachObj->FinertR; });
+					ctl.logger().addLogEntry("HANDOVER_together_FloadR",[this]() -> Eigen::Vector3d { return approachObj->FloadR; });
+					ctl.logger().addLogEntry("HANDOVER_together_FpullR",[this]() -> Eigen::Vector3d { return approachObj->FpullR; });
+					ctl.logger().addLogEntry("HANDOVER_together_newThR",[this]() -> Eigen::Vector3d { return approachObj->newThR; });
 
-					ctl.logger().addLogEntry("HANDOVER_Together_updateOffsetPosL",[this]() -> Eigen::Vector3d { return updateOffsetPosL; });
-					ctl.logger().addLogEntry("HANDOVER_Together_updateOffsetPosR",[this]() -> Eigen::Vector3d { return updateOffsetPosR; });
+					ctl.logger().addLogEntry("HANDOVER_together_updateOffsetPosL",[this]() -> Eigen::Vector3d { return updateOffsetPosL; });
+					ctl.logger().addLogEntry("HANDOVER_together_updateOffsetPosR",[this]() -> Eigen::Vector3d { return updateOffsetPosR; });
 				}
 
-				ctl.logger().addLogEntry("HANDOVER_old thresh",[this]() -> Eigen::VectorXd { return thresh; });
+				ctl.logger().addLogEntry("HANDOVER_thresh",[this]() -> Eigen::VectorXd { return thresh; });
+				ctl.logger().addLogEntry("HANDOVER_leftForce_Xabs",[this]() -> double { return leftForce_Xabs; });
+				ctl.logger().addLogEntry("HANDOVER_leftForce_Yabs",[this]() -> double { return leftForce_Yabs; });
+				ctl.logger().addLogEntry("HANDOVER_leftForce_Zabs",[this]() -> double { return leftForce_Zabs; });
+				ctl.logger().addLogEntry("HANDOVER_rightForce_Xabs",[this]() -> double { return rightForce_Xabs; });
+				ctl.logger().addLogEntry("HANDOVER_rightForce_Yabs",[this]() -> double { return rightForce_Yabs; });
+				ctl.logger().addLogEntry("HANDOVER_rightForce_Zabs",[this]() -> double { return rightForce_Zabs; });
 
 				ctl.logger().addLogEntry("HANDOVER_posTaskL", [this]() -> Eigen::Vector3d { return posTaskL->position(); });
 				ctl.logger().addLogEntry("HANDOVER_posTaskR", [this]() -> Eigen::Vector3d { return posTaskR->position(); });
+				ctl.logger().addLogEntry("HANDOVER_rpyFromOriL", [this]() -> Eigen::Vector3d { return mc_rbdyn::rpyFromMat(oriTaskL->orientation()); });
+				ctl.logger().addLogEntry("HANDOVER_rpyFromOriR", [this]() -> Eigen::Vector3d { return mc_rbdyn::rpyFromMat(oriTaskR->orientation()); });
 
-				ctl.logger().addLogEntry("HANDOVER_obj mass",[this]() -> double { return approachObj->objMass; });
-				ctl.logger().addLogEntry("HANDOVER_objAboveWaist",[this]() -> double { return objAboveWaist; });
+				ctl.logger().addLogEntry("HANDOVER_posTaskLEval", [this]() -> Eigen::Vector3d { return posTaskL->eval(); });
+				ctl.logger().addLogEntry("HANDOVER_posTaskREval", [this]() -> Eigen::Vector3d { return posTaskR->eval(); });
+				ctl.logger().addLogEntry("HANDOVER_oriTaskLEval", [this]() -> Eigen::Vector3d { return oriTaskL->eval(); });
+				ctl.logger().addLogEntry("HANDOVER_oriTaskREval", [this]() -> Eigen::Vector3d { return oriTaskR->eval(); });
+
+
+
+				ctl.logger().addLogEntry("HANDOVER_fingerPosL",[this]() -> Eigen::Vector3d { return approachObj->fingerPosL; });
+				ctl.logger().addLogEntry("HANDOVER_fingerPosR",[this]() -> Eigen::Vector3d { return approachObj->fingerPosR; });
+
+				ctl.logger().addLogEntry("HANDOVER_objmass",[this]() -> double { return approachObj->objMass; });
+				ctl.logger().addLogEntry("HANDOVER_objAboveWaist",[this]() -> double { return approachObj->objAboveWaist; });
 				ctl.logger().addLogEntry("HANDOVER_objectPosC",[this]()-> Eigen::Vector3d { return approachObj->objectPosC; });
+				ctl.logger().addLogEntry("HANDOVER_objectPosCx",[this]()-> Eigen::Vector3d { return approachObj->objectPosCx; });
+				ctl.logger().addLogEntry("HANDOVER_objectPosCy",[this]()-> Eigen::Vector3d { return approachObj->objectPosCy; });
 
-				ctl.logger().addLogEntry("HANDOVER_subjFinL",[this]() -> Eigen::Vector3d { return approachObj->fingerPosL; });
-				ctl.logger().addLogEntry("HANDOVER_subjFinR",[this]() -> Eigen::Vector3d { return approachObj->fingerPosR; });
-
-				ctl.logger().addLogEntry("HANDOVER_bool grippper open",[this]() -> double { return approachObj->gOpen; });
-				ctl.logger().addLogEntry("HANDOVER_bool grippper close",[this]() -> double { return approachObj->gClose; });
-
-				ctl.logger().addLogEntry("HANDOVER_leftHandForce-ABS_X",[this]() -> double { return leftForce_Xabs; });
-				ctl.logger().addLogEntry("HANDOVER_rightHandForce-ABS_X",[this]() -> double { return rightForce_Xabs; });
-				ctl.logger().addLogEntry("HANDOVER_leftHandForce-ABS_Y",[this]() -> double { return leftForce_Yabs; });
-				ctl.logger().addLogEntry("HANDOVER_rightHandForce-ABS_Y",[this]() -> double { return rightForce_Yabs; });
-				ctl.logger().addLogEntry("HANDOVER_leftHandForce-ABS_Z",[this]() -> double { return leftForce_Zabs; });
-				ctl.logger().addLogEntry("HANDOVER_rightHandForce-ABS_Z",[this]() -> double { return rightForce_Zabs; });
+				ctl.logger().addLogEntry("HANDOVER_bodyPosR",[this]() -> Eigen::Vector3d { return bodyPosR; });
+				ctl.logger().addLogEntry("HANDOVER_bodyPosS",[this]() -> Eigen::Vector3d { return bodyPosS; });
+				ctl.logger().addLogEntry("HANDOVER_b2bDist",[this]() -> double { return ID; });
+				ctl.logger().addLogEntry("HANDOVER_stepSize",[this]() -> double { return logStepSize; });
 
 				ctl.logger().addLogEntry("HANDOVER_elapsed_t1",[this]() -> double { return approachObj->t1; });
 				ctl.logger().addLogEntry("HANDOVER_elapsed_t2",[this]() -> double { return approachObj->t2; });
@@ -247,16 +239,31 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_elapsed_t8",[this]() -> double { return approachObj->t8; });
 				ctl.logger().addLogEntry("HANDOVER_elapsed_t9",[this]() -> double { return approachObj->t9; });
 
-				ctl.logger().addLogEntry("HANDOVER_Trials_hr-success",[this]() -> double { return approachObj->count_hr_success; });
-				ctl.logger().addLogEntry("HANDOVER_Trials_hr-fail",[this]() -> double { return approachObj->count_hr_fail; });
-				ctl.logger().addLogEntry("HANDOVER_Trials_rh-success",[this]() -> double { return approachObj->count_rh_success; });
-				ctl.logger().addLogEntry("HANDOVER_Trials_rh-fail",[this]() -> double { return approachObj->count_rh_fail; });
-				ctl.logger().addLogEntry("HANDOVER_Trials_reset",[this]() -> double { return approachObj->count_reset; });
+				ctl.logger().addLogEntry("HANDOVER_trials_hr_success",[this]() -> double { return approachObj->count_hr_success; });
+				ctl.logger().addLogEntry("HANDOVER_trials_hr_fail",[this]() -> double { return approachObj->count_hr_fail; });
+				ctl.logger().addLogEntry("HANDOVER_trials_rh_success",[this]() -> double { return approachObj->count_rh_success; });
+				ctl.logger().addLogEntry("HANDOVER_trials_rh_fail",[this]() -> double { return approachObj->count_rh_fail; });
+				ctl.logger().addLogEntry("HANDOVER_trials_reset",[this]() -> double { return approachObj->count_reset; });
 
-				ctl.logger().addLogEntry("HANDOVER_bodyPosRobot",[this]() -> Eigen::Vector3d { return bodyPosR; });
-				ctl.logger().addLogEntry("HANDOVER_bodyPosSubj",[this]() -> Eigen::Vector3d { return bodyPosS; });
-				ctl.logger().addLogEntry("HANDOVER_interPersonalDist_X",[this]() -> double { return ID; });
-				ctl.logger().addLogEntry("HANDOVER_stepSize",[this]() -> double { return logStepSize; });
+				ctl.logger().addLogEntry("HANDOVER_gOpen",[this]() -> double { return approachObj->gOpen; });
+				ctl.logger().addLogEntry("HANDOVER_gClose",[this]() -> double { return approachObj->gClose; });
+
+				ctl.logger().addLogEntry("HANDOVER_gripperEfL",[this]() -> Eigen::Vector3d { return approachObj->gripperEfL; });
+				ctl.logger().addLogEntry("HANDOVER_gripperEfR",[this]() -> Eigen::Vector3d { return approachObj->gripperEfR; });
+
+				// ctl.logger().addLogEntry("HANDOVER_subjLHandRot",[this]()-> Eigen::Matrix3d { return approachObj->subjLHandRot; });
+				// ctl.logger().addLogEntry("HANDOVER_subjRHandRot",[this]()-> Eigen::Matrix3d { return approachObj->subjRHandRot; });
+				// ctl.logger().addLogEntry("HANDOVER_objRot",[this]()-> Eigen::Matrix3d { return approachObj->objRot; });
+
+				ctl.logger().addLogEntry("HANDOVER_predictPosL",[this]() -> Eigen::Vector3d { return approachObj->predictPosL; });
+				ctl.logger().addLogEntry("HANDOVER_predictPosR",[this]() -> Eigen::Vector3d { return approachObj->predictPosR; });
+
+				ctl.logger().addLogEntry("HANDOVER_efLPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->efLPosOfHandover; });
+				ctl.logger().addLogEntry("HANDOVER_efRPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->efRPosOfHandover; });
+
+				ctl.logger().addLogEntry("HANDOVER_hLPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->hLPosOfHandover ; });
+				ctl.logger().addLogEntry("HANDOVER_hRPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->hRPosOfHandover ; });
+
 			}
 
 			if(Flag_HandoverGUI)
@@ -269,10 +276,10 @@ namespace lipm_walking
 						[this](const Eigen::Vector3d & to){approachObj->tuner = to;cout<< "t_predict = " << approachObj->tuner(0)*1/fps<< "sec, t_observe = "<<approachObj->tuner(1)*1/fps<< "sec"<<endl;}),
 
 					mc_rtc::gui::NumberInput("subject waist height",
-						[this]() { return objAboveWaist; },
+						[this]() { return approachObj->objAboveWaist; },
 						[this](double waist)
-						{	objAboveWaist = waist;
-						cout << "current subject waist height is " << objAboveWaist << endl; }));
+						{	approachObj->objAboveWaist = waist;
+						cout << "current subject waist height is " << approachObj->objAboveWaist << endl; }));
 
 				/*add remove contact*/
 				ctl.gui()->addElement({"Handover", "Contacts"},
@@ -292,7 +299,11 @@ namespace lipm_walking
 						approachObj->robotHasObject = true;
 						approachObj->subjHasObject = false;
 
+						approachObj->pickNearestHand = false;
+						subjMarkersName = approachObj->subjRtMarkers;
+
 						ctl.solver().removeTask(objEfTask);
+
 						ctl.solver().removeTask(posTaskR);
 						ctl.solver().removeTask(oriTaskR);
 
@@ -305,9 +316,15 @@ namespace lipm_walking
 						approachObj->subjHasObject = true;
 						approachObj->robotHasObject = false;
 
+						approachObj->pickNearestHand = true;
+
 						ctl.solver().addTask(objEfTask);
+
 						ctl.solver().addTask(posTaskR);
 						ctl.solver().addTask(oriTaskR);
+
+						ctl.solver().addTask(posTaskL);
+						ctl.solver().addTask(oriTaskL);
 
 						oriTaskL->reset();
 						posTaskL->reset();
@@ -391,13 +408,16 @@ namespace lipm_walking
 
 					mc_rtc::gui::Button("LEFT ARM object-rest pose", [this, &ctl]()
 					{
-						posTaskL->position(relaxPosL + X_0_rel.translation());
+						// posTaskL->position(relaxPosL + X_0_rel.translation());
+						posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.2, relaxPosL(1), relaxPosL(2)));
 						oriTaskL->orientation(relaxRotL);
 					}),
 
 					mc_rtc::gui::Button("RIGHT ARM object-rest pose", [this, &ctl]()
 					{
-						posTaskR->position(relaxPosR + X_0_rel.translation());
+						// posTaskR->position(relaxPosR + X_0_rel.translation());
+						posTaskR->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.2, relaxPosR(1), relaxPosR(2)));
+
 						oriTaskR->orientation(relaxRotR);
 					}),
 
@@ -595,6 +615,7 @@ namespace lipm_walking
 			X_relPos_efR = X_0Pos_efR * (X_0_rel.inv());
 			// X_relOri_efR = X_0Ori_efR * (X_0_rel.inv());
 			X_relOri_efR = sva::PTransformd(relaxRotR, relaxPosR) * (X_0_rel.inv());
+
 		}// start
 
 
@@ -722,14 +743,17 @@ namespace lipm_walking
 				ctl.solver().addTask(posTaskR);
 				ctl.solver().addTask(oriTaskR);
 
-				posTaskL->reset();
-				posTaskR->reset();
+				ctl.postureTask->reset();
 
+				posTaskL->reset();
 				oriTaskL->reset();
+
+				posTaskR->reset();
 				oriTaskR->reset();
 			}
 
 			approachObj->objHasContacts = objHasContact("LeftGripper") && objHasContact("RightGripper");
+
 
 
 			auto open_gripper = [&](std::string gripperName)
@@ -995,7 +1019,7 @@ namespace lipm_walking
 									relaxRotL,
 									subjMarkersName);
 
-								// approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
+								approachObj->predictPosL = get<4>(approachObj->lHandPredict);
 							}
 							else
 							{
@@ -1015,7 +1039,7 @@ namespace lipm_walking
 									relaxRotR,
 									subjMarkersName);
 
-							// approachObj->useRightEf = get<0>(approachObj->rHandPredict);
+								approachObj->predictPosR = get<4>(approachObj->rHandPredict);
 							}
 						}
 						return false;
@@ -1024,19 +1048,23 @@ namespace lipm_walking
 					{
 						if(approachObj->subjHasObject)
 						{
-							approachObj->rHandPredict = approachObj->predictionController(
-								rtPosW,
-								relaxRotR,
-								approachObj->subjLtMarkers);
+							/*CHECK once every prediction cycle*/
+							if( (approachObj->i)%(approachObj->t_observe) == 0 )
+							{
+								approachObj->rHandPredict = approachObj->predictionController(
+									rtPosW,
+									relaxRotR,
+									approachObj->subjLtMarkers);
 
-							approachObj->useRightEf = get<0>(approachObj->rHandPredict);
+								approachObj->useRightEf = get<0>(approachObj->rHandPredict);
 
-							approachObj->lHandPredict = approachObj->predictionController(
-								ltPosW,
-								relaxRotL,
-								approachObj->subjRtMarkers);
+								approachObj->lHandPredict = approachObj->predictionController(
+									ltPosW,
+									relaxRotL,
+									approachObj->subjRtMarkers);
 
-							approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
+								approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
+							}
 						}
 						else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
 						{
@@ -1061,70 +1089,13 @@ namespace lipm_walking
 								approachObj->useLeftEf = false;
 							}
 						}
+
+						approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+						approachObj->predictPosR = get<4>(approachObj->rHandPredict);
 					}
 
 					return false;
 				};
-
-
-
-				if(Flag_Walk)
-				{
-					/*when subject carries object above his/her waist*/
-					if(approachObj->walkFwd && (approachObj->objectPosC(2) >= objAboveWaist) )
-					{
-						// if( (ID < 1.8) && (ID >= 1.65) )
-						// {
-						// 	stepSize = "40";
-						// 	logStepSize = 40;
-						// 	Xmax = 0.80 +  .40 + 0.1; //0.1 as offset
-						// }
-						// if( (ID < 1.65) && (ID >= 1.50) )
-						// {
-						// 	stepSize = "30";
-						// 	logStepSize = 30;
-						// 	Xmax = 0.80 +  .30 + 0.1; //0.1 as addition offset
-						// }
-						if( (ID < 1.50) && (ID >= 1.35) )
-						{
-							stepSize = "10";
-							logStepSize = 10;
-							Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
-						}
-						if( (ID < 1.35) && (ID >= 1.20) )
-						{
-							stepSize = "10";
-							logStepSize = 10;
-							Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
-						}
-						else
-						{
-							stepSize = "10";
-							logStepSize = 10;
-							Xmax = 0.80 +  .10 + 0.1; //0.1 as offset
-						}
-
-						walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
-						LOG_ERROR("select WALK PLAN "<< walkPlan)
-						ctl.loadFootstepPlan(walkPlan);
-						ctl.config().add("triggerWalk", true);
-						approachObj->walkFwd = false;
-					}
-
-					if( approachObj->walkBack)
-					{
-						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-						LOG_ERROR("select WALK PLAN "<< walkPlan)
-						ctl.loadFootstepPlan(walkPlan);
-						ctl.config().add("triggerWalk", true);
-						approachObj->walkBack = false;
-					}
-				}
-				else
-				{
-					Xmax = 0.8;
-				}
-
 
 
 				/*feed Ef pose*/
@@ -1273,6 +1244,7 @@ namespace lipm_walking
 							/*check both gripper forces together*/
 							approachObj->forceControllerTogether(
 								approachObj->enableHand,
+								X_0_rel,
 								(initPosR + X_0_rel.translation()), initRotR,
 								(initPosL + X_0_rel.translation()), initRotL,
 								(relaxPosR + X_0_rel.translation()), relaxRotR,
@@ -1311,32 +1283,108 @@ namespace lipm_walking
 				/*TRIGGER HANDOVER ROUTINE*/
 				/* start only if object is within robot constraint space*/
 				if( (!approachObj->startNow) &&
-					(approachObj->objectPosC(0) > 1.6) && (approachObj->objectPosC(0) < 1.8) &&
-					(approachObj->fingerPosL(0) > 1.6) && (approachObj->fingerPosL(0) < 1.8) &&
-					(approachObj->fingerPosR(0) > 1.6) && (approachObj->fingerPosR(0) < 1.8) )
+					(approachObj->objectPosC(0) > 1.5) && (approachObj->objectPosC(0) < 1.8) &&
+					(approachObj->fingerPosL(0) > 1.5) && (approachObj->fingerPosL(0) < 1.8) &&
+					(approachObj->fingerPosR(0) > 1.5) && (approachObj->fingerPosR(0) < 1.8) )
 				{
-					approachObj->startNow = true;
-					approachObj->walkFwd = true;
+					if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+					{
+						approachObj->startNow = true;
+						approachObj->walkFwd = true;
+					}
 				}
 
 
-				/*CHECK once every prediction cycle*/
-				if( (approachObj->i)%(approachObj->t_observe) == 0 )
-				{
+				// /*CHECK once every prediction cycle*/
+				// if( (approachObj->i)%(approachObj->t_observe) == 0 )
+				// {
 					/*as long as object is within robot's reachable space*/
 					auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
-
 					if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.5) && (objBody_rel_robotBody >0.1) )
 					{
 						obj_rel_robot();
 					}
+				// }
+
+
+				/*trigger step-walk*/
+				if(Flag_Walk)
+				{
+
+					/*when subject carries object above his/her waist*/
+					if(approachObj->walkFwd)
+					{
+						// if( (ID < 1.8) && (ID >= 1.65) )
+						// {
+						// 	stepSize = "40";
+						// 	logStepSize = 40;
+						// 	Xmax = 0.80 +  .40 + 0.1;
+						// }
+						// if( (ID < 1.65) && (ID >= 1.50) )
+						// {
+						// 	stepSize = "30";
+						// 	logStepSize = 30;
+						// 	Xmax = 0.80 +  .30 + 0.1;
+						// }
+						if( (ID < 1.50) && (ID >= 1.35) )
+						{
+							stepSize = "10";
+							logStepSize = 10;
+							Xmax = 0.80 +  .10 + 0.1;
+						}
+						if( (ID < 1.35) && (ID >= 1.20) )
+						{
+							stepSize = "10";
+							logStepSize = 10;
+							Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
+						}
+						else
+						{
+							stepSize = "10";
+							logStepSize = 10;
+							Xmax = 0.80 +  .10 + 0.1;
+						}
+
+						walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
+						LOG_ERROR("selected WALK PLAN "<< walkPlan)
+						ctl.loadFootstepPlan(walkPlan);
+						ctl.config().add("triggerWalk", true);
+						approachObj->walkFwd = false;
+					}
+
+					if( approachObj->walkBack)
+					{
+						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+						LOG_ERROR("selected WALK PLAN "<< walkPlan)
+						ctl.loadFootstepPlan(walkPlan);
+						ctl.config().add("triggerWalk", true);
+						approachObj->walkBack = false;
+					}
+				}
+				else
+				{
+					Xmax = 0.8;
 				}
 
 			}// handoverRun
 
 
+				// if( ctl.isLastDSP() )
+				// {
+				// 	LOG_SUCCESS("during last step\n")
+				// 	return;
+				// }
+				// if(ctl.isLastDSP())
+				// {
+				// 	LOG_ERROR("after last step\n")
+				// 	return;
+				// }
+
+
+
 			if(restartEverything)
 			{
+
 				dt+=1;
 
 				/*COMMON FOR BOTH HANDOVER ROUTINE*/
@@ -1365,10 +1413,11 @@ namespace lipm_walking
 				approachObj->closeGripper = false;
 
 				approachObj->graspObject = true;
-				approachObj->goBackInit = true;
+				approachObj->goBackInitPose = true;
 				approachObj->takeBackObject = false;
 				approachObj->restartHandover = false;
 
+				approachObj->walkFwdAgain = true;
 
 				/*SPECIFIC TO INDIVIDUAL HANDOVER*/
 
@@ -1491,6 +1540,13 @@ namespace lipm_walking
 					}
 
 
+
+					approachObj->efLPosOfHandover = Eigen::Vector3d::Zero();
+					approachObj->efRPosOfHandover = Eigen::Vector3d::Zero();
+					approachObj->hLPosOfHandover  = Eigen::Vector3d::Zero();
+					approachObj->hRPosOfHandover  = Eigen::Vector3d::Zero();
+
+
 					if(approachObj->FlAG_INDIVIDUAL)
 					{
 						approachObj->enableLHand = true;
@@ -1532,12 +1588,12 @@ namespace lipm_walking
 
 				if( Flag_Walk )
 				{
-					if(ctl.isLastSSP())
+					if(ctl.isLastDSP())
 					{
 						posTaskL->position(initPosL + X_0_rel.translation());
 						posTaskR->position(initPosR + X_0_rel.translation());
 
-						LOG_WARNING("Go to  'Reset Pose'  column and set arms to half-set")
+						LOG_WARNING("**********************Go to  'Reset Pose'  column and set arms to half-set*******************")
 
 						restartEverything = false;
 					}
@@ -1563,7 +1619,6 @@ namespace lipm_walking
 		bool states::Handover::checkTransitions()
 		{
 			auto & ctl = controller();
-
 			return false;
 		}// checkTransition
 

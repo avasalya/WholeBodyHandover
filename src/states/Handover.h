@@ -24,6 +24,8 @@
 
 // RBD
 #include <mc_rbdyn/Robot.h>
+#include <mc_rbdyn/rpy_utils.h>
+
 
 // ROS
 #include <ros/ros.h>
@@ -124,7 +126,6 @@ namespace lipm_walking
 			Eigen::Vector3d bodyPosR, bodyPosS;
 			double Xmax{0.8};
 			double ID{0.0}; //interpersonal distance
-			double objAboveWaist{0.9};
 
 			double logStepSize{0.0};
 			std::string stepSize, walkPlan;
