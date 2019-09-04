@@ -845,7 +845,7 @@
 
 	// Where to look for state files
 	// "StatesFiles": [],
-	"StatesFiles": ["@STATES_DATA_DIR@"],
+	// "StatesFiles": ["@STATES_DATA_DIR@"],
 
 
 	// When true, state factory will be more verbose

@@ -848,7 +848,6 @@ namespace lipm_walking
 						(obj_rel_subjLtHand < obj_rel_robotRtHand) &&
 						(finR_rel_efL > 0.3) &&
 						(finL_rel_efR > 0.3) )
-
 				{
 					if( (FcloseL.norm() < 2.0) || (FcloseR.norm() < 2.0) )
 					{
@@ -943,10 +942,8 @@ namespace lipm_walking
 					accumulate( FloadRy.begin(), FloadRy.end(), 0.0)/double(FloadRy.size()),
 					accumulate( FloadRz.begin(), FloadRz.end(), 0.0)/double(FloadRz.size());
 
-
-					/*try "worldWrench" with gravity*/
-					// objMass = ( FloadL.norm() + FloadR.norm() )/9.81;
-					objMass = /*0.5**/( (FloadL + FloadR).norm() )/9.81;
+					/*load force in the direction of gravity in world*/
+					objMass = ( FloadL(2) + FloadR(2) )/9.8;
 
 					/*new threshold*/
 					newThL = FloadL + leftTh;
@@ -974,15 +971,23 @@ namespace lipm_walking
 					FloadLx.clear(); FloadLy.clear(); FloadLz.clear();
 					FloadRx.clear(); FloadRy.clear(); FloadRz.clear();
 				}
-				else /*divide by 9.81 and you will get object mass*/
+				else /*divide by 9.8 and you will get object mass*/
 				{
-					FloadLx.push_back( abs( abs(leftForce[0])-abs(FzeroL[0]) ) );
-					FloadLy.push_back( abs( abs(leftForce[1])-abs(FzeroL[1]) ) );
-					FloadLz.push_back( abs( abs(leftForce[2])-abs(FzeroL[2]) ) );
+					FloadLx.push_back( abs(leftForce[0]) );
+					FloadLy.push_back( abs(leftForce[1]) );
+					FloadLz.push_back( abs(leftForce[2]) );
 
-					FloadRx.push_back( abs( abs(rightForce[0])-abs(FzeroR[0]) ) );
-					FloadRy.push_back( abs( abs(rightForce[1])-abs(FzeroR[1]) ) );
-					FloadRz.push_back( abs( abs(rightForce[2])-abs(FzeroR[2]) ) );
+					FloadRx.push_back( abs(rightForce[0]) );
+					FloadRy.push_back( abs(rightForce[1]) );
+					FloadRz.push_back( abs(rightForce[2]) );
+
+					// FloadLx.push_back( abs( abs(leftForce[0])-abs(FzeroL[0]) ) );
+					// FloadLy.push_back( abs( abs(leftForce[1])-abs(FzeroL[1]) ) );
+					// FloadLz.push_back( abs( abs(leftForce[2])-abs(FzeroL[2]) ) );
+
+					// FloadRx.push_back( abs( abs(rightForce[0])-abs(FzeroR[0]) ) );
+					// FloadRy.push_back( abs( abs(rightForce[1])-abs(FzeroR[1]) ) );
+					// FloadRz.push_back( abs( abs(rightForce[2])-abs(FzeroR[2]) ) );
 				}
 				e+=1;
 

@@ -16,7 +16,7 @@
 # along with lipm_walking_controller. If not, see
 # <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_CXX_FLAGS "-pedantic -Wno-long-long -Wall -Wextra -Wcast-align -Wcast-qual -Wformat -Wwrite-strings -Wconversion")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -32,11 +32,13 @@ set(PROJECT_VERSION 1.1.0)
 
 project(${PROJECT_NAME} CXX)  # because setup_project() is not called
 
-# Enable C++14
-if(NOT WIN32)
-# add_definitions(-std=c++14)  # on ashesh pc
-   add_definitions(-std=c++11)  # on robot pc
-endif()
+set(CMAKE_CXX_STANDARD 14) # my pc
+# set(CMAKE_CXX_STANDARD 11) # robot pc
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+
 
 # Use jrl-cmakemodules to get mc_rtc depency
 set(PKG_CONFIG_ADDITIONAL_VARIABLES "${PKG_CONFIG_ADDITIONAL_VARIABLES} libdir")

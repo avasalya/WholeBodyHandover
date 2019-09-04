@@ -113,7 +113,7 @@ namespace lipm_walking
 
 		bool FlAG_INDIVIDUAL{false}; // TRUE for using individual hand, otherwise use both hands together
 
-		bool Flag_Walk{true}; //TRUE for walking, else only stabilizer
+		bool Flag_Walk{false}; //TRUE for walking, else only stabilizer
 
 		bool finishedWalk_{false};
 		bool walkFwd{false};

@@ -81,12 +81,10 @@ execute_process(COMMAND rospack find handover_urdf
                 OUTPUT_VARIABLE HANDOVER_URDF_PATH
                 ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(STATES_DIR "${CATKIN_DEVEL_PREFIX}/lib/${PROJECT_NAME}/states/")
-# set(STATES_DATA_DIR "${handover_WALKING_STATES_DIR}/data")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../etc/handoverLIPMWalking.conf.cmake" "${CONF_OUT}")
 unset(AROBASE)
 
 set(STATES_DIR "${MC_RTC_LIBDIR}/mc_controller/handover_walking_controller/states")
-# set(STATES_DATA_DIR "${handover_WALKING_STATES_DIR}/data")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../etc/handoverLIPMWalking.conf.cmake" "${CMAKE_CURRENT_BINARY_DIR}/etc/handoverLIPMWalking.conf")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/etc/handoverLIPMWalking.conf"
     DESTINATION "${MC_RTC_LIBDIR}/mc_controller/etc/")
