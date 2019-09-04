@@ -952,10 +952,10 @@ namespace lipm_walking
 					if(objHasContacts)
 					{
 						/*move EF in-solver to relax pose*/
-						posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.2, relaxPosL(1), relaxPosL(2)));
+						posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.25, relaxPosL(1), relaxPosL(2)));
 						oriTaskL->orientation(relaxRotL);
 
-						LOG_SUCCESS("------------------------------>Robot has object, Ef(s) returning to relax pose, FloadL & FloadR are "<< FloadL.transpose() <<" :: "<< FloadR.transpose())
+						LOG_SUCCESS("------------------------------>Robot has object(mass = "<< objMass <<"),   Ef(s) returning to relax pose, FloadL & FloadR are "<< FloadL.transpose() <<" :: "<< FloadR.transpose())
 					}
 
 					if( subjHasObject &&
@@ -1018,7 +1018,7 @@ namespace lipm_walking
 *  4th
 */
 			/*add ef task again*/
-			if( robotHasObject && (!enableHand) )
+			if( walkBack && robotHasObject && (!enableHand) )
 			{
 				if(Flag_Walk && ctl.isLastDSP() )
 				{
