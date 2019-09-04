@@ -884,557 +884,557 @@ namespace lipm_walking
 
 
 			/*everything dependent on markers goes inside here*/
-			if( approachObj->handoverRun() )
-			{
-
-				/*object geometric properties*/
-				objLen = 0.9;
-				objLenLt = objLen/2;
-				objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
-
-				/*human robot body distance*/
-				bodyPosR = X_0_rel.translation();
-				bodyPosS = approachObj->headPos;
-				ID = bodyPosS(0)-bodyPosR(0);
-
-
-				auto robotRtHandOnObj = [&]()-> sva::PTransformd
-				{
-					al = (approachObj->objectPosC - approachObj->gripperEfR).norm();
-					bl = abs(objLenLt - al);
-
-					if(al <= objLenLt)
-					{
-						if(al>=bl)
-						{
-							offsetLt << 0.0, -al/2, 0.0;
-						}
-						else
-						{
-							offsetLt << 0.0, bl/2, 0.0;
-						}
-
-						X_Obj0_offsetS = sva::PTransformd(offsetLt);
-						X_M_Obj0 = sva::PTransformd(approachObj->subjLHandRot.transpose(), approachObj->fingerPosL);
-						X_M_offsetR = X_Obj0_offsetS * X_M_Obj0;
-						return X_M_offsetR;
-					}
-				};
-
-				auto robotLtHandOnObj = [&]()-> sva::PTransformd
-				{
-					ar = (approachObj->objectPosCy - approachObj->gripperEfL).norm();
-					br = abs(objLenRt - ar);
-
-					if(ar <= objLenRt)
-					{
-						if(ar>=br)
-						{
-							offsetRt << 0.0, ar/2, 0.0;
-						}
-						else
-						{
-							offsetRt << 0.0, -br/2, 0.0;
-						}
-
-						X_Obj0_offsetS = sva::PTransformd(offsetRt);
-						X_M_Obj0 = sva::PTransformd(approachObj->subjRHandRot.transpose(), approachObj->fingerPosR);
-						X_M_offsetL = X_Obj0_offsetS * X_M_Obj0;
-						return X_M_offsetL;
-					}
-				};
-
-
-
-				auto subjLtHandOnObj = [&]()-> sva::PTransformd
-				{
-					al = (approachObj->objectPosC - approachObj->fingerPosL).norm();
-					bl = abs(objLenLt - al);
-
-					if(al <= objLenLt)
-					{
-						if(al>=bl)
-						{
-							offsetLt << 0.0, 2*al/3, 0.0;
-						}
-						else
-						{
-							offsetLt << 0.0, -2*bl/3, 0.0;
-						}
-						X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->fingerPosL);
-					}
-					else
-					{
-						//move to center pos of objLenLt/2
-						offsetLt << 0.0, -objLenLt/2, 0.0;
-						X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->objectPosC);
-					}
-
-					X_Obj0_offsetEf = sva::PTransformd(offsetLt);
-					X_M_offsetR = X_Obj0_offsetEf * X_M_Obj0;
-					return X_M_offsetR;
-				};
-
-				auto subjRtHandOnObj = [&]()-> sva::PTransformd
-				{
-					ar = (approachObj->objectPosCy - approachObj->fingerPosR).norm();
-					br = abs(objLenRt - ar);
-
-					if(ar <= objLenRt)
-					{
-						if(ar>=br)
-						{
-							offsetRt << 0.0, -2*ar/3, 0.0;
-						}
-						else
-						{
-							offsetRt << 0.0, 2*br/3, 0.0;
-						}
-						X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->fingerPosR);
-					}
-					else
-					{
-						//move to center pos of objLenRt/2
-						offsetRt << 0.0, objLenRt/2, 0.0;
-						X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->objectPosC);
-					}
-
-					X_Obj0_offsetEf = sva::PTransformd(offsetRt);
-					X_M_offsetL = X_Obj0_offsetEf * X_M_Obj0;
-					return X_M_offsetL;
-				};
-
-
-
-				auto obj_rel_subj = [&]()
-				{
-					if(approachObj->FlAG_INDIVIDUAL)
-					{
-						if(approachObj->obj_rel_subjRtHand < approachObj->obj_rel_subjLtHand)
-						{
-							subjMarkersName = approachObj->subjRtMarkers;
-							fingerPos = approachObj->fingerPosR;
-						}
-						else
-						{
-							subjMarkersName = approachObj->subjLtMarkers;
-							fingerPos = approachObj->fingerPosL;
-						}
-
-						objEfTask->set_ef_pose(sva::PTransformd(approachObj->handRot, approachObj->objectPosC));
-					}
-					else // TOGETHER
-					{
-						if(approachObj->subjHasObject)
-						{
-							if(approachObj->bool_t1)
-							{
-								approachObj->bool_t1 = false;
-								approachObj->t1 = difftime( time(0), approachObj->start);
-							}
-
-							objEfTask->set_ef_pose(sva::PTransformd(approachObj->objRot.transpose(), approachObj->objectPosC));
-
-							subjLtHandOnObj();
-							subjRtHandOnObj();
-						}
-						else if( approachObj->robotHasObject && approachObj->pickNearestHand &&
-							( (approachObj->finR_rel_efL < 0.9) || (approachObj->finL_rel_efR < 0.9) ) )
-						{
-							if(approachObj->bool_t6)
-							{
-								approachObj->bool_t6 = false;
-								approachObj->t6 = difftime( time(0), approachObj->start);
-							}
-							subjMarkersName = approachObj->subjRtMarkers;
-							approachObj->pickNearestHand = false;
-						}
-					}
-				};
-
-
-				/*track only subj right hand when robot carries the object*/
-				auto obj_rel_robot = [&]() -> bool
-				{
-					obj_rel_subj();
-
-					if(approachObj->FlAG_INDIVIDUAL)
-					{
-						if(fingerPos(0) < 1.1) //0.7
-						{
-							if(approachObj->bool_t1)
-							{
-								approachObj->bool_t1 = false;
-								approachObj->t1 = difftime( time(0), approachObj->start);
-							}
-
-							if( fingerPos(1) >= 0 )
-							{
-								if( (approachObj->stopRtEf) && (approachObj->useLtEf) )
-								{
-									LOG_INFO("robotLeftHand in use")
-
-									approachObj->stopRtEf = false;
-									posTaskR->position(initPosR);
-									oriTaskR->orientation(initRotR);
-
-									approachObj->stopLtEf = true;
-								}
-
-								approachObj->lHandPredict = approachObj->predictionController(
-									ltPosW,
-									relaxRotL,
-									subjMarkersName);
-
-								approachObj->predictPosL = get<4>(approachObj->lHandPredict);
-							}
-							else
-							{
-								if( (approachObj->stopLtEf) && (approachObj->useRtEf) )
-								{
-									LOG_WARNING("robotRightHand in use")
-
-									approachObj->stopLtEf = false;
-									posTaskL->position(initPosL);
-									oriTaskL->orientation(initRotL);
-
-									approachObj->stopRtEf = true;
-								}
-
-								approachObj->rHandPredict = approachObj->predictionController(
-									rtPosW,
-									relaxRotR,
-									subjMarkersName);
-
-								approachObj->predictPosR = get<4>(approachObj->rHandPredict);
-							}
-						}
-						return false;
-					}
-					else // TOGETHER
-					{
-						if(approachObj->subjHasObject)
-						{
-							/*CHECK once every prediction cycle*/
-							if( (approachObj->i)%(approachObj->t_observe) == 0 )
-							{
-								approachObj->rHandPredict = approachObj->predictionController(
-									rtPosW,
-									relaxRotR,
-									approachObj->subjLtMarkers);
-
-								approachObj->useRightEf = get<0>(approachObj->rHandPredict);
-
-								approachObj->lHandPredict = approachObj->predictionController(
-									ltPosW,
-									relaxRotL,
-									approachObj->subjRtMarkers);
-
-								approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
-							}
-						}
-						else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
-						{
-							if( subjMarkersName[0] == "lShapeRtA" )
-							{
-								approachObj->lHandPredict = approachObj->predictionController(
-									ltPosW,
-									relaxRotL,
-									subjMarkersName);
-
-								approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
-								approachObj->useRightEf = false;
-							}
-							else
-							{
-								approachObj->rHandPredict = approachObj->predictionController(
-									rtPosW,
-									relaxRotR,
-									subjMarkersName);
-
-								approachObj->useRightEf = get<0>(approachObj->rHandPredict);
-								approachObj->useLeftEf = false;
-							}
-						}
-
-						approachObj->predictPosL = get<4>(approachObj->lHandPredict);
-						approachObj->predictPosR = get<4>(approachObj->rHandPredict);
-					}
-
-					return false;
-				};
-
-
-				/*feed Ef pose*/
-					if(approachObj->FlAG_INDIVIDUAL)
-					{
-						if( (!approachObj->stopRtEf) )
-						{
-							approachObj->useRtEf = false;
-							robotMarkersName = approachObj->robotLtMarkers;
-
-							approachObj->goToHandoverPose(
-								Xmax,
-								-0.1,
-								0.7,
-								approachObj->enableLHand,
-								ltPosW,
-								posTaskL,
-								oriTaskL,
-								approachObj->lHandPredict,
-								fingerPos);
-
-							approachObj->forceControllerIndividual(
-								approachObj->enableLHand,
-								relaxPosL,
-								initPosL,
-								initRotL,
-								leftForce,
-								leftForceSurf,
-								leftTh,
-								efLAce,
-								posTaskL,
-								oriTaskL,
-								"l_gripper",
-								robotMarkersName,
-								subjMarkersName,
-								approachObj->obj_rel_robotLtHand);
-
-							gripperControl("l_gripper");
-						}
-						else if( (!approachObj->stopLtEf) )
-						{
-							approachObj->useLtEf = false;
-							robotMarkersName = approachObj->robotRtMarkers;
-
-							approachObj->goToHandoverPose(
-								Xmax,
-								-0.7,
-								0.10,
-								approachObj->enableRHand,
-								rtPosW,
-								posTaskR,
-								oriTaskR,
-								approachObj->rHandPredict,
-								fingerPos);
-
-							approachObj->forceControllerIndividual(
-								approachObj->enableRHand,
-								relaxPosR,
-								initPosR,
-								initRotR,
-								rightForce,
-								rightForceSurf,
-								rightTh,
-								efRAce,
-								posTaskR,
-								oriTaskR,
-								"r_gripper",
-								robotMarkersName,
-								subjMarkersName,
-								approachObj->obj_rel_robotRtHand);
-
-							gripperControl("r_gripper");
-						}
-					}
-					else //TOGETHER
-					{
-						if( (approachObj->useLeftEf) || (approachObj->useRightEf) )
-						{
-							if(approachObj->subjHasObject)
-							{
-								updateOffsetPosL = X_M_offsetL.translation();
-								approachObj->goToHandoverPose(
-									Xmax,
-									-0.15,
-									0.75,
-									approachObj->enableHand,
-									ltPosW,
-									posTaskL,
-									oriTaskL,
-									approachObj->lHandPredict,
-									updateOffsetPosL);
-
-
-								updateOffsetPosR = X_M_offsetR.translation();
-								approachObj->goToHandoverPose(
-									Xmax,
-									-0.75,
-									0.15,
-									approachObj->enableHand,
-									rtPosW,
-									posTaskR,
-									oriTaskR,
-									approachObj->rHandPredict,
-									updateOffsetPosR);
-							}
-							else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
-							{
-								if(approachObj->useLeftEf)
-								{
-									// robotLtHandOnObj();
-									// updateOffsetPosL = X_M_offsetL.translation();
-
-									updateOffsetPosL = approachObj->fingerPosR;
-
-									approachObj->goToHandoverPose(
-										Xmax,
-										-0.15,
-										0.75,
-										approachObj->enableHand,
-										ltPosW,
-										posTaskL,
-										oriTaskL,
-										approachObj->lHandPredict,
-										updateOffsetPosL);
-								}
-								else if(approachObj->useRightEf)
-								{
-									// robotRtHandOnObj();
-									// updateOffsetPosR = X_M_offsetR.translation();
-
-									updateOffsetPosR = approachObj->fingerPosL;
-
-									approachObj->goToHandoverPose(
-										Xmax,
-										-0.75,
-										0.15,
-										approachObj->enableHand,
-										rtPosW,
-										posTaskR,
-										oriTaskR,
-										approachObj->rHandPredict,
-										updateOffsetPosR);
-								}
-							}
-
-							/*check both gripper forces together*/
-							approachObj->forceControllerTogether(
-								approachObj->enableHand,
-								X_0_rel,
-								(initPosR + X_0_rel.translation()), initRotR,
-								(initPosL + X_0_rel.translation()), initRotL,
-								(relaxPosR + X_0_rel.translation()), relaxRotR,
-								(relaxPosL + X_0_rel.translation()), relaxRotL,
-								thresh,
-								leftForce, rightForce,
-								leftForceSurf, rightForceSurf,
-								efLAce, efRAce,
-								posTaskL, oriTaskL,
-								posTaskR, oriTaskR);
-
-							gripperControl("bothGrippers");
-						}
-					}
-
-
-
-				/*head visual tracking*/
-				if(approachObj->subjHasObject)
-				{
-					headTask->target(approachObj->objectPosC);
-				}
-				else
-				{
-					if(approachObj->FlAG_INDIVIDUAL)
-					{
-						headTask->target(fingerPos);
-					}
-					else //TOGETHER
-					{
-						headTask->target(approachObj->fingerPosR);
-					}
-				}
-
-
-				/*TRIGGER HANDOVER ROUTINE*/
-				/* start only if object is within robot constraint space*/
-				if( (!approachObj->startNow) &&
-					(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 1.5) &&
-					(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 1.5) &&
-					(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 1.5) )
-				{
-					if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
-					{
-						approachObj->startNow = true;
-						approachObj->walkFwd = true;
-					}
-				}
-
-
-				// /*CHECK once every prediction cycle*/
-				// if( (approachObj->i)%(approachObj->t_observe) == 0 )
-				// {}
-
-				/*as long as object is within robot's reachable space*/
-				auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
-				if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >0.1) )
-				{
-					obj_rel_robot();
-
-					/*trigger step-walk*/
-					if(approachObj->Flag_Walk)
-					{
-
-						/*when subject carries object above his/her waist*/
-						if(approachObj->walkFwd)
-						{
-							// if( (ID < 1.8) && (ID >= 1.65) )
-							// {
-							// 	stepSize = "40";
-							// 	logStepSize = 40;
-							// 	Xmax = 0.80 +  .40 + 0.1;
-							// }
-							// if( (ID < 1.65) && (ID >= 1.50) )
-							// {
-							// 	stepSize = "30";
-							// 	logStepSize = 30;
-							// 	Xmax = 0.80 +  .30 + 0.1;
-							// }
-							if( (ID < 1.50) && (ID >= 1.35) )
-							{
-								stepSize = "10";
-								logStepSize = 10;
-								Xmax = 0.80 +  .10 + 0.1;
-							}
-							if( (ID < 1.35) && (ID >= 1.20) )
-							{
-								stepSize = "10";
-								logStepSize = 10;
-								Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
-							}
-							else
-							{
-								stepSize = "10";
-								logStepSize = 10;
-								Xmax = 0.80 +  .10 + 0.1;
-							}
-
-							approachObj->walkFwd = false;
-							walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
-							LOG_ERROR("selected WALK PLAN "<< walkPlan)
-							ctl.loadFootstepPlan(walkPlan);
-							ctl.config().add("triggerWalk", true);
-						}
-
-						if( approachObj->walkBack)
-						{
-							approachObj->walkBack = false;
-							walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-							LOG_ERROR("selected WALK PLAN "<< walkPlan)
-							ctl.loadFootstepPlan(walkPlan);
-							ctl.config().add("triggerWalk", true);
-						}
-
-					}
-					else
-					{
-						Xmax = 0.8;
-					}
-
-				}
-
-			}// handoverRun
+			// if( approachObj->handoverRun() )
+			// {
+
+			// 	/*object geometric properties*/
+			// 	objLen = 0.9;
+			// 	objLenLt = objLen/2;
+			// 	objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
+
+			// 	/*human robot body distance*/
+			// 	bodyPosR = X_0_rel.translation();
+			// 	bodyPosS = approachObj->headPos;
+			// 	ID = bodyPosS(0)-bodyPosR(0);
+
+
+			// 	auto robotRtHandOnObj = [&]()-> sva::PTransformd
+			// 	{
+			// 		al = (approachObj->objectPosC - approachObj->gripperEfR).norm();
+			// 		bl = abs(objLenLt - al);
+
+			// 		if(al <= objLenLt)
+			// 		{
+			// 			if(al>=bl)
+			// 			{
+			// 				offsetLt << 0.0, -al/2, 0.0;
+			// 			}
+			// 			else
+			// 			{
+			// 				offsetLt << 0.0, bl/2, 0.0;
+			// 			}
+
+			// 			X_Obj0_offsetS = sva::PTransformd(offsetLt);
+			// 			X_M_Obj0 = sva::PTransformd(approachObj->subjLHandRot.transpose(), approachObj->fingerPosL);
+			// 			X_M_offsetR = X_Obj0_offsetS * X_M_Obj0;
+			// 			return X_M_offsetR;
+			// 		}
+			// 	};
+
+			// 	auto robotLtHandOnObj = [&]()-> sva::PTransformd
+			// 	{
+			// 		ar = (approachObj->objectPosCy - approachObj->gripperEfL).norm();
+			// 		br = abs(objLenRt - ar);
+
+			// 		if(ar <= objLenRt)
+			// 		{
+			// 			if(ar>=br)
+			// 			{
+			// 				offsetRt << 0.0, ar/2, 0.0;
+			// 			}
+			// 			else
+			// 			{
+			// 				offsetRt << 0.0, -br/2, 0.0;
+			// 			}
+
+			// 			X_Obj0_offsetS = sva::PTransformd(offsetRt);
+			// 			X_M_Obj0 = sva::PTransformd(approachObj->subjRHandRot.transpose(), approachObj->fingerPosR);
+			// 			X_M_offsetL = X_Obj0_offsetS * X_M_Obj0;
+			// 			return X_M_offsetL;
+			// 		}
+			// 	};
+
+
+
+			// 	auto subjLtHandOnObj = [&]()-> sva::PTransformd
+			// 	{
+			// 		al = (approachObj->objectPosC - approachObj->fingerPosL).norm();
+			// 		bl = abs(objLenLt - al);
+
+			// 		if(al <= objLenLt)
+			// 		{
+			// 			if(al>=bl)
+			// 			{
+			// 				offsetLt << 0.0, 2*al/3, 0.0;
+			// 			}
+			// 			else
+			// 			{
+			// 				offsetLt << 0.0, -2*bl/3, 0.0;
+			// 			}
+			// 			X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->fingerPosL);
+			// 		}
+			// 		else
+			// 		{
+			// 			//move to center pos of objLenLt/2
+			// 			offsetLt << 0.0, -objLenLt/2, 0.0;
+			// 			X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->objectPosC);
+			// 		}
+
+			// 		X_Obj0_offsetEf = sva::PTransformd(offsetLt);
+			// 		X_M_offsetR = X_Obj0_offsetEf * X_M_Obj0;
+			// 		return X_M_offsetR;
+			// 	};
+
+			// 	auto subjRtHandOnObj = [&]()-> sva::PTransformd
+			// 	{
+			// 		ar = (approachObj->objectPosCy - approachObj->fingerPosR).norm();
+			// 		br = abs(objLenRt - ar);
+
+			// 		if(ar <= objLenRt)
+			// 		{
+			// 			if(ar>=br)
+			// 			{
+			// 				offsetRt << 0.0, -2*ar/3, 0.0;
+			// 			}
+			// 			else
+			// 			{
+			// 				offsetRt << 0.0, 2*br/3, 0.0;
+			// 			}
+			// 			X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->fingerPosR);
+			// 		}
+			// 		else
+			// 		{
+			// 			//move to center pos of objLenRt/2
+			// 			offsetRt << 0.0, objLenRt/2, 0.0;
+			// 			X_M_Obj0 = sva::PTransformd(approachObj->objRot.transpose(), approachObj->objectPosC);
+			// 		}
+
+			// 		X_Obj0_offsetEf = sva::PTransformd(offsetRt);
+			// 		X_M_offsetL = X_Obj0_offsetEf * X_M_Obj0;
+			// 		return X_M_offsetL;
+			// 	};
+
+
+
+			// 	auto obj_rel_subj = [&]()
+			// 	{
+			// 		if(approachObj->FlAG_INDIVIDUAL)
+			// 		{
+			// 			if(approachObj->obj_rel_subjRtHand < approachObj->obj_rel_subjLtHand)
+			// 			{
+			// 				subjMarkersName = approachObj->subjRtMarkers;
+			// 				fingerPos = approachObj->fingerPosR;
+			// 			}
+			// 			else
+			// 			{
+			// 				subjMarkersName = approachObj->subjLtMarkers;
+			// 				fingerPos = approachObj->fingerPosL;
+			// 			}
+
+			// 			objEfTask->set_ef_pose(sva::PTransformd(approachObj->handRot, approachObj->objectPosC));
+			// 		}
+			// 		else // TOGETHER
+			// 		{
+			// 			if(approachObj->subjHasObject)
+			// 			{
+			// 				if(approachObj->bool_t1)
+			// 				{
+			// 					approachObj->bool_t1 = false;
+			// 					approachObj->t1 = difftime( time(0), approachObj->start);
+			// 				}
+
+			// 				objEfTask->set_ef_pose(sva::PTransformd(approachObj->objRot.transpose(), approachObj->objectPosC));
+
+			// 				subjLtHandOnObj();
+			// 				subjRtHandOnObj();
+			// 			}
+			// 			else if( approachObj->robotHasObject && approachObj->pickNearestHand &&
+			// 				( (approachObj->finR_rel_efL < 0.9) || (approachObj->finL_rel_efR < 0.9) ) )
+			// 			{
+			// 				if(approachObj->bool_t6)
+			// 				{
+			// 					approachObj->bool_t6 = false;
+			// 					approachObj->t6 = difftime( time(0), approachObj->start);
+			// 				}
+			// 				subjMarkersName = approachObj->subjRtMarkers;
+			// 				approachObj->pickNearestHand = false;
+			// 			}
+			// 		}
+			// 	};
+
+
+			// 	/*track only subj right hand when robot carries the object*/
+			// 	auto obj_rel_robot = [&]() -> bool
+			// 	{
+			// 		obj_rel_subj();
+
+			// 		if(approachObj->FlAG_INDIVIDUAL)
+			// 		{
+			// 			if(fingerPos(0) < 1.1) //0.7
+			// 			{
+			// 				if(approachObj->bool_t1)
+			// 				{
+			// 					approachObj->bool_t1 = false;
+			// 					approachObj->t1 = difftime( time(0), approachObj->start);
+			// 				}
+
+			// 				if( fingerPos(1) >= 0 )
+			// 				{
+			// 					if( (approachObj->stopRtEf) && (approachObj->useLtEf) )
+			// 					{
+			// 						LOG_INFO("robotLeftHand in use")
+
+			// 						approachObj->stopRtEf = false;
+			// 						posTaskR->position(initPosR);
+			// 						oriTaskR->orientation(initRotR);
+
+			// 						approachObj->stopLtEf = true;
+			// 					}
+
+			// 					approachObj->lHandPredict = approachObj->predictionController(
+			// 						ltPosW,
+			// 						relaxRotL,
+			// 						subjMarkersName);
+
+			// 					approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+			// 				}
+			// 				else
+			// 				{
+			// 					if( (approachObj->stopLtEf) && (approachObj->useRtEf) )
+			// 					{
+			// 						LOG_WARNING("robotRightHand in use")
+
+			// 						approachObj->stopLtEf = false;
+			// 						posTaskL->position(initPosL);
+			// 						oriTaskL->orientation(initRotL);
+
+			// 						approachObj->stopRtEf = true;
+			// 					}
+
+			// 					approachObj->rHandPredict = approachObj->predictionController(
+			// 						rtPosW,
+			// 						relaxRotR,
+			// 						subjMarkersName);
+
+			// 					approachObj->predictPosR = get<4>(approachObj->rHandPredict);
+			// 				}
+			// 			}
+			// 			return false;
+			// 		}
+			// 		else // TOGETHER
+			// 		{
+			// 			if(approachObj->subjHasObject)
+			// 			{
+			// 				/*CHECK once every prediction cycle*/
+			// 				if( (approachObj->i)%(approachObj->t_observe) == 0 )
+			// 				{
+			// 					approachObj->rHandPredict = approachObj->predictionController(
+			// 						rtPosW,
+			// 						relaxRotR,
+			// 						approachObj->subjLtMarkers);
+
+			// 					approachObj->useRightEf = get<0>(approachObj->rHandPredict);
+
+			// 					approachObj->lHandPredict = approachObj->predictionController(
+			// 						ltPosW,
+			// 						relaxRotL,
+			// 						approachObj->subjRtMarkers);
+
+			// 					approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
+			// 				}
+			// 			}
+			// 			else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
+			// 			{
+			// 				if( subjMarkersName[0] == "lShapeRtA" )
+			// 				{
+			// 					approachObj->lHandPredict = approachObj->predictionController(
+			// 						ltPosW,
+			// 						relaxRotL,
+			// 						subjMarkersName);
+
+			// 					approachObj->useLeftEf = get<0>(approachObj->lHandPredict);
+			// 					approachObj->useRightEf = false;
+			// 				}
+			// 				else
+			// 				{
+			// 					approachObj->rHandPredict = approachObj->predictionController(
+			// 						rtPosW,
+			// 						relaxRotR,
+			// 						subjMarkersName);
+
+			// 					approachObj->useRightEf = get<0>(approachObj->rHandPredict);
+			// 					approachObj->useLeftEf = false;
+			// 				}
+			// 			}
+
+			// 			approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+			// 			approachObj->predictPosR = get<4>(approachObj->rHandPredict);
+			// 		}
+
+			// 		return false;
+			// 	};
+
+
+			// 	/*feed Ef pose*/
+			// 		if(approachObj->FlAG_INDIVIDUAL)
+			// 		{
+			// 			if( (!approachObj->stopRtEf) )
+			// 			{
+			// 				approachObj->useRtEf = false;
+			// 				robotMarkersName = approachObj->robotLtMarkers;
+
+			// 				approachObj->goToHandoverPose(
+			// 					Xmax,
+			// 					-0.1,
+			// 					0.7,
+			// 					approachObj->enableLHand,
+			// 					ltPosW,
+			// 					posTaskL,
+			// 					oriTaskL,
+			// 					approachObj->lHandPredict,
+			// 					fingerPos);
+
+			// 				approachObj->forceControllerIndividual(
+			// 					approachObj->enableLHand,
+			// 					relaxPosL,
+			// 					initPosL,
+			// 					initRotL,
+			// 					leftForce,
+			// 					leftForceSurf,
+			// 					leftTh,
+			// 					efLAce,
+			// 					posTaskL,
+			// 					oriTaskL,
+			// 					"l_gripper",
+			// 					robotMarkersName,
+			// 					subjMarkersName,
+			// 					approachObj->obj_rel_robotLtHand);
+
+			// 				gripperControl("l_gripper");
+			// 			}
+			// 			else if( (!approachObj->stopLtEf) )
+			// 			{
+			// 				approachObj->useLtEf = false;
+			// 				robotMarkersName = approachObj->robotRtMarkers;
+
+			// 				approachObj->goToHandoverPose(
+			// 					Xmax,
+			// 					-0.7,
+			// 					0.10,
+			// 					approachObj->enableRHand,
+			// 					rtPosW,
+			// 					posTaskR,
+			// 					oriTaskR,
+			// 					approachObj->rHandPredict,
+			// 					fingerPos);
+
+			// 				approachObj->forceControllerIndividual(
+			// 					approachObj->enableRHand,
+			// 					relaxPosR,
+			// 					initPosR,
+			// 					initRotR,
+			// 					rightForce,
+			// 					rightForceSurf,
+			// 					rightTh,
+			// 					efRAce,
+			// 					posTaskR,
+			// 					oriTaskR,
+			// 					"r_gripper",
+			// 					robotMarkersName,
+			// 					subjMarkersName,
+			// 					approachObj->obj_rel_robotRtHand);
+
+			// 				gripperControl("r_gripper");
+			// 			}
+			// 		}
+			// 		else //TOGETHER
+			// 		{
+			// 			if( (approachObj->useLeftEf) || (approachObj->useRightEf) )
+			// 			{
+			// 				if(approachObj->subjHasObject)
+			// 				{
+			// 					updateOffsetPosL = X_M_offsetL.translation();
+			// 					approachObj->goToHandoverPose(
+			// 						Xmax,
+			// 						-0.15,
+			// 						0.75,
+			// 						approachObj->enableHand,
+			// 						ltPosW,
+			// 						posTaskL,
+			// 						oriTaskL,
+			// 						approachObj->lHandPredict,
+			// 						updateOffsetPosL);
+
+
+			// 					updateOffsetPosR = X_M_offsetR.translation();
+			// 					approachObj->goToHandoverPose(
+			// 						Xmax,
+			// 						-0.75,
+			// 						0.15,
+			// 						approachObj->enableHand,
+			// 						rtPosW,
+			// 						posTaskR,
+			// 						oriTaskR,
+			// 						approachObj->rHandPredict,
+			// 						updateOffsetPosR);
+			// 				}
+			// 				else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
+			// 				{
+			// 					if(approachObj->useLeftEf)
+			// 					{
+			// 						// robotLtHandOnObj();
+			// 						// updateOffsetPosL = X_M_offsetL.translation();
+
+			// 						updateOffsetPosL = approachObj->fingerPosR;
+
+			// 						approachObj->goToHandoverPose(
+			// 							Xmax,
+			// 							-0.15,
+			// 							0.75,
+			// 							approachObj->enableHand,
+			// 							ltPosW,
+			// 							posTaskL,
+			// 							oriTaskL,
+			// 							approachObj->lHandPredict,
+			// 							updateOffsetPosL);
+			// 					}
+			// 					else if(approachObj->useRightEf)
+			// 					{
+			// 						// robotRtHandOnObj();
+			// 						// updateOffsetPosR = X_M_offsetR.translation();
+
+			// 						updateOffsetPosR = approachObj->fingerPosL;
+
+			// 						approachObj->goToHandoverPose(
+			// 							Xmax,
+			// 							-0.75,
+			// 							0.15,
+			// 							approachObj->enableHand,
+			// 							rtPosW,
+			// 							posTaskR,
+			// 							oriTaskR,
+			// 							approachObj->rHandPredict,
+			// 							updateOffsetPosR);
+			// 					}
+			// 				}
+
+			// 				/*check both gripper forces together*/
+			// 				approachObj->forceControllerTogether(
+			// 					approachObj->enableHand,
+			// 					X_0_rel,
+			// 					(initPosR + X_0_rel.translation()), initRotR,
+			// 					(initPosL + X_0_rel.translation()), initRotL,
+			// 					(relaxPosR + X_0_rel.translation()), relaxRotR,
+			// 					(relaxPosL + X_0_rel.translation()), relaxRotL,
+			// 					thresh,
+			// 					leftForce, rightForce,
+			// 					leftForceSurf, rightForceSurf,
+			// 					efLAce, efRAce,
+			// 					posTaskL, oriTaskL,
+			// 					posTaskR, oriTaskR);
+
+			// 				gripperControl("bothGrippers");
+			// 			}
+			// 		}
+
+
+
+			// 	/*head visual tracking*/
+			// 	if(approachObj->subjHasObject)
+			// 	{
+			// 		headTask->target(approachObj->objectPosC);
+			// 	}
+			// 	else
+			// 	{
+			// 		if(approachObj->FlAG_INDIVIDUAL)
+			// 		{
+			// 			headTask->target(fingerPos);
+			// 		}
+			// 		else //TOGETHER
+			// 		{
+			// 			headTask->target(approachObj->fingerPosR);
+			// 		}
+			// 	}
+
+
+			// 	/*TRIGGER HANDOVER ROUTINE*/
+			// 	/* start only if object is within robot constraint space*/
+			// 	if( (!approachObj->startNow) &&
+			// 		(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 1.5) &&
+			// 		(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 1.5) &&
+			// 		(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 1.5) )
+			// 	{
+			// 		if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+			// 		{
+			// 			approachObj->startNow = true;
+			// 			approachObj->walkFwd = true;
+			// 		}
+			// 	}
+
+
+			// 	// /*CHECK once every prediction cycle*/
+			// 	// if( (approachObj->i)%(approachObj->t_observe) == 0 )
+			// 	// {}
+
+			// 	/*as long as object is within robot's reachable space*/
+			// 	auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
+			// 	if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >0.1) )
+			// 	{
+			// 		obj_rel_robot();
+
+			// 		/*trigger step-walk*/
+			// 		if(approachObj->Flag_Walk)
+			// 		{
+
+			// 			/*when subject carries object above his/her waist*/
+			// 			if(approachObj->walkFwd)
+			// 			{
+			// 				// if( (ID < 1.8) && (ID >= 1.65) )
+			// 				// {
+			// 				// 	stepSize = "40";
+			// 				// 	logStepSize = 40;
+			// 				// 	Xmax = 0.80 +  .40 + 0.1;
+			// 				// }
+			// 				// if( (ID < 1.65) && (ID >= 1.50) )
+			// 				// {
+			// 				// 	stepSize = "30";
+			// 				// 	logStepSize = 30;
+			// 				// 	Xmax = 0.80 +  .30 + 0.1;
+			// 				// }
+			// 				if( (ID < 1.50) && (ID >= 1.35) )
+			// 				{
+			// 					stepSize = "10";
+			// 					logStepSize = 10;
+			// 					Xmax = 0.80 +  .10 + 0.1;
+			// 				}
+			// 				if( (ID < 1.35) && (ID >= 1.20) )
+			// 				{
+			// 					stepSize = "10";
+			// 					logStepSize = 10;
+			// 					Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
+			// 				}
+			// 				else
+			// 				{
+			// 					stepSize = "10";
+			// 					logStepSize = 10;
+			// 					Xmax = 0.80 +  .10 + 0.1;
+			// 				}
+
+			// 				approachObj->walkFwd = false;
+			// 				walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
+			// 				LOG_ERROR("selected WALK PLAN "<< walkPlan)
+			// 				ctl.loadFootstepPlan(walkPlan);
+			// 				ctl.config().add("triggerWalk", true);
+			// 			}
+
+			// 			if( approachObj->walkBack)
+			// 			{
+			// 				approachObj->walkBack = false;
+			// 				walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+			// 				LOG_ERROR("selected WALK PLAN "<< walkPlan)
+			// 				ctl.loadFootstepPlan(walkPlan);
+			// 				ctl.config().add("triggerWalk", true);
+			// 			}
+
+			// 		}
+			// 		else
+			// 		{
+			// 			Xmax = 0.8;
+			// 		}
+
+			// 	}
+
+			// }// handoverRun
 
 
 
