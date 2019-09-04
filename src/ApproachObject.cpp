@@ -15,7 +15,7 @@ namespace lipm_walking
 		strMarkersBodyName = {
 			"4mars_robot_left_hand",
 			"4mars_robot_right_hand",
-			"4mars_obj",
+			"3mars_obj",
 			"7mars_subj_hands",
 			"2mars_subj_head"};
 
@@ -707,26 +707,15 @@ namespace lipm_walking
 		rightTh = thresh.segment(9,3);
 
 
-
-		/*trigger step-walk fwd when robot has object*/
-		if( walkFwdAgain && robotHasObject && (finR_rel_efL < 1.2) || (finL_rel_efR < 1.2) )
-		{
-
-			if( (fingerPosL(2)>=objAboveWaist) || (fingerPosR(2)>=objAboveWaist) )
-			{
-				walkFwd = true;
-				walkFwdAgain = false;
-			}
-
-		}
-
-
-
 		/*check pull forces/release object*/
 		if( (finR_rel_efL < 0.35) || (finL_rel_efR < 0.35) )
 		{
+/*
+*  7th
+*/
 			auto checkForce = [&](const char *axis_name, int idx)
 			{
+
 				if( (finR_rel_efL < 0.15) || (finL_rel_efR < 0.15) ) // not effective n efficient
 				/*try to check if (Fpull > Th) for cont. over 1 sec or more*/
 				{
@@ -785,8 +774,12 @@ namespace lipm_walking
 					}
 				}
 				return false;
+
 			};
 
+/*
+*  1st, 6th
+*/
 			/*check if object is being pulled*/
 			if(takeBackObject)
 			{
@@ -881,9 +874,25 @@ namespace lipm_walking
 
 		}
 
+/*
+* 5th
+*/
+		/*trigger again walk fwd when robot has the object*/
+		if( walkFwdAgain && robotHasObject && takeBackObject && ( (finR_rel_efL < 1.2) || (finL_rel_efR < 1.2) ) )
+		{
 
-		/*at the end of 2nd cycle*/
-		/*move EF to initial position at end of handover routine*/
+			if( (fingerPosL(2)>=objAboveWaist) || (fingerPosR(2)>=objAboveWaist) )
+			{
+				walkFwd = true;
+				walkFwdAgain = false;
+				LOG_WARNING("---------------------------------------are you here in the beginning of 2nd cycle?")
+			}
+
+		}
+/*
+*  8th
+*/
+		/*just before the end of 2nd cycle, move EF to initial position at end of handover routine*/
 		if( restartHandover && (finR_rel_efL > 0.45) && (finL_rel_efR > 0.45) )
 		{
 
@@ -902,11 +911,12 @@ namespace lipm_walking
 		}
 
 
-
 		/*in between 1st and 2nd cycles*/
 		if( (finR_rel_efL > 0.8) && (finL_rel_efR > 0.8) )
 		{
-
+/*
+*  2nd
+*/
 			/*come only once after object is grasped*/
 			if( (closeGripper) && (!restartHandover) && subjHasObject )
 			{
@@ -920,7 +930,6 @@ namespace lipm_walking
 
 					count_hr_success++;
 				}
-
 
 				if( (e%200==0) )//wait xx sec
 				{
@@ -978,16 +987,19 @@ namespace lipm_walking
 				e+=1;
 
 			}
-
-
-
+/*
+*  3rd
+*/
 			/*walk back when object arrives at relax pose*/
 			if( (!takeBackObject) && (!walkBack) && abs(X_0_rel.translation()(0) - objectPosC(0))<0.25 )
 			{
 
-				ctl.postureTask->reset();
-				ctl.solver().removeTask(posTaskL);
-				ctl.solver().removeTask(oriTaskL);
+				if(Flag_Walk)
+				{
+					ctl.postureTask->reset();
+					ctl.solver().removeTask(posTaskL);
+					ctl.solver().removeTask(oriTaskL);
+				}
 
 				if(robotHasObject)
 				{
@@ -997,46 +1009,66 @@ namespace lipm_walking
 				}
 
 			}
-
-
+/*
+*  4th
+*/
 			/*add ef task again*/
 			if( robotHasObject && (!enableHand) )
 			{
-
-				if( ctl.isLastDSP() )
+				if(Flag_Walk && ctl.isLastDSP() )
 				{
-					ctl.solver().addTask(posTaskL);
-					posTaskL->reset();
 
-					ctl.solver().addTask(oriTaskL);
-					oriTaskL->reset();
+					/*true when last DSP is finished*/
+					finishedWalk_ = ctl.config()("finishedWalk", false);
 
-					enableHand = true;
-					LOG_SUCCESS("------------------------------> ready to begin 2nd cycle, motion enabled")
+					if(finishedWalk_)
+					{
+				        ctl.config().add("finishedWalk", false);
+
+						ctl.solver().addTask(posTaskL);
+						posTaskL->reset();
+
+						ctl.solver().addTask(oriTaskL);
+						oriTaskL->reset();
+
+						enableHand = true;
+						walkFwdAgain = true;
+					}
+					else
+					{
+						ctl.postureTask->reset();
+					}
 				}
 				else
 				{
-					ctl.postureTask->reset();
+					enableHand = true;
 				}
-
+				LOG_SUCCESS("------------------------------> ready to begin 2nd cycle, motion enabled")
 			}
-
-
+/*
+*  9th, final
+*/
 			/*at the end of 2nd cycle*/
 			if(restartHandover)
 			{
 
-				if( (!walkFwdAgain) && (posTaskL->eval().norm()) <0.05 && (posTaskR->eval().norm() <0.05) )
+				if(!goBackInitPose)
 				{
 
-					//walk back at the end of 2nd cycle
-					walkBack = true;
-					walkFwdAgain = true;
+					e = 1;
+					t1 = 0.0;
+					t2 = 0.0;
+					t3 = 0.0;
+					t4 = 0.0;
+					t5 = 0.0;
+					t6 = 0.0;
+					t7 = 0.0;
+					t8 = 0.0;
+					t9 = 0.0;
+					t_falseClose = 0.0;
 
-				}
-
-				if( (!goBackInitPose) && ctl.isLastDSP() )
-				{
+					bool_t1 = true;
+					bool_t6 = true;
 
 					openGripper = false;
 					closeGripper = false;
@@ -1057,31 +1089,62 @@ namespace lipm_walking
 
 					pickNearestHand = true;
 
-					e = 1;
-					t1 = 0.0;
-					t2 = 0.0;
-					t3 = 0.0;
-					t4 = 0.0;
-					t5 = 0.0;
-					t6 = 0.0;
-					t7 = 0.0;
-					t8 = 0.0;
-					t9 = 0.0;
-					t_falseClose = 0.0;
+				}
 
-					bool_t1 = true;
-					bool_t6 = true;
+
+				if( (!walkFwdAgain) && (posTaskL->eval().norm()) <0.05 && (posTaskR->eval().norm() <0.05) )
+				{
+
+					walkBack = true;
+					ctl.config().add("finishedWalk", false);
+
+					ctl.postureTask->reset();
+
+					ctl.solver().removeTask(posTaskL);
+					ctl.solver().removeTask(oriTaskL);
+
+					ctl.solver().removeTask(posTaskR);
+					ctl.solver().removeTask(oriTaskR);
 
 					restartHandover = false;
-					LOG_SUCCESS("------------------------------> Handover routine completed, begin again\n")
+
+					handoverComplete = true;
+
+					LOG_WARNING("------------------------------> now robot will walk back again\n")
+
+				}
+
+			}//restartHandover
+
+
+			if(handoverComplete && Flag_Walk && ctl.isLastDSP() )
+			{
+				finishedWalk_ = ctl.config()("finishedWalk", false);
+
+				if(finishedWalk_)
+				{
+					finishedWalk_ = false;
+					ctl.config().add("finishedWalk", false);
+
+					ctl.solver().addTask(posTaskL);
+					ctl.solver().addTask(oriTaskL);
+					ctl.solver().addTask(posTaskR);
+					ctl.solver().addTask(oriTaskR);
+
+					posTaskL->reset();
+					oriTaskL->reset();
+					posTaskR->reset();
+					oriTaskR->reset();
+
+					handoverComplete = false;
+
+					LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
 				}
 				else
 				{
 					ctl.postureTask->reset();
 				}
-
-			}//restartHandover
-
+			}
 		}
 
 		return false;

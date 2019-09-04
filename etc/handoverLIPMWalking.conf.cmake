@@ -817,6 +817,7 @@
 	},
 
 	"triggerWalk" : false,
+	"finishedWalk": false,
 
 	"transitions":
 	[

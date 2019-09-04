@@ -130,6 +130,9 @@ namespace lipm_walking
       {
         ctl.plan.restorePreviousFootstep(); // current one is for next SSP
       }
+
+      ctl.config().add("finishedWalk", true);
+
       output("Standing");
       return true;
     }

@@ -113,10 +113,13 @@ namespace lipm_walking
 
 		bool FlAG_INDIVIDUAL{false}; // TRUE for using individual hand, otherwise use both hands together
 
-		bool walkFwd{false};
-		bool walkFwdAgain{true};
+		bool Flag_Walk{true}; //TRUE for walking, else only stabilizer
 
+		bool finishedWalk_{false};
+		bool walkFwd{false};
+		bool walkFwdAgain{false};
 		bool walkBack{false};
+
 
 		Eigen::Vector3d tuner;
 
@@ -191,7 +194,7 @@ namespace lipm_walking
 
 		sva::PTransformd virObjLeft, virObjRight;
 
-		double objAboveWaist{0.9};
+		double objAboveWaist{1.0}; //for Ashesh
 		double finR_rel_efL, finL_rel_efR;
 		double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
 		double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;
@@ -252,6 +255,8 @@ namespace lipm_walking
 		bool enableHand{true};
 
 		bool pickNearestHand{true};
+
+		bool handoverComplete{false};
 
 		std::vector<double> FloadLx, FloadLy, FloadLz;
 		std::vector<double> FloadRx, FloadRy, FloadRz;

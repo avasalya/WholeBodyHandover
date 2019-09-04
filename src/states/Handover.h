@@ -63,13 +63,11 @@ namespace lipm_walking
 			void ros_spinner();
 			void cortexCallback(const cortex_ros_bridge_msgs::Markers & msg);
 
-
 			bool Flag_RosMocap{true};
 			bool Flag_HandoverInit{true};
 			bool Flag_HandoverTasks{true};
 			bool Flag_HandoverGUI{true};
 			bool Flag_HandoverLogs{true};
-			bool Flag_Walk{true};//TRUE for walking, else only stabilizer
 
 
 			double pi{3.14};
@@ -87,7 +85,6 @@ namespace lipm_walking
 			std::string name;
 
 			int fps{200};
-			int dt{1};
 			int i{0};
 			int c{0};
 			int runCount{0};
@@ -169,7 +166,7 @@ namespace lipm_walking
 
 		public:
 			bool startCapture{false};
-			bool restartEverything{false};
+			bool resetFlags_and_efPose{false};
 
 			bool stepFwd;
 			bool stepBack;
