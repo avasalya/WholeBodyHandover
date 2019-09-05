@@ -111,10 +111,9 @@ namespace lipm_walking
 					thresh << 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10;
 				}
 
-				relaxPosL << 0.20, 0.35, 0.8;
-				relaxPosR << 0.20, -0.35, 0.8;
-
 				relaxPos << 0.20, 0.35, 1.0, 0.20, -0.35, 1.0;
+				relaxPosL << relaxPos.segment(0,3);
+				relaxPosR << relaxPos.segment(3,3);
 
 				efLPos.resize(3);
 				efLVel.resize(2);
@@ -216,6 +215,9 @@ namespace lipm_walking
 
 				}
 
+				ctl.logger().addLogEntry("HANDOVER_upperLim",[this]() -> double { return 1.2; });
+
+
 				ctl.logger().addLogEntry("HANDOVER_thresh",[this]() -> Eigen::VectorXd { return thresh; });
 				ctl.logger().addLogEntry("HANDOVER_leftForce_Xabs",[this]() -> double { return leftForce_Xabs; });
 				ctl.logger().addLogEntry("HANDOVER_leftForce_Yabs",[this]() -> double { return leftForce_Yabs; });
@@ -223,6 +225,9 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_rightForce_Xabs",[this]() -> double { return rightForce_Xabs; });
 				ctl.logger().addLogEntry("HANDOVER_rightForce_Yabs",[this]() -> double { return rightForce_Yabs; });
 				ctl.logger().addLogEntry("HANDOVER_rightForce_Zabs",[this]() -> double { return rightForce_Zabs; });
+				ctl.logger().addLogEntry("HANDOVER_leftForceSurf",[this]() -> Eigen::Vector3d { return leftForceSurf; });
+				ctl.logger().addLogEntry("HANDOVER_rightForceSurf",[this]() -> Eigen::Vector3d { return rightForceSurf; });
+
 
 				ctl.logger().addLogEntry("HANDOVER_posTaskL", [this]() -> Eigen::Vector3d { return posTaskL->position(); });
 				ctl.logger().addLogEntry("HANDOVER_posTaskR", [this]() -> Eigen::Vector3d { return posTaskR->position(); });
@@ -656,8 +661,8 @@ namespace lipm_walking
 			auto & ctl = controller();
 			auto & pendulum_ = ctl.pendulum();
 
-			relaxPosL << relaxPos(0,3);
-			relaxPosR << relaxPos(3,3);
+			relaxPosL << relaxPos.segment(0,3);
+			relaxPosR << relaxPos.segment(3,3);
 
 			/*relative to pelvis*/
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
@@ -1276,9 +1281,7 @@ namespace lipm_walking
 
 					/*head visual tracking*/
 					if(approachObj->subjHasObject)
-					{
-						headTask->target(approachObj->objectPosC);
-					}
+					{ headTask->target(approachObj->objectPosC); }
 					else
 					{
 						if(approachObj->FlAG_INDIVIDUAL)
@@ -1312,7 +1315,7 @@ namespace lipm_walking
 					// {}
 
 					/*as long as object is within robot's reachable space*/
-					objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
+					objBody_rel_robotBody = abs( approachObj->objectPosC(0) - X_0_rel.translation()(0) );
 					if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >=0.0) )
 					{
 						obj_rel_robot();
@@ -1402,8 +1405,8 @@ namespace lipm_walking
 					approachObj->Markers[d] << Eigen::Vector3d(0, 0, 0);
 				}
 
-				relaxPosL << 0.20, 0.35, 0.8;
-				relaxPosR << 0.20, -0.35, 0.8;
+				relaxPosL << 0.20, 0.35, 1.0;
+				relaxPosR << 0.20, -0.35, 1.0;
 
 				auto  gripperL = ctl.grippers["l_gripper"].get();
 				auto  gripperR = ctl.grippers["r_gripper"].get();
