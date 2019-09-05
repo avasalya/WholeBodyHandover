@@ -4,10 +4,10 @@ namespace lipm_walking
 {
 	ApproachObject::ApproachObject(Controller & controller_):ctl(controller_) {}
 
+
 	ApproachObject::~ApproachObject() {}
 
 
-	/*allocate memory*/
 	void ApproachObject::initials()
 	{
 
@@ -49,8 +49,6 @@ namespace lipm_walking
 
 		if(Flag_withoutRobot)
 		{	LOG_ERROR("robot markers are not considered") }
-		else
-		{	LOG_WARNING("robot markers are considered")	}
 
 		/*prediction controller parameter*/
 		tuner << 100., 10., 10.;
@@ -90,7 +88,7 @@ namespace lipm_walking
 		for(unsigned int k=8; k<totalMarkers; k++)
 		{
 			/*mostly human markers*/
-			if( Markers[k](0) > 0.1 && Markers[k](0) < 3 )
+			if( Markers[k](0) > 0.15 && Markers[k](0) < 3 )
 			{
 				checkNonZero = true;
 				// LOG_WARNING("return true " << checkNonZero)
@@ -459,7 +457,7 @@ namespace lipm_walking
 			count_rh_success--;
 			rh_fail = false;
 
-			LOG_ERROR("------------------------------>did robot drop the object ?")
+			LOG_ERROR("------------------------------> did robot drop the object ?")
 		}
 
 
@@ -479,7 +477,7 @@ namespace lipm_walking
 					{
 						enableHand = false;
 						t7 = difftime( time(0), start);
-						LOG_WARNING("------------------------------>2nd cycle, motion stopped, try to retreat object")
+						LOG_WARNING("------------------------------> 2nd cycle, motion stopped, try to retreat object")
 					}
 
 					Finert = objMass * efAce;
@@ -502,7 +500,7 @@ namespace lipm_walking
 
 							goBackInitPose = false;
 
-							LOG_SUCCESS("------------------------------>object pulled, threshold on " << axis_name << " with pull force " << Fpull[idx]<< " reached on "<< gripperName + " with newTh " << newTh.transpose())
+							LOG_SUCCESS("------------------------------> object pulled, threshold on " << axis_name << " with pull force " << Fpull[idx]<< " reached on "<< gripperName + " with newTh " << newTh.transpose())
 							cout << gripperName + "_Forces at Grasp "<< handForce.transpose() <<endl;
 							cout << "Finert "<< Finert.transpose() <<endl;
 							cout <<"object mass " << objMass <<endl;
@@ -536,7 +534,7 @@ namespace lipm_walking
 					enableHand = false;
 					t3 = difftime( time(0), start);
 
-					LOG_WARNING("------------------------------>motion stopped with Fzero Norm "<< Fzero.norm())
+					LOG_WARNING("------------------------------> motion stopped with Fzero Norm "<< Fzero.norm())
 				}
 
 				/*closed WITH object*/
@@ -551,7 +549,7 @@ namespace lipm_walking
 
 					Fclose = handForce;
 					t4 = difftime( time(0), start);
-					LOG_INFO("------------------------------>closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
+					LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
 				}
 
 				/*closed WITHOUT object*/
@@ -567,7 +565,7 @@ namespace lipm_walking
 
 						gOpen = true;
 						t_falseClose = difftime( time(0), start);
-						LOG_ERROR("------------------------------>false close, try with object again")
+						LOG_ERROR("------------------------------> false close, try with object again")
 					}
 					else
 					{ Fclose = Eigen::Vector3d(1,1,1); }
@@ -600,7 +598,7 @@ namespace lipm_walking
 					accumulate( Floady.begin(), Floady.end(), 0.0)/double(Floady.size()),
 					accumulate( Floadz.begin(), Floadz.end(), 0.0)/double(Floadz.size());
 
-					LOG_SUCCESS("------------------------------>robot has object, motion enabled, Fload "<< Fload.transpose() << ", EF returning to init pose" )
+					LOG_SUCCESS("------------------------------> robot has object, motion enabled, Fload "<< Fload.transpose() << ", EF returning to init pose" )
 
 
 					/*try "worldWrench" with gravity*/
@@ -675,7 +673,7 @@ namespace lipm_walking
 					bool_t6 = true;
 					rh_fail = true;
 
-					LOG_INFO("------------------------------>object returned to subject, motion enabled, restarting handover\n")
+					LOG_INFO("------------------------------> object returned to subject, motion enabled, restarting handover\n")
 				}
 			}
 		}
@@ -723,7 +721,7 @@ namespace lipm_walking
 					{
 						enableHand = false;
 						t7 = difftime( time(0), start);
-						LOG_WARNING("------------------------------>trying to pull object, motion stopped")
+						LOG_WARNING("------------------------------> trying to pull object, motion stopped")
 					}
 
 					FinertL = (objMass/2) * efLAce;
@@ -762,14 +760,14 @@ namespace lipm_walking
 								count_rh_success++;
 
 								goBackInitPose = false;
-								LOG_SUCCESS("------------------------------>object returned and estimated mass(kg) was = " << objMass)
+								LOG_SUCCESS("------------------------------> object returned and estimated mass(kg) was = " << objMass)
 								cout<< "object pulled with forces L= " << abs(FpullL[idx]) << "  and R= "<<abs(FpullR[idx])<<endl;
 							}
 						}
 						else
 						{
 							count_rh_fail++;
-							LOG_ERROR("------------------------------>robot doesn't have contacts with the object")
+							LOG_ERROR("------------------------------> robot doesn't have contacts with the object")
 						}
 					}
 				}
@@ -794,7 +792,7 @@ namespace lipm_walking
 					gOpen = true;
 					t2 = difftime( time(0), start);
 
-					LOG_INFO("------------------------------>1st cycle, opening grippers")
+					LOG_INFO("------------------------------> 1st cycle, opening grippers")
 				}
 
 				/*stop motion*/
@@ -814,7 +812,7 @@ namespace lipm_walking
 					enableHand = false;
 					t3 = difftime( time(0), start);
 
-					LOG_WARNING("------------------------------>motion stopped with Fzero L & R Norms "<<FzeroL.norm()<<" & "<< FzeroR.norm())
+					LOG_WARNING("------------------------------> motion stopped with Fzero L & R Norms "<<FzeroL.norm()<<" & "<< FzeroR.norm())
 				}
 
 				/*closed WITH object*/
@@ -838,7 +836,7 @@ namespace lipm_walking
 					efRPosOfHandover = posTaskR->position();
 					hRPosOfHandover = fingerPosR;
 
-					LOG_WARNING("------------------------------>closing with Fclose L & R Norms "<<FcloseL.norm()<<" & "<<FcloseR.norm())
+					LOG_WARNING("------------------------------> closing with Fclose L & R Norms "<<FcloseL.norm()<<" & "<<FcloseR.norm())
 				}
 
 				/*closed WITHOUT object*/
@@ -860,7 +858,7 @@ namespace lipm_walking
 
 						t_falseClose = difftime( time(0), start);
 
-						LOG_ERROR("------------------------------>false close, Fclose L & R Norms, try with object again"<<FcloseL.norm()<<" & "<<FcloseR.norm())
+						LOG_ERROR("------------------------------> false close, Fclose L & R Norms, try with object again"<<FcloseL.norm()<<" & "<<FcloseR.norm())
 					}
 					else
 					{
@@ -955,7 +953,7 @@ namespace lipm_walking
 						posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.25, relaxPosL(1), relaxPosL(2)));
 						oriTaskL->orientation(relaxRotL);
 
-						LOG_SUCCESS("------------------------------>Robot has object(mass = "<< objMass <<"),   Ef(s) returning to relax pose, FloadL & FloadR are "<< FloadL.transpose() <<" :: "<< FloadR.transpose())
+						LOG_SUCCESS("------------------------------> Robot has object(mass = "<< objMass <<"),   Ef(s) returning to relax pose, FloadL & FloadR are "<< FloadL.transpose() <<" :: "<< FloadR.transpose())
 					}
 
 					if( subjHasObject &&
@@ -1010,7 +1008,7 @@ namespace lipm_walking
 				{
 					takeBackObject = true;
 					walkBack = true;
-				  LOG_SUCCESS("------------------------------>, robot returning to relax pose")
+				  LOG_SUCCESS("------------------------------> robot returning to relax pose")
 				}
 
 			}
@@ -1020,6 +1018,7 @@ namespace lipm_walking
 			/*add ef task again*/
 			if( walkBack && robotHasObject && (!enableHand) )
 			{
+
 				if(Flag_Walk && ctl.isLastDSP() )
 				{
 
@@ -1048,7 +1047,8 @@ namespace lipm_walking
 				{
 					enableHand = true;
 				}
-				LOG_SUCCESS("------------------------------> ready to begin 2nd cycle, motion enabled")
+				LOG_SUCCESS("------------------------------> ready to begin 2nd cycle, motion enabled = " << enableHand)
+
 			}
 /*
 *  9th, final
@@ -1100,22 +1100,29 @@ namespace lipm_walking
 				if( (!walkFwdAgain) && (posTaskL->eval().norm()) <0.05 && (posTaskR->eval().norm() <0.05) )
 				{
 
-					walkBack = true;
-					ctl.config().add("finishedWalk", false);
+					if(Flag_Walk)
+					{
+						walkBack = true;
+						ctl.config().add("finishedWalk", false);
 
-					ctl.postureTask->reset();
+						ctl.postureTask->reset();
 
-					ctl.solver().removeTask(posTaskL);
-					ctl.solver().removeTask(oriTaskL);
+						ctl.solver().removeTask(posTaskL);
+						ctl.solver().removeTask(oriTaskL);
 
-					ctl.solver().removeTask(posTaskR);
-					ctl.solver().removeTask(oriTaskR);
+						ctl.solver().removeTask(posTaskR);
+						ctl.solver().removeTask(oriTaskR);
+
+						handoverComplete = true;
+
+						LOG_WARNING("------------------------------> now robot will walk back again\n")
+					}
+					else
+					{
+						LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
+					}
 
 					restartHandover = false;
-
-					handoverComplete = true;
-
-					LOG_WARNING("------------------------------> now robot will walk back again\n")
 
 				}
 

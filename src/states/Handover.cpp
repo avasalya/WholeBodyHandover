@@ -41,11 +41,15 @@ namespace lipm_walking
 
 			auto & ctl = controller();
 
-			if(Flag_RosMocap)
+			if(Flag_HandoverInit)
 			{
 
+				/*current time*/
+				time_t now = time(0);
+				char* dt = ctime(&now);
+
+
 				/*configure MOCAP*/
-				cout << "\033[1;32m***ROS_MOCAP_BRIDGE IS ENABLED*** \033[0m\n";
 				m_nh_ = mc_rtc::ROSBridge::get_node_handle();
 				if(!m_nh_)
 				{
@@ -54,22 +58,23 @@ namespace lipm_walking
 				m_ros_spinner_ = std::thread{[this](){ this->ros_spinner(); }};
 				l_shape_sub_ = m_nh_->subscribe("novis_markers", 1, & lipm_walking::states::Handover::cortexCallback, this);
 
-			}
-
-			if(Flag_HandoverInit)
-			{
-
-				/*current time*/
-				time_t now = time(0);
-				char* dt = ctime(&now);
-				cout << "The local date and time is: " << dt << endl;
-
-				stepFwd = true;
-				stepBack = true;
 
 				/*allocate memory*/
 				approachObj = std::make_shared<lipm_walking::ApproachObject>(ctl);
 				approachObj->initials();
+
+				if(approachObj->FlAG_INDIVIDUAL)
+				{
+					LOG_ERROR("Starting **INDIVIDUAL** hands scenario at " <<  dt)
+				}
+				else //TOGETHER
+				{
+					LOG_ERROR("Starting **TOGETHER** hands scenario at " << dt)
+				}
+
+
+				stepFwd = true;
+				stepBack = true;
 
 
 				/*close grippers for safety*/
@@ -109,7 +114,7 @@ namespace lipm_walking
 				relaxPosL << 0.20, 0.35, 0.8;
 				relaxPosR << 0.20, -0.35, 0.8;
 
-				relaxPos << 0.20, 0.35, 0.8, 0.20, -0.35, 0.8;
+				relaxPos << 0.20, 0.35, 1.0, 0.20, -0.35, 1.0;
 
 				efLPos.resize(3);
 				efLVel.resize(2);
@@ -183,6 +188,10 @@ namespace lipm_walking
 				else // TOGETHER
 				{
 
+					ctl.logger().addLogEntry("HANDOVER_together_robotHasObject",[this]() -> double { return approachObj->robotHasObject; });
+					ctl.logger().addLogEntry("HANDOVER_together_subjHasObject",[this]() -> double { return approachObj->subjHasObject; });
+					ctl.logger().addLogEntry("HANDOVER_together_pickNearestHand",[this]() -> double { return approachObj->pickNearestHand; });
+
 					ctl.logger().addLogEntry("HANDOVER_together_enableHand",[this]() -> double { return approachObj->enableHand; });
 
 					ctl.logger().addLogEntry("HANDOVER_together_efLAce",[this]() -> Eigen::Vector3d { return efLAce; });
@@ -225,8 +234,6 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_oriTaskLEval", [this]() -> Eigen::Vector3d { return oriTaskL->eval(); });
 				ctl.logger().addLogEntry("HANDOVER_oriTaskREval", [this]() -> Eigen::Vector3d { return oriTaskR->eval(); });
 
-
-
 				ctl.logger().addLogEntry("HANDOVER_fingerPosL",[this]() -> Eigen::Vector3d { return approachObj->fingerPosL; });
 				ctl.logger().addLogEntry("HANDOVER_fingerPosR",[this]() -> Eigen::Vector3d { return approachObj->fingerPosR; });
 
@@ -236,6 +243,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_objectPosCx",[this]()-> Eigen::Vector3d { return approachObj->objectPosCx; });
 				ctl.logger().addLogEntry("HANDOVER_objectPosCy",[this]()-> Eigen::Vector3d { return approachObj->objectPosCy; });
 
+				ctl.logger().addLogEntry("HANDOVER_relObjRobotBodiesDist",[this]() -> double { return objBody_rel_robotBody; });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosR",[this]() -> Eigen::Vector3d { return bodyPosR; });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosS",[this]() -> Eigen::Vector3d { return bodyPosS; });
 				ctl.logger().addLogEntry("HANDOVER_b2bDist",[this]() -> double { return ID; });
@@ -259,6 +267,9 @@ namespace lipm_walking
 
 				ctl.logger().addLogEntry("HANDOVER_gOpen",[this]() -> double { return approachObj->gOpen; });
 				ctl.logger().addLogEntry("HANDOVER_gClose",[this]() -> double { return approachObj->gClose; });
+
+				ctl.logger().addLogEntry("HANDOVER_OpenGripper",[this]() -> double { return approachObj->openGripper; });
+				ctl.logger().addLogEntry("HANDOVER_CloseGripper",[this]() -> double { return approachObj->closeGripper; });
 
 				ctl.logger().addLogEntry("HANDOVER_gripperEfL",[this]() -> Eigen::Vector3d { return approachObj->gripperEfL; });
 				ctl.logger().addLogEntry("HANDOVER_gripperEfR",[this]() -> Eigen::Vector3d { return approachObj->gripperEfR; });
@@ -636,39 +647,6 @@ namespace lipm_walking
 
 			}
 
-
-			if(approachObj->FlAG_INDIVIDUAL)
-			{
-				LOG_SUCCESS("******** Both hands INDIVIDUAL scenario *********")
-			}
-			else //TOGETHER
-			{
-				LOG_SUCCESS("******** Both hands TOGETHER scenario *********")
-			}
-
-
-			/*Relative transformation X_b1_b2 from body b1 to body b2*/
-			// sva::PTransformd X_b1_b2(const std::string & b1, const std::string & b2) const;
-
-			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
-			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
-
-
-			sva::PTransformd X_0Pos_efL = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK7")];
-			sva::PTransformd X_0Ori_efL = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK6")];
-
-			sva::PTransformd X_0Pos_efR = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("RARM_LINK7")];
-			sva::PTransformd X_0Ori_efR = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("RARM_LINK6")];
-
-			/* X_rel_ef = X_0_ef * X_rel_0 */
-			X_relPos_efL = X_0Pos_efL * (X_0_rel.inv());
-			// X_relOri_efL = X_0Ori_efL * (X_0_rel.inv());
-			X_relOri_efL = sva::PTransformd(relaxRotL, relaxPosL) * (X_0_rel.inv());
-
-			X_relPos_efR = X_0Pos_efR * (X_0_rel.inv());
-			// X_relOri_efR = X_0Ori_efR * (X_0_rel.inv());
-			X_relOri_efR = sva::PTransformd(relaxRotR, relaxPosR) * (X_0_rel.inv());
-
 		}// start
 
 
@@ -684,27 +662,6 @@ namespace lipm_walking
 			/*relative to pelvis*/
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
 			X_0_rel = sva::PTransformd( X_0_body.rotation(), X_0_body.translation() - Eigen::Vector3d(0, 0, 0.772319) );
-
-
-			// /*left ef relative pos to body*/
-			// // X_desPos_efL = X_relPos_efL * X_0_rel; posTaskL->position( X_desPos_efL.translation() );
-			// posTaskL->refAccel(pendulum_.comdd());
-			// posTaskL->refVel(pendulum_.comd());
-			// posTaskL->position( objEfTask->get_ef_pose().translation() );
-
-			// X_desOri_efL = X_relOri_efL * X_0_rel; oriTaskL->orientation( X_desOri_efL.rotation() );
-			// // oriTaskL->orientation( objEfTask->get_ef_pose().rotation() );
-
-
-			// /*right ef relative pos to body*/
-			// // X_desPos_efR = X_relPos_efR * X_0_rel; posTaskR->position( X_desPos_efR.translation() );
-			// posTaskR->refAccel(pendulum_.comdd());
-			// posTaskR->refVel(pendulum_.comd());
-			// posTaskR->position( objEfTask->get_ef_pose().translation() );
-
-			// X_desOri_efR = X_relOri_efR * X_0_rel; oriTaskR->orientation( X_desOri_efR.rotation() );
-			// // oriTaskR->orientation( objEfTask->get_ef_pose().rotation() );
-
 
 
 			ltPosW = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("LARM_LINK7")].translation();
@@ -1027,7 +984,7 @@ namespace lipm_walking
 								subjRtHandOnObj();
 							}
 							else if( approachObj->robotHasObject && approachObj->pickNearestHand &&
-								( (approachObj->finR_rel_efL < 0.9) || (approachObj->finL_rel_efR < 0.9) ) )
+								( (approachObj->finR_rel_efL < 1.0) || (approachObj->finL_rel_efR < 1.0) ) )
 							{
 								if(approachObj->bool_t6)
 								{
@@ -1355,8 +1312,8 @@ namespace lipm_walking
 					// {}
 
 					/*as long as object is within robot's reachable space*/
-					auto objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
-					if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >0.1) )
+					objBody_rel_robotBody = (approachObj->objectPosC(0) - X_0_rel.translation()(0));
+					if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >=0.0) )
 					{
 						obj_rel_robot();
 

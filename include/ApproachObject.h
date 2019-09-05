@@ -182,8 +182,10 @@ namespace lipm_walking
 		Eigen::Vector3d gripperEfL = Eigen::Vector3d::Zero();
 		Eigen::Vector3d gripperEfR = Eigen::Vector3d::Zero();
 
-		Eigen::Vector3d gripperLtEfA, gripperRtEfA;
-		Eigen::Vector3d gripperLtEfB, gripperRtEfB;
+		Eigen::Vector3d gripperLtEfA = Eigen::Vector3d::Zero();
+		Eigen::Vector3d gripperRtEfA = Eigen::Vector3d::Zero();
+		Eigen::Vector3d gripperLtEfB = Eigen::Vector3d::Zero();
+		Eigen::Vector3d gripperRtEfB = Eigen::Vector3d::Zero();
 
 		Eigen::Vector3d headPos, headPos1, headPos2;
 		Eigen::Vector3d fingerPosL = Eigen::Vector3d::Zero();

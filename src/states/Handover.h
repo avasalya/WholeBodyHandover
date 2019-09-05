@@ -63,7 +63,6 @@ namespace lipm_walking
 			void ros_spinner();
 			void cortexCallback(const cortex_ros_bridge_msgs::Markers & msg);
 
-			bool Flag_RosMocap{true};
 			bool Flag_HandoverInit{true};
 			bool Flag_HandoverTasks{true};
 			bool Flag_HandoverGUI{true};
@@ -100,8 +99,6 @@ namespace lipm_walking
 
 
 			sva::PTransformd X_0_rel;
-			sva::PTransformd X_relPos_efL, X_relOri_efL, X_desPos_efL, X_desOri_efL;
-			sva::PTransformd X_relPos_efR, X_relOri_efR, X_desPos_efR, X_desOri_efR;
 
 			Eigen::Vector3d headVector, headTarget;
 
@@ -128,6 +125,9 @@ namespace lipm_walking
 			double logStepSize{0.0};
 			std::string stepSize, walkPlan;
 			std::string walkThisDir = "can move either forward or backward";
+
+
+			double objBody_rel_robotBody{0.0};
 
 			/*offsets for robot grippers to grasp object*/
 			double objLen;

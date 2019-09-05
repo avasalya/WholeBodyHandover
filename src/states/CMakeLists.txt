@@ -35,7 +35,7 @@ endmacro()
 
 add_subdirectory(cortex)
 
-#find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge) # on ashesh pc
+# find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge) # on ashesh pc
 find_package(catkin REQUIRED COMPONENTS cortex_ros_bridge) # on robot pc
 
 include_directories(${catkin_INCLUDE_DIRS})
