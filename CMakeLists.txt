@@ -32,8 +32,8 @@ set(PROJECT_VERSION 1.1.0)
 
 project(${PROJECT_NAME} CXX)  # because setup_project() is not called
 
-# set(CMAKE_CXX_STANDARD 14) # my pc
-set(CMAKE_CXX_STANDARD 11) # robot pc
+set(CMAKE_CXX_STANDARD 14) # my pc
+# set(CMAKE_CXX_STANDARD 11) # robot pc
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
