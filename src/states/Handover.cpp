@@ -136,21 +136,21 @@ namespace lipm_walking
 
 
 				/*Ef pos Tasks*/
-				posTaskL = make_shared<mc_tasks::PositionTask>("LARM_LINK7", Eigen::Vector3d(0.0, 0.0, -0.09), ctl.robots(), 0, 4.0, 1e3);
+				posTaskL = make_shared<mc_tasks::PositionTask>("LARM_LINK7", ctl.robots(), 0, 4.0, 1e3);
 				ctl.solver().addTask(posTaskL);
 				initPosL = posTaskL->position();
 
-				posTaskR = make_shared<mc_tasks::PositionTask>("RARM_LINK7", Eigen::Vector3d(0.0, 0.0, -0.09), ctl.robots(), 0, 4.0, 1e3);
+				posTaskR = make_shared<mc_tasks::PositionTask>("RARM_LINK7", ctl.robots(), 0, 4.0, 1e3);
 				ctl.solver().addTask(posTaskR);
 				initPosR = posTaskR->position();
 
 
 				/*Ef ori Task*/
-				oriTaskL = make_shared<mc_tasks::OrientationTask>("LARM_LINK6",ctl.robots(), 0, 4.0, 500);
+				oriTaskL = make_shared<mc_tasks::OrientationTask>("LARM_LINK6", ctl.robots(), 0, 4.0, 500);
 				ctl.solver().addTask(oriTaskL);
 				initRotL = oriTaskL->orientation();
 
-				oriTaskR = make_shared<mc_tasks::OrientationTask>("RARM_LINK6",ctl.robots(), 0, 4.0, 500);
+				oriTaskR = make_shared<mc_tasks::OrientationTask>("RARM_LINK6", ctl.robots(), 0, 4.0, 500);
 				ctl.solver().addTask(oriTaskR);
 				initRotR = oriTaskR->orientation();
 

@@ -523,8 +523,8 @@ namespace lipm_walking
 				/*closed WITH object*/
 				else if( (!enableHand) &&
 						(graspObject) && /*along localY direction*/
-						( abs( (leftForceSurf - localSurf_FzeroL)(2) ) >8 ) &&
-						( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > 8 ) )
+						( abs( (leftForceSurf - localSurf_FzeroL)(2) ) > 5.5 ) &&
+						( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > 5.5 ) )
 				{
 					gClose = true;
 					closeGripper = true;
