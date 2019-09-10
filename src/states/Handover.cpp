@@ -989,7 +989,7 @@ namespace lipm_walking
 								subjRtHandOnObj();
 							}
 							else if( approachObj->robotHasObject && approachObj->pickNearestHand &&
-								( (approachObj->finR_rel_efL < 1.0) || (approachObj->finL_rel_efR < 1.0) ) )
+								( (approachObj->finR_rel_efL < 1.2) || (approachObj->finL_rel_efR < 1.2) ) )
 							{
 								if(approachObj->bool_t6)
 								{
@@ -1116,84 +1116,117 @@ namespace lipm_walking
 
 
 					/*feed Ef pose*/
-						if(approachObj->FlAG_INDIVIDUAL)
+					if(approachObj->FlAG_INDIVIDUAL)
+					{
+						if( (!approachObj->stopRtEf) )
 						{
-							if( (!approachObj->stopRtEf) )
-							{
-								approachObj->useRtEf = false;
-								robotMarkersName = approachObj->robotLtMarkers;
+							approachObj->useRtEf = false;
+							robotMarkersName = approachObj->robotLtMarkers;
 
+							approachObj->goToHandoverPose(
+								Xmax,
+								-0.1,
+								0.7,
+								approachObj->enableLHand,
+								ltPosW,
+								posTaskL,
+								oriTaskL,
+								approachObj->lHandPredict,
+								fingerPos);
+
+							approachObj->forceControllerIndividual(
+								approachObj->enableLHand,
+								relaxPosL,
+								initPosL,
+								initRotL,
+								leftForce,
+								leftForceSurf,
+								leftTh,
+								efLAce,
+								posTaskL,
+								oriTaskL,
+								"l_gripper",
+								robotMarkersName,
+								subjMarkersName,
+								approachObj->obj_rel_robotLtHand);
+
+							gripperControl("l_gripper");
+						}
+						else if( (!approachObj->stopLtEf) )
+						{
+							approachObj->useLtEf = false;
+							robotMarkersName = approachObj->robotRtMarkers;
+
+							approachObj->goToHandoverPose(
+								Xmax,
+								-0.7,
+								0.10,
+								approachObj->enableRHand,
+								rtPosW,
+								posTaskR,
+								oriTaskR,
+								approachObj->rHandPredict,
+								fingerPos);
+
+							approachObj->forceControllerIndividual(
+								approachObj->enableRHand,
+								relaxPosR,
+								initPosR,
+								initRotR,
+								rightForce,
+								rightForceSurf,
+								rightTh,
+								efRAce,
+								posTaskR,
+								oriTaskR,
+								"r_gripper",
+								robotMarkersName,
+								subjMarkersName,
+								approachObj->obj_rel_robotRtHand);
+
+							gripperControl("r_gripper");
+						}
+					}
+					else //TOGETHER
+					{
+						if( (approachObj->useLeftEf) || (approachObj->useRightEf) )
+						{
+							if(approachObj->subjHasObject)
+							{
+								updateOffsetPosL = X_M_offsetL.translation();
 								approachObj->goToHandoverPose(
 									Xmax,
-									-0.1,
-									0.7,
-									approachObj->enableLHand,
+									-0.15,
+									0.75,
+									approachObj->enableHand,
 									ltPosW,
 									posTaskL,
 									oriTaskL,
 									approachObj->lHandPredict,
-									fingerPos);
+									updateOffsetPosL);
 
-								approachObj->forceControllerIndividual(
-									approachObj->enableLHand,
-									relaxPosL,
-									initPosL,
-									initRotL,
-									leftForce,
-									leftForceSurf,
-									leftTh,
-									efLAce,
-									posTaskL,
-									oriTaskL,
-									"l_gripper",
-									robotMarkersName,
-									subjMarkersName,
-									approachObj->obj_rel_robotLtHand);
 
-								gripperControl("l_gripper");
-							}
-							else if( (!approachObj->stopLtEf) )
-							{
-								approachObj->useLtEf = false;
-								robotMarkersName = approachObj->robotRtMarkers;
-
+								updateOffsetPosR = X_M_offsetR.translation();
 								approachObj->goToHandoverPose(
 									Xmax,
-									-0.7,
-									0.10,
-									approachObj->enableRHand,
+									-0.75,
+									0.15,
+									approachObj->enableHand,
 									rtPosW,
 									posTaskR,
 									oriTaskR,
 									approachObj->rHandPredict,
-									fingerPos);
-
-								approachObj->forceControllerIndividual(
-									approachObj->enableRHand,
-									relaxPosR,
-									initPosR,
-									initRotR,
-									rightForce,
-									rightForceSurf,
-									rightTh,
-									efRAce,
-									posTaskR,
-									oriTaskR,
-									"r_gripper",
-									robotMarkersName,
-									subjMarkersName,
-									approachObj->obj_rel_robotRtHand);
-
-								gripperControl("r_gripper");
+									updateOffsetPosR);
 							}
-						}
-						else //TOGETHER
-						{
-							if( (approachObj->useLeftEf) || (approachObj->useRightEf) )
+							else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
 							{
-								if(approachObj->subjHasObject)
+								if(approachObj->useLeftEf)
 								{
-									updateOffsetPosL = X_M_offsetL.translation();
+									// robotLtHandOnObj();
+									// updateOffsetPosL = X_M_offsetL.translation();
+
+									updateOffsetPosL = approachObj->fingerPosR;
+
 									approachObj->goToHandoverPose(
 										Xmax,
 										-0.15,
@@ -1204,9 +1237,14 @@ namespace lipm_walking
 										oriTaskL,
 										approachObj->lHandPredict,
 										updateOffsetPosL);
+								}
+								else if(approachObj->useRightEf)
+								{
+									// robotRtHandOnObj();
+									// updateOffsetPosR = X_M_offsetR.translation();
 
+									updateOffsetPosR = approachObj->fingerPosL;
 
-									updateOffsetPosR = X_M_offsetR.translation();
 									approachObj->goToHandoverPose(
 										Xmax,
 										-0.75,
@@ -1218,64 +1256,26 @@ namespace lipm_walking
 										approachObj->rHandPredict,
 										updateOffsetPosR);
 								}
-								else if( approachObj->robotHasObject && (!approachObj->pickNearestHand) )
-								{
-									if(approachObj->useLeftEf)
-									{
-										// robotLtHandOnObj();
-										// updateOffsetPosL = X_M_offsetL.translation();
-
-										updateOffsetPosL = approachObj->fingerPosR;
-
-										approachObj->goToHandoverPose(
-											Xmax,
-											-0.15,
-											0.75,
-											approachObj->enableHand,
-											ltPosW,
-											posTaskL,
-											oriTaskL,
-											approachObj->lHandPredict,
-											updateOffsetPosL);
-									}
-									else if(approachObj->useRightEf)
-									{
-										// robotRtHandOnObj();
-										// updateOffsetPosR = X_M_offsetR.translation();
-
-										updateOffsetPosR = approachObj->fingerPosL;
-
-										approachObj->goToHandoverPose(
-											Xmax,
-											-0.75,
-											0.15,
-											approachObj->enableHand,
-											rtPosW,
-											posTaskR,
-											oriTaskR,
-											approachObj->rHandPredict,
-											updateOffsetPosR);
-									}
-								}
-
-								/*check both gripper forces together*/
-								approachObj->forceControllerTogether(
-									approachObj->enableHand,
-									X_0_rel,
-									(initPosR + X_0_rel.translation()), initRotR,
-									(initPosL + X_0_rel.translation()), initRotL,
-									(relaxPosR + X_0_rel.translation()), relaxRotR,
-									(relaxPosL + X_0_rel.translation()), relaxRotL,
-									thresh,
-									leftForce, rightForce,
-									leftForceSurf, rightForceSurf,
-									efLAce, efRAce,
-									posTaskL, oriTaskL,
-									posTaskR, oriTaskR);
-
-								gripperControl("bothGrippers");
 							}
+
+							/*check both gripper forces together*/
+							approachObj->forceControllerTogether(
+								approachObj->enableHand,
+								X_0_rel,
+								(initPosR + X_0_rel.translation()), initRotR,
+								(initPosL + X_0_rel.translation()), initRotL,
+								(relaxPosR + X_0_rel.translation()), relaxRotR,
+								(relaxPosL + X_0_rel.translation()), relaxRotL,
+								thresh,
+								leftForce, rightForce,
+								leftForceSurf, rightForceSurf,
+								efLAce, efRAce,
+								posTaskL, oriTaskL,
+								posTaskR, oriTaskR);
+
+							gripperControl("bothGrippers");
 						}
+					}
 
 
 
