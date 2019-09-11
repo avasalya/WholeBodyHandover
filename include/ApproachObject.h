@@ -42,6 +42,14 @@ namespace lipm_walking
 {
 	struct Controller;
 
+	constexpr double GRAVITY 			= 9.80665;
+	constexpr double SURFACE_FORCE  	= 5.5;
+	constexpr double ROBOT_OBJ_DIST 	= 0.10;
+	constexpr double TRIGGER_WALK_AGAIN = 1.2;
+
+	// const Eigen::Vector3d gravity = Eigen::Vector3d{0., 0., -GRAVITY};
+
+
 	struct ApproachObject
 	{
 	public:
@@ -72,11 +80,12 @@ namespace lipm_walking
 
 		bool forceControllerIndividual(
 			bool& enableHand,
+			sva::PTransformd X_0_rel,
 			Eigen::Vector3d relaxPos,
 			Eigen::Vector3d initPos,
 			Eigen::Matrix3d initRot,
 			Eigen::Vector3d handForce,
-			Eigen::Vector3d ForceSurf,
+			Eigen::Vector3d forceSurf,
 			Eigen::Vector3d thresh,
 			Eigen::Vector3d efAce,
 			std::shared_ptr<mc_tasks::PositionTask>& posTask,
@@ -111,7 +120,7 @@ namespace lipm_walking
 
 		bool Flag_prediction{false}; //TRUE otherwise, use finger Position
 
-		bool FlAG_INDIVIDUAL{false}; // TRUE for using individual hand, otherwise use both hands together
+		bool FlAG_INDIVIDUAL{true}; // TRUE for using individual hand, otherwise use both hands together
 
 		bool Flag_Walk{false}; //TRUE for walking, else only stabilizer
 
@@ -141,15 +150,16 @@ namespace lipm_walking
 
 		time_t start;
 
-		double t1{0.0};
-		double t2{0.0};
-		double t3{0.0};
-		double t4{0.0};
-		double t5{0.0};
-		double t6{0.0};
-		double t7{0.0};
-		double t8{0.0};
-		double t9{0.0};
+		double t1{0.0}; // approach
+		double t2{0.0}; // open gripper
+		double t3{0.0}; // stop motion
+		double t4{0.0}; // close gripper
+		double t5{0.0}; // retreat human
+		double t6{0.0}; // approach again
+		double t7{0.0}; // stop motion again
+		double t8{0.0}; // pull object
+		double t9{0.0}; // handover routine completed
+
 		double t_falseClose{0.0};
 
 		bool bool_t1{true};
@@ -171,8 +181,12 @@ namespace lipm_walking
 		Eigen::Matrix3d handRot= idtMat;
 		Eigen::Matrix3d subjLHandRot, subjRHandRot, objRot;
 
+		Eigen::Vector3d efPosOfHandover = Eigen::Vector3d::Zero();
+		Eigen::Vector3d hPosOfHandover  = Eigen::Vector3d::Zero();
+
 		Eigen::Vector3d efLPosOfHandover = Eigen::Vector3d::Zero();
 		Eigen::Vector3d efRPosOfHandover = Eigen::Vector3d::Zero();
+
 		Eigen::Vector3d hLPosOfHandover  = Eigen::Vector3d::Zero();
 		Eigen::Vector3d hRPosOfHandover  = Eigen::Vector3d::Zero();
 
@@ -218,7 +232,8 @@ namespace lipm_walking
 
 		bool startNow{false};
 
-		double objMass{0.0};
+		double objMassZ{0.0};
+		double objMassNorm{0.0};
 
 	public: // individual hand
 

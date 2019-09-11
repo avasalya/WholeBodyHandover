@@ -48,7 +48,7 @@ namespace lipm_walking
 			{ markersPos[m] = Eigen::MatrixXd::Zero(3,600000); }
 
 		if(Flag_withoutRobot)
-		{	LOG_ERROR("robot markers are not considered") }
+			{	LOG_ERROR("robot markers are not considered") }
 
 		/*prediction controller parameter*/
 		tuner << 100., 10., 10.;
@@ -220,7 +220,7 @@ namespace lipm_walking
 			return true;
 		}
 		else
-		{ return false; }
+			{ return false; }
 
 	}
 
@@ -342,6 +342,7 @@ namespace lipm_walking
 		std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d, Eigen::Vector3d> handPredict,
 		Eigen::Vector3d offsetPos)
 	{
+
 		Eigen::Vector3d wp, handoverPos;
 
 		if(Flag_prediction)
@@ -383,6 +384,7 @@ namespace lipm_walking
 				}
 			}
 		}
+
 	}
 
 
@@ -413,6 +415,7 @@ namespace lipm_walking
 		/*check pull forces/release object*/
 		if( (finR_rel_efL < 0.35) || (finL_rel_efR < 0.35) )
 		{
+
 			/*
 			*  7th
 			*/
@@ -425,12 +428,14 @@ namespace lipm_walking
 					if(enableHand)
 					{
 						enableHand = false;
+
 						t7 = difftime( time(0), start);
+
 						LOG_WARNING("------------------------------> trying to pull object, motion stopped")
 					}
 
-					FinertL = (objMass/2) * efLAce;
-					FinertR = (objMass/2) * efRAce;
+					FinertL = (objMassZ/2) * efLAce;
+					FinertR = (objMassZ/2) * efRAce;
 
 					FpullL[0] = abs(leftForce[0]) - abs(FinertL[0]) - abs(FzeroL[0]);
 					FpullL[1] = abs(leftForce[1]) - abs(FinertL[1]) - abs(FzeroL[1]);
@@ -452,12 +457,13 @@ namespace lipm_walking
 
 						if(objHasContacts)
 						{
-							removeContacts = true;
-							robotHasObject = false;
 
 							gOpen = true;
 							restartHandover = true;
 							takeBackObject = false;
+							robotHasObject = false;
+
+							removeContacts = true;
 
 							if(goBackInitPose)
 							{
@@ -465,15 +471,21 @@ namespace lipm_walking
 								count_rh_success++;
 
 								goBackInitPose = false;
-								LOG_SUCCESS("------------------------------> object returned and estimated mass(kg) was = " << objMass)
+
 								cout<< "------------------------------> object pulled with forces L("<<axis_name<<") = " << abs(FpullL[idx]) << "  and R("<<axis_name<<") = " << abs(FpullR[idx])<<endl;
+								LOG_SUCCESS("------------------------------> object returned and estimated mass(Norm) was = " << objMassNorm)
 							}
+
 						}
-						else
+						else if(rh_fail) /*check for false r-to-h trial during object pulling*/
 						{
 							count_rh_fail++;
+							count_rh_success--;
+							rh_fail = false;
+
 							LOG_ERROR("------------------------------> robot doesn't have contacts with the object")
 						}
+
 					}
 				}
 				return false;
@@ -501,12 +513,12 @@ namespace lipm_walking
 				}
 
 				/*stop motion*/
-				else if( (openGripper)
-						&& (!closeGripper)
-						&& (!restartHandover)
-						&& (enableHand)
-						&& ( (virObj_rel_robotRtHand < 0.10) || (virObj_rel_robotLtHand < 0.10) )
-						)
+				else if( (enableHand)
+					&& (openGripper)
+					&& (!closeGripper)
+					&& (!restartHandover)
+					&& ( (virObj_rel_robotRtHand < ROBOT_OBJ_DIST) || (virObj_rel_robotLtHand < ROBOT_OBJ_DIST) )
+					)
 				{
 					FzeroL = leftForce;
 					FzeroR = rightForce;
@@ -523,8 +535,8 @@ namespace lipm_walking
 				/*closed WITH object*/
 				else if( (!enableHand) &&
 						(graspObject) && /*along localY direction*/
-						( abs( (leftForceSurf - localSurf_FzeroL)(2) ) > 5.5 ) &&
-						( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > 5.5 ) )
+					( abs( (leftForceSurf - localSurf_FzeroL)(2) ) > SURFACE_FORCE ) &&
+					( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > SURFACE_FORCE ) )
 				{
 					gClose = true;
 					closeGripper = true;
@@ -542,17 +554,15 @@ namespace lipm_walking
 					hRPosOfHandover = fingerPosR;
 
 					LOG_WARNING("------------------------------> closing with Fclose L & R Norms "<<FcloseL.norm()<<" & "<<FcloseR.norm())
-					cout<< "------------------------------> closing with Fclose L & R Norms "<<FcloseL.norm()<<" & "<<FcloseR.norm()<<endl;
-
 				}
 
 				/*closed WITHOUT object*/
-				else if(
-						(!restartHandover) && (!graspObject)  &&
-						(obj_rel_subjRtHand < obj_rel_robotLtHand) &&
-						(obj_rel_subjLtHand < obj_rel_robotRtHand) &&
-						(finR_rel_efL > 0.3) &&
-						(finL_rel_efR > 0.3) )
+				else if( (!restartHandover) &&
+					(!graspObject)  &&
+					(obj_rel_subjRtHand < obj_rel_robotLtHand) &&
+					(obj_rel_subjLtHand < obj_rel_robotRtHand) &&
+					(finR_rel_efL > 0.3) &&
+					(finL_rel_efR > 0.3) )
 				{
 					if( (FcloseL.norm() < 2.0) || (FcloseR.norm() < 2.0) )
 					{
@@ -569,8 +579,8 @@ namespace lipm_walking
 					}
 					else
 					{
-						FcloseL = Eigen::Vector3d(1,1,1);
-						FcloseR = Eigen::Vector3d(1,1,1);
+						FcloseL = Eigen::Vector3d(1, 1, 1);
+						FcloseR = Eigen::Vector3d(1, 1, 1);
 					}
 				}
 
@@ -582,17 +592,18 @@ namespace lipm_walking
 		* 5th
 		*/
 		/*trigger again walk fwd when robot has the object*/
-		if( walkFwdAgain && robotHasObject && takeBackObject && ( (finR_rel_efL < 1.2) || (finL_rel_efR < 1.2) ) )
+		if( walkFwdAgain && robotHasObject && takeBackObject && ( (finR_rel_efL < TRIGGER_WALK_AGAIN) || (finL_rel_efR < TRIGGER_WALK_AGAIN) ) )
 		{
 
 			if( (fingerPosL(2)>=objAboveWaist) || (fingerPosR(2)>=objAboveWaist) )
 			{
 				walkFwd = true;
 				walkFwdAgain = false;
-				LOG_WARNING("---------------------------------------> are you here in the beginning of 2nd cycle?")
+				LOG_WARNING("------------------------------> walk Fwd again, are you here in the beginning of 2nd cycle?")
 			}
 
 		}
+
 		/*
 		*  8th
 		*/
@@ -611,9 +622,9 @@ namespace lipm_walking
 				gClose = true;
 				goBackInitPose = true;
 
-				LOG_WARNING("---------------------------------------> robot will move to half-sit pose")
-
 				t9 = difftime( time(0), start);
+
+				LOG_WARNING("------------------------------> robot will move to half-sit pose")
 			}
 		}
 
@@ -651,7 +662,8 @@ namespace lipm_walking
 					accumulate( FloadRz.begin(), FloadRz.end(), 0.0)/double(FloadRz.size());
 
 					/*load force in the direction of gravity in world*/
-					objMass = ( FloadL(2) + FloadR(2) )/9.8;
+					objMassZ = ( FloadL(2) + FloadR(2) )/GRAVITY;
+					objMassNorm = ( FloadL.norm() + FloadR.norm() )/GRAVITY;
 
 					/*new threshold*/
 					newThL = FloadL + leftTh;
@@ -663,25 +675,26 @@ namespace lipm_walking
 						posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.25, relaxPosL(1), relaxPosL(2)));
 						oriTaskL->orientation(relaxRotL);
 
-						LOG_SUCCESS("------------------------------> Ef(s) returning to relax pose")
+						LOG_SUCCESS("------------------------------> Robot has object of mass(Z) = "<< objMassZ)
 						cout<< "------------------------------> FloadL & FloadR are "<< FloadL.transpose() <<" :: "<< FloadR.transpose()<<endl;
 					}
 
 					if( subjHasObject &&
-						(obj_rel_subjRtHand > obj_rel_robotLtHand) && /* less conservative with "||" */
+						(obj_rel_subjRtHand > obj_rel_robotLtHand) && /* less aggressive with "||" */
 						(obj_rel_subjLtHand > obj_rel_robotRtHand)
 						)
 					{
 						subjHasObject = false;
 						robotHasObject = true;
-						LOG_SUCCESS("------------------------------> Robot has object of mass = "<< objMass)
+
+						LOG_SUCCESS("------------------------------> Ef(s) returning to relax pose")
 					}
 
 					/*clear vector memories*/
 					FloadLx.clear(); FloadLy.clear(); FloadLz.clear();
 					FloadRx.clear(); FloadRy.clear(); FloadRz.clear();
 				}
-				else /*divide by 9.8 and you will get object mass*/
+				else /*averaging load force to get object mass*/
 				{
 					FloadLx.push_back( abs(leftForce[0]) );
 					FloadLy.push_back( abs(leftForce[1]) );
@@ -702,6 +715,7 @@ namespace lipm_walking
 				e+=1;
 
 			}
+
 			/*
 			*  3rd
 			*/
@@ -720,10 +734,12 @@ namespace lipm_walking
 				{
 					takeBackObject = true;
 					walkBack = true;
-				  LOG_SUCCESS("------------------------------> robot returning to relax pose")
+
+					LOG_SUCCESS("------------------------------> robot returning to relax pose")
 				}
 
 			}
+
 			/*
 			*  4th
 			*/
@@ -739,7 +755,7 @@ namespace lipm_walking
 
 					if(finishedWalk_)
 					{
-				        ctl.config().add("finishedWalk", false);
+						ctl.config().add("finishedWalk", false);
 
 						ctl.solver().addTask(posTaskL);
 						posTaskL->reset();
@@ -759,11 +775,11 @@ namespace lipm_walking
 				{
 					enableHand = true;
 				}
-				LOG_SUCCESS("------------------------------> ready to begin 2nd cycle, motion enabled = " << enableHand)
-
+				LOG_INFO("------------------------------> ready to begin 2nd cycle, motion enabled")
 			}
+
 			/*
-			*  9th, final
+			*  9th
 			*/
 			/*at the end of 2nd cycle*/
 			if(restartHandover)
@@ -786,6 +802,7 @@ namespace lipm_walking
 
 					bool_t1 = true;
 					bool_t6 = true;
+					rh_fail = true;
 
 					openGripper = false;
 					closeGripper = false;
@@ -793,12 +810,12 @@ namespace lipm_walking
 					graspObject = true;
 					enableHand = true;
 
-					useLeftEf = false;
-					useRightEf = false;
-
 					startNow = false;
 
 					subjHasObject = true;
+
+					useLeftEf = false;
+					useRightEf = false;
 
 					addContacts = false;
 					removeContacts = false;
@@ -841,6 +858,9 @@ namespace lipm_walking
 			}//restartHandover
 
 
+			/*
+			*  10th, final
+			*/
 			if(handoverComplete && Flag_Walk && ctl.isLastDSP() )
 			{
 				finishedWalk_ = ctl.config()("finishedWalk", false);
@@ -881,11 +901,12 @@ namespace lipm_walking
 
 	bool ApproachObject::forceControllerIndividual(
 		bool& enableHand,
+		sva::PTransformd X_0_rel,
 		Eigen::Vector3d relaxPos,
 		Eigen::Vector3d initPos,
 		Eigen::Matrix3d initRot,
 		Eigen::Vector3d handForce,
-		Eigen::Vector3d ForceSurf,
+		Eigen::Vector3d forceSurf,
 		Eigen::Vector3d thesh,
 		Eigen::Vector3d efAce,
 		std::shared_ptr<mc_tasks::PositionTask>& posTask,
@@ -895,6 +916,475 @@ namespace lipm_walking
 		std::vector<std::string> lShpMarkersName,
 		double obj_rel_robotHand)
 	{
+
+		Eigen::Vector3d ef_wA_O, ef_wA_wB, ef_wA_gA, ef_wA_gB, ef_wA_f;
+
+		double ef_wAB_theta_wAO;
+		double ef_wAB_theta_wAgA;
+		double ef_wAB_theta_wAgB;
+		double ef_wAB_theta_wAf;
+
+		double ef_area_wAB_O;
+		double ef_area_wAB_gA;
+		double ef_area_wAB_gB;
+
+		double fin_rel_ef, obj_rel_ef, obj_rel_subj;
+
+		Eigen::Vector3d nearestFingerPos, gripperEf;
+
+		nearestFingerPos = markersPos[markers_name_index[lShpMarkersName[0]]].col(i);
+
+		/*direction vectors, projections and area*/
+		ef_wA_O  =
+		markersPos[markers_name_index[robotMarkersName[0]]].col(i) - objectPosC;
+		ef_wA_f  =
+		markersPos[markers_name_index[robotMarkersName[0]]].col(i) - nearestFingerPos;
+		ef_wA_wB =
+		markersPos[markers_name_index[robotMarkersName[0]]].col(i) - markersPos[markers_name_index[robotMarkersName[1]]].col(i);
+		ef_wA_gA =
+		markersPos[markers_name_index[robotMarkersName[0]]].col(i) - markersPos[markers_name_index[robotMarkersName[2]]].col(i);
+		ef_wA_gB =
+		markersPos[markers_name_index[robotMarkersName[0]]].col(i) - markersPos[markers_name_index[robotMarkersName[3]]].col(i);
+
+		ef_wAB_theta_wAO = acos( ef_wA_wB.dot(ef_wA_O)/( ef_wA_wB.norm()*ef_wA_O.norm() ) );
+		ef_wAB_theta_wAf = acos( ef_wA_wB.dot(ef_wA_f)/( ef_wA_wB.norm()*ef_wA_f.norm() ) );
+		ef_wAB_theta_wAgA = acos( ef_wA_wB.dot(ef_wA_gA)/( ef_wA_wB.norm()*ef_wA_gA.norm() ) );
+		ef_wAB_theta_wAgB = acos( ef_wA_wB.dot(ef_wA_gB)/( ef_wA_wB.norm()*ef_wA_gB.norm() ) );
+
+		ef_area_wAB_O  = 0.5*ef_wA_wB.norm()*ef_wA_O.norm()*sin(ef_wAB_theta_wAO);
+		ef_area_wAB_gA = 0.5*ef_wA_wB.norm()*ef_wA_gA.norm()*sin(ef_wAB_theta_wAgA);
+		ef_area_wAB_gB = 0.5*ef_wA_wB.norm()*ef_wA_gB.norm()*sin(ef_wAB_theta_wAgB);
+
+
+		gripperEf = 0.5*( markersPos[markers_name_index[robotMarkersName[2]]].col(i) + markersPos[markers_name_index[robotMarkersName[3]]].col(i) );
+
+		fin_rel_ef   = (gripperEf  - nearestFingerPos).norm();
+		obj_rel_subj = (objectPosC - nearestFingerPos).norm();
+		obj_rel_ef   = (gripperEf  - objectPosC).norm();
+
+
+		/*check for false r-to-h trial during object pulling*/
+		if( rh_fail && (fin_rel_ef < 0.15) && (obj_rel_ef > 0.5) && (!goBackInitPose) )
+		{
+			count_rh_fail++;
+			count_rh_success--;
+			rh_fail = false;
+
+			LOG_ERROR("------------------------------> did robot drop the object ?")
+		}
+
+
+		if( fin_rel_ef < 0.35 )
+		{
+
+			/*
+			*  7th
+			*/
+			auto checkForce = [&](const char *axis_name, int idx)
+			{
+
+				if( fin_rel_ef < 0.15 ) // not effective n efficient
+				/*try to check if (Fpull > Th) for cont. over 1 sec or more*/
+				{
+					if(enableHand)
+					{
+						enableHand = false;
+
+						t7 = difftime( time(0), start);
+
+						LOG_WARNING("------------------------------> trying to pull object, motion stopped")
+					}
+
+					Finert = objMassZ * efAce;
+
+					Fpull[0] = abs(handForce[0]) - abs(Finert[0]) - abs(Fzero[0]);
+					Fpull[1] = abs(handForce[1]) - abs(Finert[1]) - abs(Fzero[1]);
+					Fpull[2] = abs(handForce[2]) - abs(Finert[2]) - abs(Fzero[2]);
+
+					if( (abs(Fpull[idx]) > newTh[idx]) )
+					{
+
+						efPosOfHandover = posTask->position();
+						hPosOfHandover = nearestFingerPos;
+
+						gOpen = true;
+						restartHandover = true;
+						takeBackObject = false;
+						robotHasObject = false;
+
+						pickaHand = false;
+
+						if(goBackInitPose)
+						{
+							t8 = difftime( time(0), start);
+							count_rh_success++;
+
+							goBackInitPose = false;
+
+							cout <<"------------------------------> object pulled, threshold on " << axis_name << " with pull force " << Fpull[idx]<< " reached on "<< gripperName + " with newTh " << newTh.transpose() <<endl;
+							LOG_SUCCESS("------------------------------> object returned and estimated mass(Norm) was = " << objMassNorm)
+						}
+
+					}
+				}
+				return false;
+
+			};
+
+
+			/*
+			*  1st, 6th
+			*/
+			/*check if object is being pulled*/
+			if(takeBackObject)
+			{
+				return checkForce("x-axis", 0) || checkForce("y-axis", 1) || checkForce("z-axis", 2);
+			}
+			else
+			{
+
+				/*open empty gripper when subject come near to robot*/
+				if( (!openGripper) )
+				{
+					gOpen = true;
+					t2 = difftime( time(0), start);
+
+					LOG_INFO("------------------------------> 1st cycle, opening " << gripperName)
+				}
+
+				/*stop motion*/
+				else if( (enableHand)
+					&& (openGripper)
+					&& (!closeGripper)
+					&& (!restartHandover)
+					&& (fin_rel_ef < ROBOT_OBJ_DIST) ) //.12
+				{
+					Fzero = handForce;
+					localSurf_Fzero = forceSurf;
+
+					enableHand = false;
+					t3 = difftime( time(0), start);
+
+					LOG_WARNING("------------------------------> motion stopped with Fzero Norm "<< Fzero.norm())
+				}
+
+				/*closed WITH object*/
+				else if( (!enableHand)
+					&& (graspObject)
+					&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > SURFACE_FORCE )
+					//  && ( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
+					)
+				{
+					gClose = true;
+					closeGripper = true;
+					graspObject = false;
+
+					Fclose = handForce;
+
+					t4 = difftime( time(0), start);
+
+					efPosOfHandover = posTask->position();
+					hPosOfHandover = nearestFingerPos;
+
+					LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
+				}
+
+				/*closed WITHOUT object*/
+				else if( (!restartHandover) &&
+					(!graspObject) &&
+					(obj_rel_robotHand > 0.1) &&
+					(obj_rel_robotHand < 0.2) &&
+					(ef_area_wAB_gA < ef_area_wAB_O) &&
+					(ef_area_wAB_gB < ef_area_wAB_O) )
+				{
+					if( (Fclose.norm() < 2.0) )
+					{
+						gClose = false;
+						closeGripper = false;
+						graspObject = true;
+						gOpen = true;
+
+						count_hr_fail++;
+
+						t_falseClose = difftime( time(0), start);
+
+						LOG_ERROR("------------------------------> false close, try with object again")
+					}
+					else
+						{ Fclose = Eigen::Vector3d(1, 1, 1); }
+				}
+
+			}
+
+		}
+
+		/*
+		* 5th
+		*/
+		/*trigger again walk fwd when robot has the object*/
+		if( walkFwdAgain && robotHasObject && takeBackObject && ( fin_rel_ef < TRIGGER_WALK_AGAIN ) )
+		{
+
+			if( (nearestFingerPos(2)>=objAboveWaist) )
+			{
+				walkFwd = true;
+				walkFwdAgain = false;
+				LOG_WARNING("------------------------------> walk Fwd again, are you here in the beginning of 2nd cycle?")
+			}
+
+		}
+
+		/*
+		*  8th
+		*/
+		/*just before the end of 2nd cycle, move EF to initial position at end of handover routine*/
+		if( restartHandover && (fin_rel_ef > 0.45) )
+		{
+
+			if( (!gClose) && (!goBackInitPose) )
+			{
+				posTask->position(initPos);
+				oriTask->orientation(initRot);
+
+				gClose = true;
+				goBackInitPose = true;
+
+				t9 = difftime( time(0), start);
+
+				LOG_WARNING("------------------------------> robot will move to half-sit pose")
+			}
+		}
+
+
+		/*in between 1st and 2nd cycles*/
+		if( fin_rel_ef > 0.5 )
+		{
+			/*
+			*  2nd
+			*/
+			/*comes only if object is grasped*/
+			if( (closeGripper) && (!restartHandover) && subjHasObject )
+			{
+
+				if(e == 2)
+				{
+					t5 = difftime( time(0), start);
+
+					count_hr_success++;
+				}
+
+				if( (e%200==0) )//wait xx sec
+				{
+					Fload <<
+					accumulate( Floadx.begin(), Floadx.end(), 0.0)/double(Floadx.size()),
+					accumulate( Floady.begin(), Floady.end(), 0.0)/double(Floady.size()),
+					accumulate( Floadz.begin(), Floadz.end(), 0.0)/double(Floadz.size());
+
+					/*load force in the direction of gravity in world*/
+					objMassZ = Fload(2)/GRAVITY;
+					objMassNorm = Fload.norm()/GRAVITY;
+
+					LOG_SUCCESS("------------------------------> Robot has object of mass(Z) = "<< objMassZ)
+					cout<< "------------------------------> Fload was "<< Fload.transpose() << endl;
+
+					/*new threshold*/
+					newTh = Fload + thesh;
+
+					if(subjHasObject)
+					{
+						/*move EF to initial position*/
+						// posTask->position(initPos);
+						posTask->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.25, relaxPos(1), relaxPos(2)));
+						oriTask->orientation(initRot);
+
+						subjHasObject = false;
+						robotHasObject = true;
+
+						LOG_SUCCESS("------------------------------> Ef returning to relax pose")
+					}
+
+					/*clear vector memories*/
+					Floadx.clear(); Floady.clear(); Floadz.clear();
+				}
+				else /*averaging load force to get object mass*/
+				{
+					Floadx.push_back( abs(handForce[0]) );
+					Floady.push_back( abs(handForce[1]) );
+					Floadz.push_back( abs(handForce[2]) );
+
+					// Floadx.push_back( abs( abs(handForce[0])-abs(Fzero[0]) ) );
+					// Floady.push_back( abs( abs(handForce[1])-abs(Fzero[1]) ) );
+					// Floadz.push_back( abs( abs(handForce[2])-abs(Fzero[2]) ) );
+				}
+				e+=1;
+
+			}
+
+			/*
+			*  3rd
+			*/
+			/*walk back when object arrives at relax pose*/
+			if( (!takeBackObject) && (!walkBack) && abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) )<0.25 )
+			{
+
+				if(Flag_Walk)
+				{
+					ctl.postureTask->reset();
+					ctl.solver().removeTask(posTask);
+					ctl.solver().removeTask(oriTask);
+				}
+
+				if(robotHasObject)
+				{
+					takeBackObject = true;
+					walkBack = true;
+
+					LOG_SUCCESS("------------------------------> robot returning to relax pose")
+				}
+
+			}
+
+			/*
+			*  4th
+			*/
+			/*add ef task again*/
+			if( walkBack && robotHasObject && (!enableHand) )
+			{
+
+				if(Flag_Walk && ctl.isLastDSP() )
+				{
+
+					/*true when last DSP is finished*/
+					finishedWalk_ = ctl.config()("finishedWalk", false);
+
+					if(finishedWalk_)
+					{
+						ctl.config().add("finishedWalk", false);
+
+						ctl.solver().addTask(posTask);
+						posTask->reset();
+
+						ctl.solver().addTask(oriTask);
+						oriTask->reset();
+
+						enableHand = true;
+						walkFwdAgain = true;
+					}
+					else
+					{
+						ctl.postureTask->reset();
+					}
+				}
+				else
+				{
+					enableHand = true;
+				}
+				LOG_INFO("------------------------------> ready to begin 2nd cycle, motion enabled")
+			}
+
+			/*
+			*  9th
+			*/
+			/*at the end of 2nd cycle*/
+			if(restartHandover)
+			{
+
+				if(!subjHasObject)
+				{
+
+					e = 1;
+					t1 = 0.0;
+					t2 = 0.0;
+					t3 = 0.0;
+					t4 = 0.0;
+					t5 = 0.0;
+					t6 = 0.0;
+					t7 = 0.0;
+					t8 = 0.0;
+					t9 = 0.0;
+					t_falseClose = 0.0;
+
+					bool_t1 = true;
+					bool_t6 = true;
+					rh_fail = true;
+
+					openGripper = false;
+					closeGripper = false;
+
+					graspObject = true;
+					enableHand = true;
+
+					startNow = false;
+
+					subjHasObject = true;
+
+					useLtEf=  true;
+					stopLtEf = true;
+
+					useRtEf = true;
+					stopRtEf = true;
+
+				}
+
+
+				if( (!walkFwdAgain) && (posTask->eval().norm()) < 0.05 )
+				{
+
+					if(Flag_Walk)
+					{
+						walkBack = true;
+						ctl.config().add("finishedWalk", false);
+
+						ctl.postureTask->reset();
+
+						ctl.solver().removeTask(posTask);
+						ctl.solver().removeTask(oriTask);
+
+						handoverComplete = true;
+
+						LOG_WARNING("------------------------------> now robot will walk back again\n")
+					}
+					else
+					{
+						walkBack = false;
+						LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
+					}
+
+					restartHandover = false;
+
+				}
+
+			}//restartHandover
+
+
+			/*
+			*  10th, final
+			*/
+			if(handoverComplete && Flag_Walk && ctl.isLastDSP() )
+			{
+				finishedWalk_ = ctl.config()("finishedWalk", false);
+
+				if(finishedWalk_)
+				{
+					finishedWalk_ = false;
+					ctl.config().add("finishedWalk", false);
+
+					ctl.solver().addTask(posTask);
+					ctl.solver().addTask(oriTask);
+
+					posTask->reset();
+					oriTask->reset();
+
+					handoverComplete = false;
+
+					LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
+				}
+				else
+				{
+					ctl.postureTask->reset();
+				}
+			}
+		}
 
 		return false;
 
