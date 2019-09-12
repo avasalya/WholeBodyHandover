@@ -230,7 +230,7 @@ namespace lipm_walking
 
 				}
 
-				ctl.logger().addLogEntry("HANDOVER_upperLim",[this]() -> double { return 1.2; });
+				ctl.logger().addLogEntry("HANDOVER_upperLim",[this]() -> double { return MAX_ALLOWED_DIST; });
 
 				ctl.logger().addLogEntry("HANDOVER_thresh",[this]() -> Eigen::VectorXd { return thresh; });
 				ctl.logger().addLogEntry("HANDOVER_leftForce_Xabs",[this]() -> double { return leftForce_Xabs; });
@@ -965,6 +965,13 @@ namespace lipm_walking
 
 
 
+					/*
+					*
+					* 4th,
+					*
+					* check object relative to human hands
+					*
+					*/
 					auto obj_rel_subj = [&]()
 					{
 						if(approachObj->FlAG_INDIVIDUAL)
@@ -998,7 +1005,7 @@ namespace lipm_walking
 								subjRtHandOnObj();
 							}
 							else if( approachObj->robotHasObject && approachObj->pickNearestHand &&
-								( (approachObj->finR_rel_efL < 1.2) || (approachObj->finL_rel_efR < 1.2) ) )
+								( (approachObj->finR_rel_efL < MAX_ALLOWED_DIST) || (approachObj->finL_rel_efR < MAX_ALLOWED_DIST) ) )
 							{
 								if(approachObj->bool_t6)
 								{
@@ -1012,14 +1019,22 @@ namespace lipm_walking
 					};
 
 
-					/*track only subj right hand when robot carries the object*/
+
+
+					/*
+					* 3rd,
+					*
+					* track only subj right hand when robot carries the object
+					*
+					*/
 					auto obj_rel_robot = [&]() -> bool
 					{
 						obj_rel_subj();
 
 						if(approachObj->FlAG_INDIVIDUAL)
 						{
-							if(fingerPos(0) < 1.2) //0.7            /*this should be relative to robot body*/
+							/*this should be relative to robot body*/
+							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST ) //1.2 //old was 0.7
 							{
 								if(approachObj->bool_t1)
 								{
@@ -1031,7 +1046,7 @@ namespace lipm_walking
 								{
 									if( (approachObj->stopRtEf) && (approachObj->useLtEf) )
 									{
-										LOG_INFO("robotLeftHand in use")
+										LOG_SUCCESS("robotLeftHand in use\n")
 
 										approachObj->stopRtEf = false;
 										posTaskR->position(initPosR);
@@ -1051,7 +1066,7 @@ namespace lipm_walking
 								{
 									if( (approachObj->stopLtEf) && (approachObj->useRtEf) )
 									{
-										LOG_WARNING("robotRightHand in use")
+										LOG_SUCCESS("robotRightHand in use\n")
 
 										approachObj->stopLtEf = false;
 										posTaskL->position(initPosL);
@@ -1124,7 +1139,13 @@ namespace lipm_walking
 					};
 
 
-					/*feed Ef pose*/
+
+					/*
+					* 5th,
+					*
+					* feed Ef pose
+					*
+					*/
 					if(approachObj->FlAG_INDIVIDUAL)
 					{
 						if( (!approachObj->stopRtEf) )
@@ -1290,28 +1311,22 @@ namespace lipm_walking
 
 
 
-					/*head visual tracking*/
-					if(approachObj->subjHasObject)
-					{ headTask->target(approachObj->objectPosC); }
-					else
-					{
-						if(approachObj->FlAG_INDIVIDUAL)
-						{
-							headTask->target(fingerPos);
-						}
-						else //TOGETHER
-						{
-							headTask->target(approachObj->fingerPosR);
-						}
-					}
-
-
-					/*TRIGGER HANDOVER ROUTINE*/
-					/* start only if object is within robot constraint space*/
+					/*
+					* 1st, TRIGGER HANDOVER ROUTINE
+					*
+					* Trigger only when both object & human come to 'START ZONE'
+					*
+					*/
 					if( (!approachObj->startNow) &&
-						(approachObj->objectPosC(0) > 1.2) && (approachObj->objectPosC(0) < 1.5) &&
-						(approachObj->fingerPosL(0) > 1.2) && (approachObj->fingerPosL(0) < 1.5) &&
-						(approachObj->fingerPosR(0) > 1.2) && (approachObj->fingerPosR(0) < 1.5) )
+
+						(approachObj->objectPosC(0) > MAX_ALLOWED_DIST) &&//1.2
+						(approachObj->objectPosC(0) < START_ZONE_DIST) 	&&//1.4
+
+						(approachObj->fingerPosL(0) > MAX_ALLOWED_DIST) &&
+						(approachObj->fingerPosL(0) < START_ZONE_DIST) 	&&
+
+						(approachObj->fingerPosR(0) > MAX_ALLOWED_DIST) &&
+						(approachObj->fingerPosR(0) < START_ZONE_DIST) )
 					{
 						if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
 						{
@@ -1321,18 +1336,28 @@ namespace lipm_walking
 					}
 
 
-					// /*CHECK once every prediction cycle*/
-					// if( (approachObj->i)%(approachObj->t_observe) == 0 )
-					// {}
 
-					/*as long as object is within robot's reachable space*/
+					/*
+					* 2nd then non-stop
+					*
+					* as long as object is within robot's reachable space
+					*
+					*/
 					objBody_rel_robotBody = abs( approachObj->objectPosC(0) - X_0_rel.translation()(0) );
-					if( (approachObj->startNow)  && (objBody_rel_robotBody <=1.2) && (objBody_rel_robotBody >=0.0) )
+					if( (approachObj->startNow) &&
+						(objBody_rel_robotBody >= ZERO) &&
+						(objBody_rel_robotBody <= MAX_ALLOWED_DIST) )
 					{
+
 						obj_rel_robot();
 
-						/*trigger step-walk*/
-						if(approachObj->Flag_Walk)
+
+						/*
+						* only when walking is enabled
+						*
+						* trigger step-walk
+						*/
+						if(approachObj->Flag_Walk) /*may be put outside above 'if' loop to trigger walk*/
 						{
 
 							/*when subject carries object above his/her waist*/
@@ -1393,10 +1418,41 @@ namespace lipm_walking
 
 					}
 
+
+
+					/*
+					* non-stop
+					*
+					* head visual tracking
+					*
+					*/
+					if(approachObj->subjHasObject)
+					{
+						headTask->target(approachObj->objectPosC);
+					}
+					else
+					{
+						if(approachObj->FlAG_INDIVIDUAL)
+						{
+							headTask->target(fingerPos);
+						}
+						else //TOGETHER
+						{
+							headTask->target(approachObj->fingerPosR);
+						}
+					}
+
+
 				}// handoverRun
 
 			}
 
+
+			/*
+			*
+			* Reset handover flags and end-effectors flags
+			*
+			*/
 			if(resetFlags_and_efPose)
 			{
 
@@ -1588,9 +1644,13 @@ namespace lipm_walking
 		}// runState
 
 
+
+
+
+
 		bool states::Handover::checkTransitions()
 		{
-			auto & ctl = controller();
+			// auto & ctl = controller();
 			return false;
 		}// checkTransition
 
@@ -1616,6 +1676,9 @@ namespace lipm_walking
 				ctl.solver().removeTask(objEfTask);
 			}
 		}// teardown
+
+
+
 
 	} // namespace states
 

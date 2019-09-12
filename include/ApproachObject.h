@@ -42,10 +42,13 @@ namespace lipm_walking
 {
 	struct Controller;
 
+	constexpr double ZERO 				= 0.0;
 	constexpr double GRAVITY 			= 9.80665;
-	constexpr double SURFACE_FORCE  	= 5.5;
-	constexpr double ROBOT_OBJ_DIST 	= 0.10;
-	constexpr double TRIGGER_WALK_AGAIN = 1.2;
+	constexpr double SAFE_ZONE_DIST 	= 1.8;
+	constexpr double START_ZONE_DIST 	= 1.4;
+	constexpr double MAX_ALLOWED_DIST	= 1.2;
+	constexpr double MIN_ALLOWED_DIST 	= 0.1;
+	constexpr double MIN_SURFACE_FORCE 	= 5.5;
 
 	// const Eigen::Vector3d gravity = Eigen::Vector3d{0., 0., -GRAVITY};
 
@@ -116,19 +119,20 @@ namespace lipm_walking
 	    Controller & ctl;
 
 
-		bool Flag_withoutRobot{false}; //TRUE, otherwise use ROBOT_Markers
+		bool Flag_withoutRobot{false}; 	//TRUE, otherwise use ROBOT_Markers
 
-		bool Flag_prediction{false}; //TRUE otherwise, use finger Position
+		bool Flag_prediction{false}; 	//TRUE, otherwise, use finger Position
 
-		bool FlAG_INDIVIDUAL{true}; // TRUE for using individual hand, otherwise use both hands together
+		bool FlAG_INDIVIDUAL{true}; 	//TRUE, to use individual hand, otherwise use both hands together
 
-		bool Flag_Walk{false}; //TRUE for walking, else only stabilizer
+		bool Flag_Walk{false};			//TRUE, for walking, else only stabilizer
 
 		bool finishedWalk_{false};
 		bool walkFwd{false};
 		bool walkFwdAgain{false};
 		bool walkBack{false};
 
+		double objAboveWaist{1.0}; //for Ashesh
 
 		Eigen::Vector3d tuner;
 
@@ -210,7 +214,6 @@ namespace lipm_walking
 
 		sva::PTransformd virObjLeft, virObjRight;
 
-		double objAboveWaist{1.0}; //for Ashesh
 		double finR_rel_efL, finL_rel_efR;
 		double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
 		double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;

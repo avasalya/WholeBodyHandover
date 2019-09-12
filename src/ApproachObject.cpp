@@ -517,7 +517,7 @@ namespace lipm_walking
 					&& (openGripper)
 					&& (!closeGripper)
 					&& (!restartHandover)
-					&& ( (virObj_rel_robotRtHand < ROBOT_OBJ_DIST) || (virObj_rel_robotLtHand < ROBOT_OBJ_DIST) )
+					&& ( (virObj_rel_robotRtHand < MIN_ALLOWED_DIST) || (virObj_rel_robotLtHand < MIN_ALLOWED_DIST) )
 					)
 				{
 					FzeroL = leftForce;
@@ -535,8 +535,8 @@ namespace lipm_walking
 				/*closed WITH object*/
 				else if( (!enableHand) &&
 						(graspObject) && /*along localY direction*/
-					( abs( (leftForceSurf - localSurf_FzeroL)(2) ) > SURFACE_FORCE ) &&
-					( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > SURFACE_FORCE ) )
+					( abs( (leftForceSurf - localSurf_FzeroL)(2) ) > MIN_SURFACE_FORCE ) &&
+					( abs( (rightForceSurf - localSurf_FzeroR)(2) ) > MIN_SURFACE_FORCE ) )
 				{
 					gClose = true;
 					closeGripper = true;
@@ -592,7 +592,7 @@ namespace lipm_walking
 		* 5th
 		*/
 		/*trigger again walk fwd when robot has the object*/
-		if( walkFwdAgain && robotHasObject && takeBackObject && ( (finR_rel_efL < TRIGGER_WALK_AGAIN) || (finL_rel_efR < TRIGGER_WALK_AGAIN) ) )
+		if( walkFwdAgain && robotHasObject && takeBackObject && ( (finR_rel_efL < MAX_ALLOWED_DIST) || (finL_rel_efR < MAX_ALLOWED_DIST) ) )
 		{
 
 			if( (fingerPosL(2)>=objAboveWaist) || (fingerPosR(2)>=objAboveWaist) )
@@ -1057,7 +1057,7 @@ namespace lipm_walking
 					&& (openGripper)
 					&& (!closeGripper)
 					&& (!restartHandover)
-					&& (fin_rel_ef < ROBOT_OBJ_DIST) ) //.12
+					&& (fin_rel_ef < MIN_ALLOWED_DIST) ) //.12
 				{
 					Fzero = handForce;
 					localSurf_Fzero = forceSurf;
@@ -1071,7 +1071,7 @@ namespace lipm_walking
 				/*closed WITH object*/
 				else if( (!enableHand)
 					&& (graspObject)
-					&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > SURFACE_FORCE )
+					&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > MIN_SURFACE_FORCE )
 					//  && ( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
 					)
 				{
@@ -1122,7 +1122,7 @@ namespace lipm_walking
 		* 5th
 		*/
 		/*trigger again walk fwd when robot has the object*/
-		if( walkFwdAgain && robotHasObject && takeBackObject && ( fin_rel_ef < TRIGGER_WALK_AGAIN ) )
+		if( walkFwdAgain && robotHasObject && takeBackObject && ( fin_rel_ef < MAX_ALLOWED_DIST ) )
 		{
 
 			if( (nearestFingerPos(2)>=objAboveWaist) )
