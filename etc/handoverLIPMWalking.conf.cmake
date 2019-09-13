@@ -181,6 +181,48 @@
 		},
 
 
+		"HANDOVER_fwd_20cm_10cm":
+		{
+			"double_support_duration": 0.2,
+			"single_support_duration": 0.8,
+			"swing_height": 0.05,
+			"contacts":
+			[
+				{ "pose": { "translation": [0.0,  -0.09, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "RightFootCenter" },
+				{ "pose": { "translation": [0.0,   0.09, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "LeftFootCenter" },
+
+				{ "pose": { "translation": [0.2,  -0.09, 0.0] }, "ref_vel": [0.10, 0.0, 0.0], "surface": "RightFootCenter" },
+				{ "pose": { "translation": [0.2,   0.09, 0.0] }, "ref_vel": [0.10, 0.0, 0.0], "surface": "LeftFootCenter" },
+
+				{ "pose": { "translation": [0.3,  -0.09, 0.0] }, "ref_vel": [0.10, 0.0, 0.0], "surface": "RightFootCenter" },
+				{ "pose": { "translation": [0.3,   0.09, 0.0] }, "ref_vel": [0.10, 0.0, 0.0], "surface": "LeftFootCenter" },
+			]
+		},
+
+
+
+		"HANDOVER_back_20cm_10cm":
+		{
+			"double_support_duration": 0.2,
+			"single_support_duration": 0.8,
+			"swing_height": 0.05,
+			"contacts":
+			[
+				{ "pose": { "translation": [0.0,   -0.09, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "RightFootCenter" },
+				{ "pose": { "translation": [0.0,    0.09, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "LeftFootCenter"  },
+
+				{ "pose": { "translation": [-0.1,  -0.09, 0.0] }, "ref_vel": [-0.10, 0.0, 0.0], "surface": "RightFootCenter" },
+				{ "pose": { "translation": [-0.1,   0.09, 0.0] }, "ref_vel": [-0.10, 0.0, 0.0], "surface": "LeftFootCenter"  },
+
+				{ "pose": { "translation": [-0.3, -0.09, 0.0] }, "ref_vel": [-0.10, 0.0, 0.0], "surface": "RightFootCenter" },
+				{ "pose": { "translation": [-0.3,   0.09, 0.0] }, "ref_vel": [-0.10, 0.0, 0.0], "surface": "LeftFootCenter"  },
+			]
+		},
+
+
+
+
+
 		"HANDOVER_1stepCycle_fwd_10cm":
 		{
 			"double_support_duration": 0.1,

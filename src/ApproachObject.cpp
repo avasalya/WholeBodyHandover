@@ -723,7 +723,7 @@ namespace lipm_walking
 			if( (!takeBackObject) && (!walkBack) && abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) )<0.25 )
 			{
 
-				if(Flag_Walk)
+				if(Flag_WALK)
 				{
 					ctl.postureTask->reset();
 					ctl.solver().removeTask(posTaskL);
@@ -747,7 +747,7 @@ namespace lipm_walking
 			if( walkBack && robotHasObject && (!enableHand) )
 			{
 
-				if(Flag_Walk && ctl.isLastDSP() )
+				if(Flag_WALK && ctl.isLastDSP() )
 				{
 
 					/*true when last DSP is finished*/
@@ -828,7 +828,7 @@ namespace lipm_walking
 				if( (!walkFwdAgain) && (posTaskL->eval().norm()) <0.05 && (posTaskR->eval().norm() <0.05) )
 				{
 
-					if(Flag_Walk)
+					if(Flag_WALK)
 					{
 						walkBack = true;
 						ctl.config().add("finishedWalk", false);
@@ -861,7 +861,7 @@ namespace lipm_walking
 			/*
 			*  10th, final
 			*/
-			if(handoverComplete && Flag_Walk && ctl.isLastDSP() )
+			if(handoverComplete && Flag_WALK && ctl.isLastDSP() )
 			{
 				finishedWalk_ = ctl.config()("finishedWalk", false);
 
@@ -1234,7 +1234,7 @@ namespace lipm_walking
 			if( (!takeBackObject) && (!walkBack) && abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) )<0.25 )
 			{
 
-				if(Flag_Walk)
+				if(Flag_WALK)
 				{
 					ctl.postureTask->reset();
 					ctl.solver().removeTask(posTask);
@@ -1245,6 +1245,22 @@ namespace lipm_walking
 				{
 					takeBackObject = true;
 					walkBack = true;
+
+
+
+					// if(Flag_WALK)
+					// {
+					// 	ctl.solver().removeTask(posTask);
+					// 	ctl.solver().removeTask(oriTask);
+
+					// 	ctl.postureTask->reset();
+
+					// 	walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+					// 	LOG_ERROR("selected WALK PLAN "<< walkPlan)
+					// 	ctl.loadFootstepPlan(walkPlan);
+					// 	ctl.config().add("triggerWalk", true);
+					// }
+
 
 					LOG_SUCCESS("------------------------------> robot returning to relax pose")
 				}
@@ -1258,15 +1274,18 @@ namespace lipm_walking
 			if( walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
 			{
 
-				if(Flag_Walk)
+				if(Flag_WALK)
 				{
 					if( ctl.isLastDSP() )
 					{
 						/*true when last DSP is finished*/
 						finishedWalk_ = ctl.config()("finishedWalk", false);
 
+
 						if(finishedWalk_)
 						{
+							// walkBack = false;
+
 							ctl.config().add("finishedWalk", false);
 
 							ctl.solver().addTask(posTask);
@@ -1275,7 +1294,10 @@ namespace lipm_walking
 							ctl.solver().addTask(oriTask);
 							oriTask->reset();
 
+
 							walkFwdAgain = true;
+							// Flag_WALK = false;
+
 
 							enableHand = true;
 						}
@@ -1348,7 +1370,7 @@ namespace lipm_walking
 				if( (!walkFwdAgain) && (posTask->eval().norm()) < 0.05 )
 				{
 
-					if(Flag_Walk)
+					if(Flag_WALK)
 					{
 						walkBack = true;
 						ctl.config().add("finishedWalk", false);
@@ -1380,7 +1402,7 @@ namespace lipm_walking
 			/*
 			*  10th, final
 			*/
-			if(handoverComplete && Flag_Walk && ctl.isLastDSP() )
+			if(handoverComplete && Flag_WALK && ctl.isLastDSP() )
 			{
 				finishedWalk_ = ctl.config()("finishedWalk", false);
 

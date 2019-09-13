@@ -126,12 +126,15 @@ namespace lipm_walking
 
 		bool FlAG_INDIVIDUAL{true}; 	//TRUE, to use individual hand, otherwise use both hands together
 
-		bool Flag_Walk{false};			//TRUE, for walking, else only stabilizer
+		bool Flag_WALK{false};			//TRUE, for walking, else only stabilizer
 
 		bool finishedWalk_{false};
 		bool walkFwd{false};
 		bool walkFwdAgain{false};
 		bool walkBack{false};
+
+		std::string stepSize, walkPlan;
+
 
 		double objAboveWaist{1.0}; //for Ashesh
 

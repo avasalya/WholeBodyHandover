@@ -123,7 +123,6 @@ namespace lipm_walking
 			double ID{0.0}; //interpersonal distance
 
 			double logStepSize{0.0};
-			std::string stepSize, walkPlan;
 			std::string walkThisDir = "can move either forward or backward";
 
 

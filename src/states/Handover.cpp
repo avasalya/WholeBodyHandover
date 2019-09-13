@@ -234,17 +234,11 @@ namespace lipm_walking
 
 
 				ctl.logger().addLogEntry("HANDOVER_Flag_Individual",[this]() -> double { return approachObj->FlAG_INDIVIDUAL; });
-				ctl.logger().addLogEntry("HANDOVER_Flag_Walk",[this]() -> double { return approachObj->Flag_Walk; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_Walk",[this]() -> double { return approachObj->Flag_WALK; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwd",[this]() -> double { return approachObj->walkFwd; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwdAgain",[this]() -> double { return approachObj->walkFwdAgain; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkBack",[this]() -> double { return approachObj->walkBack; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_finishedWalk_",[this]() -> double { return approachObj->finishedWalk_; });
-
-
-				ctl.logger().addLogEntry("HANDOVER_objRel_subjLtHand",[this]() -> double { return approachObj->obj_rel_subjLtHand; });
-				ctl.logger().addLogEntry("HANDOVER_objRel_subjRtHand",[this]() -> double { return approachObj->obj_rel_subjRtHand; });
-				ctl.logger().addLogEntry("HANDOVER_objRel_robotLtHand",[this]() -> double { return approachObj->obj_rel_robotLtHand; });
-				ctl.logger().addLogEntry("HANDOVER_objRel_robotRtHand",[this]() -> double { return approachObj->obj_rel_robotRtHand; });
 
 				ctl.logger().addLogEntry("HANDOVER_RoutineCompleted",[this]() -> double { return approachObj->handoverComplete; });
 
@@ -286,7 +280,12 @@ namespace lipm_walking
 
 				ctl.logger().addLogEntry("HANDOVER_rpyFrom_objRot", [this]() -> Eigen::Vector3d { return mc_rbdyn::rpyFromMat(approachObj->objRot); });
 
-				ctl.logger().addLogEntry("HANDOVER_relObjRobotBodiesDist",[this]() -> double { return objBody_rel_robotBody; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_subjLtHand",[this]() -> double { return approachObj->obj_rel_subjLtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_subjRtHand",[this]() -> double { return approachObj->obj_rel_subjRtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_robotLtHand",[this]() -> double { return approachObj->obj_rel_robotLtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_robotRtHand",[this]() -> double { return approachObj->obj_rel_robotRtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_RobotBodiesDist",[this]() -> double { return objBody_rel_robotBody; });
+
 				ctl.logger().addLogEntry("HANDOVER_bodyPosR",[this]() -> Eigen::Vector3d { return bodyPosR; });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosS",[this]() -> Eigen::Vector3d { return bodyPosS; });
 				ctl.logger().addLogEntry("HANDOVER_b2bDist",[this]() -> double { return ID; });
@@ -558,10 +557,10 @@ namespace lipm_walking
 								stepFwd = false;
 								stepBack = true;
 
-								stepSize = "30";
+								approachObj->stepSize = "30";
 								logStepSize = 30;
-								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
-								ctl.loadFootstepPlan(walkPlan);
+								approachObj->walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
+								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
@@ -587,10 +586,10 @@ namespace lipm_walking
 								stepBack = false;
 								stepFwd = true;
 
-								stepSize = "30";
+								approachObj->stepSize = "30";
 								logStepSize = 30;
-								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-								ctl.loadFootstepPlan(walkPlan);
+								approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
@@ -617,10 +616,10 @@ namespace lipm_walking
 								stepFwd = false;
 								stepBack = true;
 
-								stepSize = "40";
+								approachObj->stepSize = "40";
 								logStepSize = 40;
-								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
-								ctl.loadFootstepPlan(walkPlan);
+								approachObj->walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
+								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}),
@@ -646,10 +645,10 @@ namespace lipm_walking
 								stepBack = false;
 								stepFwd = true;
 
-								stepSize = "40";
+								approachObj->stepSize = "40";
 								logStepSize = 40;
-								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-								ctl.loadFootstepPlan(walkPlan);
+								approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
 						}));
@@ -871,10 +870,17 @@ namespace lipm_walking
 					objLenLt = objLen/2;
 					objLenRt = objLenLt - (approachObj->objectPosC - approachObj->objectPosCy).norm();
 
+
+					/*object body relative to robot body*/
+					objBody_rel_robotBody = abs( approachObj->objectPosC(0) - X_0_rel.translation()(0) );
+
+
 					/*human robot body distance*/
 					bodyPosR = X_0_rel.translation();
 					bodyPosS = approachObj->headPos;
 					ID = bodyPosS(0)-bodyPosR(0);
+
+
 
 
 					auto robotRtHandOnObj = [&]()-> sva::PTransformd
@@ -1065,8 +1071,12 @@ namespace lipm_walking
 										approachObj->selectRobotHand = false;
 
 										approachObj->stopRtEf = false;
-										posTaskR->position(initPosR);
-										oriTaskR->orientation(initRotR);
+
+										// posTaskR->position(initPosR);
+										// oriTaskR->orientation(initRotR);
+										ctl.solver().removeTask(posTaskR);
+										ctl.solver().removeTask(oriTaskR);
+
 
 										approachObj->stopLtEf = true;
 									}
@@ -1089,8 +1099,11 @@ namespace lipm_walking
 										approachObj->selectRobotHand = false;
 
 										approachObj->stopLtEf = false;
-										posTaskL->position(initPosL);
-										oriTaskL->orientation(initRotL);
+
+										// posTaskL->position(initPosL);
+										// oriTaskL->orientation(initRotL);
+										ctl.solver().removeTask(posTaskL);
+										ctl.solver().removeTask(oriTaskL);
 
 										approachObj->stopRtEf = true;
 									}
@@ -1353,8 +1366,8 @@ namespace lipm_walking
 					*/
 					if( (!approachObj->startNow) &&
 
-						(approachObj->objectPosC(0) > MAX_ALLOWED_DIST) &&//1.2
-						(approachObj->objectPosC(0) < START_ZONE_DIST) 	&&//1.4
+						(approachObj->objectPosC(0) > MAX_ALLOWED_DIST) && //1.2
+						(approachObj->objectPosC(0) < START_ZONE_DIST) 	&& //1.4
 
 						(approachObj->fingerPosL(0) > MAX_ALLOWED_DIST) &&
 						(approachObj->fingerPosL(0) < START_ZONE_DIST) 	&&
@@ -1365,7 +1378,8 @@ namespace lipm_walking
 						if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
 						{
 							approachObj->startNow = true;
-							approachObj->walkFwd = true;
+							// approachObj->walkFwd = true;
+
 						}
 					}
 
@@ -1377,80 +1391,103 @@ namespace lipm_walking
 					* as long as object is within robot's reachable space
 					*
 					*/
-					objBody_rel_robotBody = abs( approachObj->objectPosC(0) - X_0_rel.translation()(0) );
-					if( (approachObj->startNow) &&
-						(objBody_rel_robotBody >= ZERO) &&
-						(objBody_rel_robotBody <= MAX_ALLOWED_DIST) )
+					if(approachObj->startNow)
 					{
 
-						obj_rel_robot();
-
-
-						/*
-						* only when walking is enabled
-						*
-						* trigger step-walk
-						*/
-						if(approachObj->Flag_Walk) /*may be put outside above 'if' loop to trigger walk*/
+						if( (objBody_rel_robotBody >= ZERO) && //0.0
+							(objBody_rel_robotBody <= MAX_ALLOWED_DIST) ) //1.2
 						{
-
-							/*when subject carries object above his/her waist*/
-							if(approachObj->walkFwd)
-							{
-								// if( (ID < 1.8) && (ID >= 1.65) )
-								// {
-								// 	stepSize = "40";
-								// 	logStepSize = 40;
-								// 	Xmax = 0.80 +  .40 + 0.1;
-								// }
-								// if( (ID < 1.65) && (ID >= 1.50) )
-								// {
-								// 	stepSize = "30";
-								// 	logStepSize = 30;
-								// 	Xmax = 0.80 +  .30 + 0.1;
-								// }
-								if( (ID < 1.50) && (ID >= 1.35) )
-								{
-									stepSize = "10";
-									logStepSize = 10;
-									Xmax = 0.80 +  .10 + 0.1;
-								}
-								if( (ID < 1.35) && (ID >= 1.20) )
-								{
-									stepSize = "10";
-									logStepSize = 10;
-									Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
-								}
-								else
-								{
-									stepSize = "10";
-									logStepSize = 10;
-									Xmax = 0.80 +  .10 + 0.1;
-								}
-
-								approachObj->walkFwd = false;
-								walkPlan = "HANDOVER_1stepCycle_fwd_" + stepSize + "cm";
-								LOG_ERROR("selected WALK PLAN "<< walkPlan)
-								ctl.loadFootstepPlan(walkPlan);
-								ctl.config().add("triggerWalk", true);
-							}
-
-							if( approachObj->walkBack)
-							{
-								approachObj->walkBack = false;
-								walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-								LOG_ERROR("selected WALK PLAN "<< walkPlan)
-								ctl.loadFootstepPlan(walkPlan);
-								ctl.config().add("triggerWalk", true);
-							}
-
+							obj_rel_robot();
 						}
-						else
+
+
+
+						// if(	(!approachObj->Flag_WALK) &&
+						// 	(bodyPosS(0) > START_ZONE_DIST) && //1.4
+						// 	(bodyPosS(0) < SAFE_ZONE_DIST) &&  //1.8
+
+						// 	(approachObj->objectPosC(0) > MAX_ALLOWED_DIST) && //1.2
+						// 	(approachObj->objectPosC(0) < START_ZONE_DIST)	) //1.4
+						// {
+
+
+						// 	if( (approachObj->objectPosC(2) >= approachObj->objAboveWaist) )
+						// 	{
+						// 		approachObj->Flag_WALK = true;
+						// 		approachObj->walkFwd = true;
+						// 	}
+
+						// }
+
+					}
+
+
+
+					/*
+					* only when walking is enabled
+					*
+					* trigger step-walk
+					*/
+					if(approachObj->Flag_WALK)
+					{
+
+						/*when subject carries object above his/her waist*/
+						if(approachObj->walkFwd)
 						{
-							Xmax = 0.8;
+							if( (ID < 1.50) && (ID >= 1.35) )
+							{
+								approachObj->stepSize = "10";
+								logStepSize = 10;
+								Xmax = 0.80 +  .10 + 0.1;
+							}
+							if( (ID < 1.35) && (ID >= 1.20) )
+							{
+								approachObj->stepSize = "10";
+								logStepSize = 10;
+								Xmax = 0.80 +  .10 + 0.1; //0.1 as addition offset
+							}
+							else
+							{
+								approachObj->stepSize = "10";
+								logStepSize = 10;
+								Xmax = 0.80 +  .10 + 0.1;
+							}
+
+							approachObj->walkFwd = false;
+							walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
+							LOG_ERROR("selected WALK PLAN "<< walkPlan)
+							ctl.loadFootstepPlan(walkPlan);
+							ctl.config().add("triggerWalk", true);
+						}
+
+						// if(approachObj->walkFwd)
+						// {
+						// 	approachObj->stepSize = "20cm_10";
+						// 	logStepSize = 30;
+						// 	Xmax = 0.80 + 0.30; // + 0.1;
+
+						// 	approachObj->walkFwd = false;
+						// 	approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
+						// 	LOG_ERROR("selected WALK PLAN "<< approachObj->walkPlan)
+						// 	ctl.loadFootstepPlan(approachObj->walkPlan);
+						// 	ctl.config().add("triggerWalk", true);
+						// }
+
+						if( approachObj->walkBack)
+						{
+							approachObj->walkBack = false;
+							approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+							LOG_ERROR("selected WALK PLAN "<< approachObj->walkPlan)
+							ctl.loadFootstepPlan(approachObj->walkPlan);
+							ctl.config().add("triggerWalk", true);
 						}
 
 					}
+					else
+					{
+						Xmax = 0.8;
+					}
+
 
 
 
@@ -1664,7 +1701,8 @@ namespace lipm_walking
 				}
 
 
-				if(approachObj->Flag_Walk)
+				/*SPECIFIC TO WALKING*/
+				if(approachObj->Flag_WALK)
 				{
 					approachObj->walkFwd = false;
 					approachObj->walkBack = false;
