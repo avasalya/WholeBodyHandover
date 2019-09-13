@@ -87,6 +87,7 @@ namespace lipm_walking
 			Eigen::Vector3d relaxPos,
 			Eigen::Vector3d initPos,
 			Eigen::Matrix3d initRot,
+			Eigen::Matrix3d relaxRot,
 			Eigen::Vector3d handForce,
 			Eigen::Vector3d forceSurf,
 			Eigen::Vector3d thresh,

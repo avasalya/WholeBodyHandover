@@ -905,6 +905,7 @@ namespace lipm_walking
 		Eigen::Vector3d relaxPos,
 		Eigen::Vector3d initPos,
 		Eigen::Matrix3d initRot,
+		Eigen::Matrix3d relaxRot,
 		Eigen::Vector3d handForce,
 		Eigen::Vector3d forceSurf,
 		Eigen::Vector3d thesh,
@@ -1071,31 +1072,33 @@ namespace lipm_walking
 				/*closed WITH object*/
 				else if( (!enableHand)
 					&& (graspObject)
-					&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > MIN_SURFACE_FORCE )
-					//  && ( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
-					)
+					&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > MIN_SURFACE_FORCE - 1 ) )
 				{
-					gClose = true;
-					closeGripper = true;
-					graspObject = false;
+					if( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
+					{
+						gClose = true;
+						closeGripper = true;
+						graspObject = false;
 
-					Fclose = handForce;
+						Fclose = handForce;
 
-					t4 = difftime( time(0), start);
+						t4 = difftime( time(0), start);
 
-					efPosOfHandover = posTask->position();
-					hPosOfHandover = nearestFingerPos;
+						efPosOfHandover = posTask->position();
+						hPosOfHandover = nearestFingerPos;
 
-					LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
+						LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
+					}
 				}
 
 				/*closed WITHOUT object*/
 				else if( (!restartHandover) &&
 					(!graspObject) &&
-					(obj_rel_robotHand > 0.1) &&
-					(obj_rel_robotHand < 0.2) &&
-					(ef_area_wAB_gA < ef_area_wAB_O) &&
-					(ef_area_wAB_gB < ef_area_wAB_O) )
+					// (obj_rel_ef > 0.3) && or
+					(obj_rel_robotHand > 0.15) &&
+					(obj_rel_robotHand < 0.25) &&
+					(ef_area_wAB_gA < ef_area_wAB_O) && (ef_area_wAB_gB < ef_area_wAB_O) &&
+					(fin_rel_ef > 0.3) )
 				{
 					if( (Fclose.norm() < 2.0) )
 					{
@@ -1157,7 +1160,7 @@ namespace lipm_walking
 
 
 		/*in between 1st and 2nd cycles*/
-		if( fin_rel_ef > 0.5 )
+		if( fin_rel_ef > 0.8 )
 		{
 			/*
 			*  2nd
@@ -1192,10 +1195,10 @@ namespace lipm_walking
 
 					if(subjHasObject)
 					{
-						/*move EF to initial position*/
+						/*move EF in-solver to relax pose*/
 						// posTask->position(initPos);
 						posTask->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.25, relaxPos(1), relaxPos(2)));
-						oriTask->orientation(initRot);
+						oriTask->orientation(relaxRot);
 
 						subjHasObject = false;
 						robotHasObject = true;
