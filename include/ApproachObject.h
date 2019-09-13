@@ -241,6 +241,10 @@ namespace lipm_walking
 
 	public: // individual hand
 
+		bool tryToPull{false};
+
+		bool selectRobotHand{true};
+
 		bool useLtEf{true};
 		bool stopLtEf{true};
 

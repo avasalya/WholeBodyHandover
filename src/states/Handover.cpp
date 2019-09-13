@@ -95,7 +95,7 @@ namespace lipm_walking
 						-0.243029,   0.967128, -0.0748305,
 						-0.969923,  -0.241198,  0.0327433;
 
-			 			thresh << 10, 10, 10, 6, 6, 6, 10, 10, 10, 6, 6, 6;
+			 			thresh << 10, 10, 10, 5, 5, 5, 10, 10, 10, 5, 5, 5;
 			 			// thresh << 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10;
 						leftTh = thresh.segment(3,3);
 						rightTh = thresh.segment(9,3);
@@ -175,6 +175,8 @@ namespace lipm_walking
 					ctl.logger().addLogEntry("HANDOVER_indiv_enableLHand",[this]() -> double { return approachObj->enableLHand; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_enableRHand",[this]() -> double { return approachObj->enableRHand; });
 
+					ctl.logger().addLogEntry("HANDOVER_indiv_tryToPull",[this]() -> double { return approachObj->tryToPull; });
+
 					ctl.logger().addLogEntry("HANDOVER_indiv_useLtEf",[this]() -> double { return approachObj->useLtEf; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_stopLtEf",[this]() -> double { return approachObj->stopLtEf; });
 
@@ -186,6 +188,7 @@ namespace lipm_walking
 					ctl.logger().addLogEntry("HANDOVER_indiv_Finert",[this]() -> Eigen::Vector3d { return approachObj->Finert; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_Fload",[this]() -> Eigen::Vector3d { return approachObj->Fload; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_Fpull",[this]() -> Eigen::Vector3d { return approachObj->Fpull; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_newTh",[this]() -> Eigen::Vector3d { return approachObj->newTh; });
 
 					ctl.logger().addLogEntry("HANDOVER_efPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->efPosOfHandover; });
 					ctl.logger().addLogEntry("HANDOVER_hPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->hPosOfHandover; });
@@ -227,8 +230,21 @@ namespace lipm_walking
 					ctl.logger().addLogEntry("HANDOVER_efRPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->efRPosOfHandover; });
 					ctl.logger().addLogEntry("HANDOVER_hLPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->hLPosOfHandover ; });
 
-
 				}
+
+
+				ctl.logger().addLogEntry("HANDOVER_Flag_Individual",[this]() -> double { return approachObj->FlAG_INDIVIDUAL; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_Walk",[this]() -> double { return approachObj->Flag_Walk; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwd",[this]() -> double { return approachObj->walkFwd; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwdAgain",[this]() -> double { return approachObj->walkFwdAgain; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_walkBack",[this]() -> double { return approachObj->walkBack; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_finishedWalk_",[this]() -> double { return approachObj->finishedWalk_; });
+
+
+				ctl.logger().addLogEntry("HANDOVER_objRel_subjLtHand",[this]() -> double { return approachObj->obj_rel_subjLtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_subjRtHand",[this]() -> double { return approachObj->obj_rel_subjRtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_robotLtHand",[this]() -> double { return approachObj->obj_rel_robotLtHand; });
+				ctl.logger().addLogEntry("HANDOVER_objRel_robotRtHand",[this]() -> double { return approachObj->obj_rel_robotRtHand; });
 
 				ctl.logger().addLogEntry("HANDOVER_RoutineCompleted",[this]() -> double { return approachObj->handoverComplete; });
 
@@ -302,12 +318,9 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_gripperEfL",[this]() -> Eigen::Vector3d { return approachObj->gripperEfL; });
 				ctl.logger().addLogEntry("HANDOVER_gripperEfR",[this]() -> Eigen::Vector3d { return approachObj->gripperEfR; });
 
-				// ctl.logger().addLogEntry("HANDOVER_subjLHandRot",[this]()-> Eigen::Matrix3d { return approachObj->subjLHandRot; });
-				// ctl.logger().addLogEntry("HANDOVER_subjRHandRot",[this]()-> Eigen::Matrix3d { return approachObj->subjRHandRot; });
-				// ctl.logger().addLogEntry("HANDOVER_objRot",[this]()-> Eigen::Matrix3d { return approachObj->objRot; });
-
 				ctl.logger().addLogEntry("HANDOVER_predictPosL",[this]() -> Eigen::Vector3d { return approachObj->predictPosL; });
 				ctl.logger().addLogEntry("HANDOVER_predictPosR",[this]() -> Eigen::Vector3d { return approachObj->predictPosR; });
+
 			}
 
 			if(Flag_HandoverGUI)
@@ -1041,19 +1054,15 @@ namespace lipm_walking
 						if(approachObj->FlAG_INDIVIDUAL)
 						{
 							/*this should be relative to robot body*/
-							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST ) //1.2 //old was 0.7
+							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST - 0.2 ) //1.2 //old was 0.7
 							{
-								if(approachObj->bool_t1)
-								{
-									approachObj->bool_t1 = false;
-									approachObj->t1 = difftime( time(0), approachObj->start);
-								}
 
-								if( fingerPos(1) >= 0 )
+								if( fingerPos(1) >= 0.11 )
 								{
-									if( (approachObj->stopRtEf) && (approachObj->useLtEf) )
+									if( (approachObj->stopRtEf) && (approachObj->useLtEf) && (approachObj->selectRobotHand) )
 									{
-										LOG_SUCCESS("------------------------------> robot 'LEFT' Hand in use\n")
+										LOG_SUCCESS("------------------------------> robot 'LEFT' Hand in use")
+										approachObj->selectRobotHand = false;
 
 										approachObj->stopRtEf = false;
 										posTaskR->position(initPosR);
@@ -1062,18 +1071,22 @@ namespace lipm_walking
 										approachObj->stopLtEf = true;
 									}
 
-									approachObj->lHandPredict = approachObj->predictionController(
-										ltPosW,
-										relaxRotL,
-										subjMarkersName);
+									if(!approachObj->selectRobotHand)
+									{
+										approachObj->lHandPredict = approachObj->predictionController(
+											ltPosW,
+											relaxRotL,
+											subjMarkersName);
 
-									approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+										approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+									}
 								}
 								else
 								{
-									if( (approachObj->stopLtEf) && (approachObj->useRtEf) )
+									if( (approachObj->stopLtEf) && (approachObj->useRtEf) && (approachObj->selectRobotHand) )
 									{
-										LOG_SUCCESS("------------------------------> robot 'RIGHT' Hand in use\n")
+										LOG_SUCCESS("------------------------------> robot 'RIGHT' Hand in use")
+										approachObj->selectRobotHand = false;
 
 										approachObj->stopLtEf = false;
 										posTaskL->position(initPosL);
@@ -1082,14 +1095,26 @@ namespace lipm_walking
 										approachObj->stopRtEf = true;
 									}
 
-									approachObj->rHandPredict = approachObj->predictionController(
-										rtPosW,
-										relaxRotR,
-										subjMarkersName);
+									if(!approachObj->selectRobotHand)
+									{
+										approachObj->rHandPredict = approachObj->predictionController(
+											rtPosW,
+											relaxRotR,
+											subjMarkersName);
 
-									approachObj->predictPosR = get<4>(approachObj->rHandPredict);
+										approachObj->predictPosR = get<4>(approachObj->rHandPredict);
+									}
 								}
+
+
+								if( (approachObj->bool_t1) && (!approachObj->selectRobotHand) )
+								{
+									approachObj->bool_t1 = false;
+									approachObj->t1 = difftime( time(0), approachObj->start);
+								}
+
 							}
+
 							return false;
 						}
 						else // TOGETHER
@@ -1561,6 +1586,8 @@ namespace lipm_walking
 						oriTaskR->orientation(initRotR);
 					}
 
+					approachObj->selectRobotHand = true;
+
 					approachObj->useLtEf = true;
 					approachObj->stopLtEf = true;
 
@@ -1572,6 +1599,8 @@ namespace lipm_walking
 
 					approachObj->enableLHand = true;
 					approachObj->enableRHand = true;
+
+					approachObj->tryToPull = false;
 
 					approachObj->localSurf_Fzero = Eigen::Vector3d::Zero();
 					approachObj->newTh = Eigen::Vector3d::Zero();

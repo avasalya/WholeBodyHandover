@@ -987,7 +987,7 @@ namespace lipm_walking
 				if( fin_rel_ef < 0.15 ) // not effective n efficient
 				/*try to check if (Fpull > Th) for cont. over 1 sec or more*/
 				{
-					if(enableHand)
+					if( enableHand && tryToPull )
 					{
 						enableHand = false;
 
@@ -1121,6 +1121,8 @@ namespace lipm_walking
 
 		}
 
+
+
 		/*
 		* 5th
 		*/
@@ -1136,6 +1138,8 @@ namespace lipm_walking
 			}
 
 		}
+
+
 
 		/*
 		*  8th
@@ -1251,38 +1255,47 @@ namespace lipm_walking
 			*  4th
 			*/
 			/*add ef task again*/
-			if( walkBack && robotHasObject && (!enableHand) )
+			if( walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
 			{
 
-				if(Flag_Walk && ctl.isLastDSP() )
+				if(Flag_Walk)
 				{
-
-					/*true when last DSP is finished*/
-					finishedWalk_ = ctl.config()("finishedWalk", false);
-
-					if(finishedWalk_)
+					if( ctl.isLastDSP() )
 					{
-						ctl.config().add("finishedWalk", false);
+						/*true when last DSP is finished*/
+						finishedWalk_ = ctl.config()("finishedWalk", false);
 
-						ctl.solver().addTask(posTask);
-						posTask->reset();
+						if(finishedWalk_)
+						{
+							ctl.config().add("finishedWalk", false);
 
-						ctl.solver().addTask(oriTask);
-						oriTask->reset();
+							ctl.solver().addTask(posTask);
+							posTask->reset();
 
-						enableHand = true;
-						walkFwdAgain = true;
-					}
-					else
-					{
-						ctl.postureTask->reset();
+							ctl.solver().addTask(oriTask);
+							oriTask->reset();
+
+							walkFwdAgain = true;
+
+							enableHand = true;
+						}
+						else
+						{
+							ctl.postureTask->reset();
+						}
 					}
 				}
 				else
 				{
 					enableHand = true;
 				}
-				LOG_INFO("------------------------------> ready to begin 2nd cycle, motion enabled")
+
+				if(enableHand)
+				{
+					tryToPull = true;
+					LOG_INFO("------------------------------> ready to begin 2nd cycle, motion enabled")
+				}
+
 			}
 
 			/*
@@ -1327,6 +1340,8 @@ namespace lipm_walking
 					useRtEf = true;
 					stopRtEf = true;
 
+					tryToPull = false;
+
 				}
 
 
@@ -1350,6 +1365,8 @@ namespace lipm_walking
 					else
 					{
 						walkBack = false;
+
+						selectRobotHand = true;
 						LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
 					}
 
@@ -1380,6 +1397,7 @@ namespace lipm_walking
 
 					handoverComplete = false;
 
+					selectRobotHand = true;
 					LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
 				}
 				else
