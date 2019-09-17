@@ -902,6 +902,7 @@ namespace lipm_walking
 	bool ApproachObject::forceControllerIndividual(
 		bool& enableHand,
 		sva::PTransformd X_0_rel,
+		Eigen::Vector3d bodyPosS,
 		Eigen::Vector3d relaxPos,
 		Eigen::Vector3d initPos,
 		Eigen::Matrix3d initRot,
@@ -979,7 +980,7 @@ namespace lipm_walking
 		{
 
 			/*
-			*  7th
+			*  6th
 			*/
 			auto checkForce = [&](const char *axis_name, int idx)
 			{
@@ -1034,118 +1035,106 @@ namespace lipm_walking
 
 
 			/*
-			*  1st, 6th
-			*/
-			/*check if object is being pulled*/
-			if(takeBackObject)
+			*  1st, 5th
+			*
+			*check if object is being pulled*/
+			if(cycle_2nd && takeBackObject)
 			{
 				return checkForce("x-axis", 0) || checkForce("y-axis", 1) || checkForce("z-axis", 2);
 			}
 			else
 			{
-
-				/*open empty gripper when subject come near to robot*/
-				if( (!openGripper) )
+				/*
+				*  1st
+				*/
+				if(cycle_1st)
 				{
-					gOpen = true;
-					t2 = difftime( time(0), start);
-
-					LOG_INFO("------------------------------> 1st cycle, opening " << gripperName)
-				}
-
-				/*stop motion*/
-				else if( (enableHand)
-					&& (openGripper)
-					&& (!closeGripper)
-					&& (!restartHandover)
-					&& (fin_rel_ef < MIN_ALLOWED_DIST) ) //.12
-				{
-					Fzero = handForce;
-					localSurf_Fzero = forceSurf;
-
-					enableHand = false;
-					t3 = difftime( time(0), start);
-
-					LOG_WARNING("------------------------------> motion stopped with Fzero Norm "<< Fzero.norm())
-				}
-
-				/*closed WITH object*/
-				else if( (!enableHand)
-					&& (graspObject)
-					&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > MIN_SURFACE_FORCE - 1 ) )
-				{
-					if( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
+					/*open empty gripper when subject come near to robot*/
+					if( (!openGripper) )
 					{
-						gClose = true;
-						closeGripper = true;
-						graspObject = false;
-
-						Fclose = handForce;
-
-						t4 = difftime( time(0), start);
-
-						efPosOfHandover = posTask->position();
-						hPosOfHandover = nearestFingerPos;
-
-						LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
-					}
-				}
-
-				/*closed WITHOUT object*/
-				else if( (!restartHandover) &&
-					(!graspObject) &&
-					// (obj_rel_ef > 0.3) && or
-					(obj_rel_robotHand > 0.15) &&
-					(obj_rel_robotHand < 0.25) &&
-					(ef_area_wAB_gA < ef_area_wAB_O) && (ef_area_wAB_gB < ef_area_wAB_O) &&
-					(fin_rel_ef > 0.3) )
-				{
-					if( (Fclose.norm() < 2.0) )
-					{
-						gClose = false;
-						closeGripper = false;
-						graspObject = true;
 						gOpen = true;
+						t2 = difftime( time(0), start);
 
-						count_hr_fail++;
-
-						t_falseClose = difftime( time(0), start);
-
-						LOG_ERROR("------------------------------> false close, try with object again")
+						LOG_INFO("------------------------------> 1st cycle, opening " << gripperName)
 					}
-					else
-						{ Fclose = Eigen::Vector3d(1, 1, 1); }
+
+					/*stop motion*/
+					else if( (enableHand)
+						&& (openGripper)
+						&& (!closeGripper)
+						&& (!restartHandover)
+						&& (fin_rel_ef < MIN_ALLOWED_DIST) ) //.12
+					{
+						Fzero = handForce;
+						localSurf_Fzero = forceSurf;
+
+						enableHand = false;
+						t3 = difftime( time(0), start);
+
+						LOG_WARNING("------------------------------> motion stopped with Fzero Norm "<< Fzero.norm())
+					}
+
+					/*closed WITH object*/
+					else if( (!enableHand)
+						&& (graspObject)
+						&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > (MIN_SURFACE_FORCE - 1) ) )
+					{
+						if( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
+						{
+							gClose = true;
+							closeGripper = true;
+							graspObject = false;
+
+							Fclose = handForce;
+
+							t4 = difftime( time(0), start);
+
+							efPosOfHandover = posTask->position();
+							hPosOfHandover = nearestFingerPos;
+
+							LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
+						}
+					}
+
+					/*closed WITHOUT object*/
+					else if( (!restartHandover) &&
+						(!graspObject) &&
+						// (obj_rel_ef > 0.3) && or
+						(obj_rel_robotHand > 0.15) &&
+						(obj_rel_robotHand < 0.25) &&
+						(ef_area_wAB_gA < ef_area_wAB_O) && (ef_area_wAB_gB < ef_area_wAB_O) &&
+						(fin_rel_ef > 0.3) )
+					{
+						if( (Fclose.norm() < 2.0) )
+						{
+							gClose = false;
+							closeGripper = false;
+							graspObject = true;
+							gOpen = true;
+
+							count_hr_fail++;
+
+							t_falseClose = difftime( time(0), start);
+
+							LOG_ERROR("------------------------------> false close, try with object again")
+						}
+						else
+							{ Fclose = Eigen::Vector3d(1, 1, 1); }
+					}
+
 				}
-
 			}
 
 		}
 
 
 
-		/*
-		* 5th
-		*/
-		/*trigger again walk fwd when robot has the object*/
-		if( walkFwdAgain && robotHasObject && takeBackObject && ( fin_rel_ef < MAX_ALLOWED_DIST ) )
-		{
-
-			if( (nearestFingerPos(2)>=objAboveWaist) )
-			{
-				walkFwd = true;
-				walkFwdAgain = false;
-				LOG_WARNING("------------------------------> walk Fwd again, are you here in the beginning of 2nd cycle?")
-			}
-
-		}
-
-
 
 		/*
-		*  8th
+		*  7th
 		*/
 		/*just before the end of 2nd cycle, move EF to initial position at end of handover routine*/
-		if( restartHandover && (fin_rel_ef > 0.45) )
+		if( cycle_2nd && restartHandover && (fin_rel_ef > 0.45) )
 		{
 
 			if( (!gClose) && (!goBackInitPose) )
@@ -1170,7 +1159,7 @@ namespace lipm_walking
 			*  2nd
 			*/
 			/*comes only if object is grasped*/
-			if( (closeGripper) && (!restartHandover) && subjHasObject )
+			if( cycle_1st &&  (closeGripper) && (!restartHandover) && subjHasObject )
 			{
 
 				if(e == 2)
@@ -1197,18 +1186,15 @@ namespace lipm_walking
 					/*new threshold*/
 					newTh = Fload + thesh;
 
-					if(subjHasObject)
-					{
-						/*move EF in-solver to relax pose*/
-						// posTask->position(initPos);
-						posTask->position(Eigen::Vector3d(X_0_rel.translation()(0)+0.25, relaxPos(1), relaxPos(2)));
-						oriTask->orientation(relaxRot);
 
-						subjHasObject = false;
-						robotHasObject = true;
+					/*move EF in-solver to relax pose*/
+					posTask->position(Eigen::Vector3d(X_0_rel.translation()(0) + objRELAX_POSx, relaxPos(1), relaxPos(2)));
+					oriTask->orientation(relaxRot);
 
-						LOG_SUCCESS("------------------------------> Ef returning to relax pose")
-					}
+					subjHasObject = false;
+					robotHasObject = true;
+
+					LOG_SUCCESS("------------------------------> Ef returning to relax pose")
 
 					/*clear vector memories*/
 					Floadx.clear(); Floady.clear(); Floadz.clear();
@@ -1231,15 +1217,8 @@ namespace lipm_walking
 			*  3rd
 			*/
 			/*walk back when object arrives at relax pose*/
-			if( (!takeBackObject) && (!walkBack) && abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) )<0.25 )
+			if( cycle_1st &&  (!takeBackObject) && (!walkBack) && abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) ) < objRELAX_POSx )
 			{
-
-				if(Flag_WALK)
-				{
-					ctl.postureTask->reset();
-					ctl.solver().removeTask(posTask);
-					ctl.solver().removeTask(oriTask);
-				}
 
 				if(robotHasObject)
 				{
@@ -1247,22 +1226,20 @@ namespace lipm_walking
 					walkBack = true;
 
 
+					if(Flag_WALK)
+					{
+						ctl.solver().removeTask(posTask);
+						ctl.solver().removeTask(oriTask);
 
-					// if(Flag_WALK)
-					// {
-					// 	ctl.solver().removeTask(posTask);
-					// 	ctl.solver().removeTask(oriTask);
+						ctl.postureTask->reset();
 
-					// 	ctl.postureTask->reset();
-
-					// 	walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
-					// 	LOG_ERROR("selected WALK PLAN "<< walkPlan)
-					// 	ctl.loadFootstepPlan(walkPlan);
-					// 	ctl.config().add("triggerWalk", true);
-					// }
+						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+						ctl.loadFootstepPlan(walkPlan);
+						ctl.config().add("triggerWalk", true);
+					}
 
 
-					LOG_SUCCESS("------------------------------> robot returning to relax pose")
+					LOG_SUCCESS("------------------------------> robot returning to relax pose with selected WALK PLAN ---> "<< walkPlan)
 				}
 
 			}
@@ -1271,7 +1248,7 @@ namespace lipm_walking
 			*  4th
 			*/
 			/*add ef task again*/
-			if( walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
+			if( cycle_1st && walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
 			{
 
 				if(Flag_WALK)
@@ -1284,27 +1261,23 @@ namespace lipm_walking
 
 						if(finishedWalk_)
 						{
-							// walkBack = false;
-
 							ctl.config().add("finishedWalk", false);
 
 							ctl.solver().addTask(posTask);
-							posTask->reset();
-
 							ctl.solver().addTask(oriTask);
+
+							posTask->reset();
 							oriTask->reset();
 
-
-							walkFwdAgain = true;
-							// Flag_WALK = false;
-
+							walkBack = false;
+							// walkFwdAgain = true;
 
 							enableHand = true;
 						}
-						else
-						{
-							ctl.postureTask->reset();
-						}
+					}
+					else
+					{
+						ctl.postureTask->reset();
 					}
 				}
 				else
@@ -1315,16 +1288,22 @@ namespace lipm_walking
 				if(enableHand)
 				{
 					tryToPull = true;
+
+					Flag_WALK = false;
+
+					cycle_1st = false;
+					cycle_2nd = true;
+
 					LOG_INFO("------------------------------> ready to begin 2nd cycle, motion enabled")
 				}
 
 			}
 
 			/*
-			*  9th
+			*  8th
 			*/
 			/*at the end of 2nd cycle*/
-			if(restartHandover)
+			if( cycle_2nd && restartHandover )
 			{
 
 				if(!subjHasObject)
@@ -1367,18 +1346,23 @@ namespace lipm_walking
 				}
 
 
-				if( (!walkFwdAgain) && (posTask->eval().norm()) < 0.05 )
+				if( /*(!walkFwdAgain) &&*/ (posTask->eval().norm()) < 0.05 )
 				{
 
 					if(Flag_WALK)
 					{
-						walkBack = true;
-						ctl.config().add("finishedWalk", false);
 
-						ctl.postureTask->reset();
+						ctl.config().add("finishedWalk", false);
 
 						ctl.solver().removeTask(posTask);
 						ctl.solver().removeTask(oriTask);
+
+						ctl.postureTask->reset();
+
+						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+						ctl.loadFootstepPlan(walkPlan);
+						ctl.config().add("triggerWalk", true);
+
 
 						handoverComplete = true;
 
@@ -1386,8 +1370,6 @@ namespace lipm_walking
 					}
 					else
 					{
-						walkBack = false;
-
 						selectRobotHand = true;
 						LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
 					}
@@ -1400,10 +1382,11 @@ namespace lipm_walking
 
 
 			/*
-			*  10th, final
+			*  9th, final
 			*/
-			if(handoverComplete && Flag_WALK && ctl.isLastDSP() )
+			if( cycle_2nd && handoverComplete && Flag_WALK && ctl.isLastDSP() )
 			{
+				/*true when last DSP is finished*/
 				finishedWalk_ = ctl.config()("finishedWalk", false);
 
 				if(finishedWalk_)

@@ -68,6 +68,7 @@ namespace lipm_walking
 			bool Flag_HandoverGUI{true};
 			bool Flag_HandoverLogs{true};
 			bool Flag_HandoverRun{true};
+			bool Flag_HeadTracking{true};
 
 
 			double pi{3.14};
