@@ -35,8 +35,8 @@ endmacro()
 
 add_subdirectory(cortex)
 
- find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge) # my pc
-# find_package(catkin REQUIRED COMPONENTS cortex_ros_bridge) # robot pc
+#  find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge) # my pc
+find_package(catkin REQUIRED COMPONENTS cortex_ros_bridge) # robot pc
 
 include_directories(${catkin_INCLUDE_DIRS})
 add_fsm_state_simple(Handover)

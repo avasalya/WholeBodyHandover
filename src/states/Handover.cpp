@@ -233,6 +233,7 @@ namespace lipm_walking
 				}
 
 
+
 				ctl.logger().addLogEntry("HANDOVER_cycle_1st",[this]() -> double { return approachObj->cycle_1st; });
 				ctl.logger().addLogEntry("HANDOVER_cycle_2nd",[this]() -> double { return approachObj->cycle_2nd; });
 
@@ -293,6 +294,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_objRel_robotRtHand",[this]() -> double { return approachObj->obj_rel_robotRtHand; });
 				ctl.logger().addLogEntry("HANDOVER_objRel_RobotBodyDist",[this]() -> double { return objBody_rel_robotBody; });
 
+				ctl.logger().addLogEntry("HANDOVER_X-0-rel",[this]() -> Eigen::Vector3d { return X_0_rel.translation(); });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosR",[this]() -> Eigen::Vector3d { return bodyPosR; });
 				ctl.logger().addLogEntry("HANDOVER_bodyPosS",[this]() -> Eigen::Vector3d { return bodyPosS; });
 				ctl.logger().addLogEntry("HANDOVER_b2bDist",[this]() -> double { return ID; });
@@ -1488,6 +1490,7 @@ namespace lipm_walking
 									approachObj->walkFwd = false;
 
 									approachObj->stepSize = "20cm_10";
+									// approachObj->stepSize = "20cm_20";
 									logStepSize = 0.30;
 									Xmax = 0.80 + logStepSize;
 

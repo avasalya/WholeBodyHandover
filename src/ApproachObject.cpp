@@ -1217,7 +1217,9 @@ namespace lipm_walking
 			*  3rd
 			*/
 			/*walk back when object arrives at relax pose*/
-			if( cycle_1st &&  (!takeBackObject) && (!walkBack) && abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) ) < objRELAX_POSx )
+			if( cycle_1st &&  (!takeBackObject) && (!walkBack) &&
+				( (abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) ) < objRELAX_POSx ) ||
+				( (posTask->eval().norm()) < 0.05) ) )
 			{
 
 				if(robotHasObject)
@@ -1270,7 +1272,6 @@ namespace lipm_walking
 							oriTask->reset();
 
 							walkBack = false;
-							// walkFwdAgain = true;
 
 							enableHand = true;
 						}
@@ -1346,7 +1347,7 @@ namespace lipm_walking
 				}
 
 
-				if( /*(!walkFwdAgain) &&*/ (posTask->eval().norm()) < 0.05 )
+				if( posTask->eval().norm() < 0.05 )
 				{
 
 					if(Flag_WALK)
