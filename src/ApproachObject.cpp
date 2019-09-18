@@ -1079,8 +1079,8 @@ namespace lipm_walking
 						&& (graspObject)
 						&& ( abs( (forceSurf - localSurf_Fzero)(2) ) > (MIN_SURFACE_FORCE - 1) ) )
 					{
-						if( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
-						{
+						// if( (ef_area_wAB_gA > ef_area_wAB_O) || (ef_area_wAB_gB > ef_area_wAB_O) )
+						// {
 							gClose = true;
 							closeGripper = true;
 							graspObject = false;
@@ -1093,7 +1093,7 @@ namespace lipm_walking
 							hPosOfHandover = nearestFingerPos;
 
 							LOG_INFO("------------------------------> closing with Fclose Norm "<<Fclose.norm() << ",	is object inside gripper?")
-						}
+						// }
 					}
 
 					/*closed WITHOUT object*/
@@ -1201,13 +1201,13 @@ namespace lipm_walking
 				}
 				else /*averaging load force to get object mass*/
 				{
-					Floadx.push_back( abs(handForce[0]) );
-					Floady.push_back( abs(handForce[1]) );
-					Floadz.push_back( abs(handForce[2]) );
+					Floadx.push_back(handForce[0]);
+					Floady.push_back(handForce[1]);
+					Floadz.push_back(handForce[2]);
 
-					// Floadx.push_back( abs( abs(handForce[0])-abs(Fzero[0]) ) );
-					// Floady.push_back( abs( abs(handForce[1])-abs(Fzero[1]) ) );
-					// Floadz.push_back( abs( abs(handForce[2])-abs(Fzero[2]) ) );
+					// Floadx.push_back( abs(handForce[0]) );
+					// Floady.push_back( abs(handForce[1]) );
+					// Floadz.push_back( abs(handForce[2]) );
 				}
 				e+=1;
 
@@ -1228,25 +1228,20 @@ namespace lipm_walking
 					walkBack = true;
 
 
-					if(enableWalk)
+					if(Flag_WALK && enableWalk)
 					{
 						ctl.solver().removeTask(posTask);
 						ctl.solver().removeTask(oriTask);
 
 						ctl.postureTask->reset();
 
-						if(Flag_WALK)
-						{
-							walkPlan = "HANDOVER_back_" + stepSize + "cm";
-							ctl.loadFootstepPlan(walkPlan);
-							ctl.config().add("triggerWalk", true);
-						}
+
+						walkPlan = "HANDOVER_back_" + stepSize + "cm";
+						ctl.loadFootstepPlan(walkPlan);
+						ctl.config().add("triggerWalk", true);
+						LOG_SUCCESS("------------------------------> robot returning to relax pose with selected WALK PLAN ---> "<< walkPlan)
 					}
-
-
-					LOG_SUCCESS("------------------------------> robot returning to relax pose with selected WALK PLAN ---> "<< walkPlan)
 				}
-
 			}
 
 			/*
@@ -1256,7 +1251,7 @@ namespace lipm_walking
 			if( cycle_1st && walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
 			{
 
-				if(enableWalk)
+				if(Flag_WALK && enableWalk)
 				{
 					if( ctl.isLastDSP() )
 					{
@@ -1283,6 +1278,12 @@ namespace lipm_walking
 				}
 				else
 				{
+					ctl.solver().addTask(posTask);
+					ctl.solver().addTask(oriTask);
+
+					posTask->reset();
+					oriTask->reset();
+
 					enableHand = true;
 				}
 
@@ -1352,21 +1353,17 @@ namespace lipm_walking
 				if( posTask->eval().norm() < 0.05 )
 				{
 
-					if(enableWalk)
+					if(Flag_WALK && enableWalk)
 					{
 						ctl.solver().removeTask(posTask);
 						ctl.solver().removeTask(oriTask);
 
 						ctl.postureTask->reset();
 
-						if(Flag_WALK)
-						{
-							ctl.config().add("finishedWalk", false);
-							walkPlan = "HANDOVER_back_" + stepSize + "cm";
-							ctl.loadFootstepPlan(walkPlan);
-							ctl.config().add("triggerWalk", true);
-						}
-
+						ctl.config().add("finishedWalk", false);
+						walkPlan = "HANDOVER_back_" + stepSize + "cm";
+						ctl.loadFootstepPlan(walkPlan);
+						ctl.config().add("triggerWalk", true);
 
 						handoverComplete = true;
 

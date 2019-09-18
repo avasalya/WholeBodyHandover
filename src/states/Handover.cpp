@@ -1384,11 +1384,11 @@ namespace lipm_walking
 					*/
 					if( (!approachObj->startNow) &&
 
-						// (approachObj->objectPosC(0) > MAX_ALLOWED_DIST) && //1.2
-						// (approachObj->objectPosC(0) < START_ZONE_DIST) 	&& //1.4
+						(approachObj->objectPosC(0) > MIN_ALLOWED_DIST) && //0.1
+						(approachObj->objectPosC(0) < START_ZONE_DIST) 	&& //1.4
 
 						(approachObj->fingerPosL(0) > MIN_ALLOWED_DIST) && //0.1
-						(approachObj->fingerPosL(0) < START_ZONE_DIST) 	&&
+						(approachObj->fingerPosL(0) < START_ZONE_DIST) 	&& //1.4
 
 						(approachObj->fingerPosR(0) > MIN_ALLOWED_DIST) &&
 						(approachObj->fingerPosR(0) < START_ZONE_DIST) )
@@ -1397,8 +1397,8 @@ namespace lipm_walking
 						approachObj->cycle_1st = true;
 						approachObj->cycle_2nd = false;
 
-						if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
-						{
+						// if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+						// {
 							approachObj->startNow = true;
 							approachObj->enableWalk = false;
 
@@ -1410,7 +1410,7 @@ namespace lipm_walking
 
 							LOG_SUCCESS("------------------------------> Handover Routine TRIGGERED")
 
-						}
+						// }
 
 					}
 
@@ -1429,7 +1429,7 @@ namespace lipm_walking
 
 						/*when walk Fwd -- this condition must satisfy --- otherwise routine wont work*/
 						if( (objBody_rel_robotBody >= ZERO) && //0.0
-							(objBody_rel_robotBody <= MAX_ALLOWED_DIST) ) //1.2
+							(objBody_rel_robotBody <= START_ZONE_DIST) ) //1.4 //MAX_ALLOWED_DIST //1.2
 						{
 							obj_rel_robot();
 						}
@@ -1491,7 +1491,6 @@ namespace lipm_walking
 									{
 										approachObj->enableWalk = true;
 										approachObj->walkFwd = true;
-										LOG_SUCCESS("------------------------------> FWD walking triggered")
 									}
 								};
 
@@ -1521,7 +1520,7 @@ namespace lipm_walking
 										Xmax = 0.80 + 0.1 + logStepSize;
 
 										approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
-										LOG_ERROR("------------------------------> selected WALK PLAN ---> "<< approachObj->walkPlan)
+										LOG_ERROR("------------------------------> FWD walking triggered with PLAN ---> "<< approachObj->walkPlan)
 
 										ctl.loadFootstepPlan(approachObj->walkPlan);
 										ctl.config().add("triggerWalk", true);
