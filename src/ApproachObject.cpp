@@ -1346,7 +1346,7 @@ namespace lipm_walking
 				}
 
 
-				if( posTask->eval().norm() < 0.05 )
+				if( posTask->eval().norm() < 0.10 )
 				{
 
 					if(Flag_WALK && enableWalk)
@@ -1394,6 +1394,7 @@ namespace lipm_walking
 					ctl.solver().addTask(posTask);
 					ctl.solver().addTask(oriTask);
 
+					/* due to slowness in posTask.eval -- better send ef to initPos then reset here*/
 					posTask->reset();
 					oriTask->reset();
 
