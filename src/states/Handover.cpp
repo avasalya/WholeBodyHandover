@@ -246,7 +246,8 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_human_far",[this]() -> double { return approachObj->human_far; });
 
 				ctl.logger().addLogEntry("HANDOVER_Flag_Individual",[this]() -> double { return approachObj->FlAG_INDIVIDUAL; });
-				ctl.logger().addLogEntry("HANDOVER_Flag_Walk",[this]() -> double { return approachObj->Flag_WALK; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_walk",[this]() -> double { return approachObj->Flag_WALK; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_enableWalk",[this]() -> double { return approachObj->enableWalk; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwd",[this]() -> double { return approachObj->walkFwd; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwdAgain",[this]() -> double { return approachObj->walkFwdAgain; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkBack",[this]() -> double { return approachObj->walkBack; });
@@ -1399,7 +1400,7 @@ namespace lipm_walking
 						if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
 						{
 							approachObj->startNow = true;
-							approachObj->Flag_WALK = false;
+							approachObj->enableWalk = false;
 
 							ctl.solver().addTask(posTaskL);
 							ctl.solver().addTask(oriTaskL);
@@ -1438,17 +1439,23 @@ namespace lipm_walking
 						/*
 						* 2nd (a)
 						*/
-						if( (!approachObj->Flag_WALK) && (!approachObj->walkFwd) )
+						if( (!approachObj->enableWalk) && (!approachObj->walkFwd) )
 						{
 
 							if(approachObj->cycle_1st)
 							{
-								isHumanReady = approachObj->objectPosC(2) >= approachObj->objAboveWaist;
+								if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+								{
+									isHumanReady = true;
+								}
 							}
 							else if(approachObj->cycle_2nd)
 							{
-								isHumanReady = ( (approachObj->fingerPosL(2) >= approachObj->objAboveWaist) ||
-												 (approachObj->fingerPosR(2) >= approachObj->objAboveWaist) );
+								if( (approachObj->fingerPosL(2) >= approachObj->objAboveWaist) ||
+									(approachObj->fingerPosR(2) >= approachObj->objAboveWaist) )
+								{
+									isHumanReady = true;
+								}
 							}
 
 							if(isHumanReady)
@@ -1477,12 +1484,12 @@ namespace lipm_walking
 								{
 									if(approachObj->human_near)
 									{
-										approachObj->Flag_WALK = false;
+										approachObj->enableWalk = false;
 										approachObj->walkFwd = false;
 									}
 									else if(approachObj->human_far)
 									{
-										approachObj->Flag_WALK = true;
+										approachObj->enableWalk = true;
 										approachObj->walkFwd = true;
 										LOG_SUCCESS("------------------------------> FWD walking triggered")
 									}
@@ -1498,7 +1505,7 @@ namespace lipm_walking
 						* 2nd (b)
 						*
 						*trigger step-walk only when walk Fwd is enabled*/
-						else if( (approachObj->Flag_WALK) && (approachObj->walkFwd) )
+						else if( (approachObj->enableWalk) && (approachObj->walkFwd) )
 						{
 							if( (ID > START_ZONE_DIST) && (ID < SAFE_ZONE_DIST) ) //1.8>ID>1.4
 							{
@@ -1506,16 +1513,23 @@ namespace lipm_walking
 								{
 									approachObj->walkFwd = false;
 
-									approachObj->stepSize = "20cm_10";
-									// approachObj->stepSize = "20cm_20";
-									logStepSize = 0.30;
-									Xmax = 0.80 + 0.1 + logStepSize;
+									if(approachObj->Flag_WALK)
+									{
+										approachObj->stepSize = "20cm_10";
+										// approachObj->stepSize = "20cm_20";
+										logStepSize = 0.30;
+										Xmax = 0.80 + 0.1 + logStepSize;
 
-									approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
-									LOG_ERROR("------------------------------> selected WALK PLAN ---> "<< approachObj->walkPlan)
+										approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
+										LOG_ERROR("------------------------------> selected WALK PLAN ---> "<< approachObj->walkPlan)
 
-									ctl.loadFootstepPlan(approachObj->walkPlan);
-									ctl.config().add("triggerWalk", true);
+										ctl.loadFootstepPlan(approachObj->walkPlan);
+										ctl.config().add("triggerWalk", true);
+									}
+									else
+									{
+										Xmax = 0.8;
+									}
 								}
 							}
 						}
@@ -1751,19 +1765,16 @@ namespace lipm_walking
 
 
 				/*SPECIFIC TO WALKING*/
-				if(approachObj->Flag_WALK)
-				{
-					approachObj->Flag_WALK = false;
+				approachObj->enableWalk = false;
 
-					approachObj->walkFwd = false;
-					approachObj->walkBack = false;
+				approachObj->walkFwd = false;
+				approachObj->walkBack = false;
 
-					stepFwd = true;
-					stepBack = true;
+				stepFwd = true;
+				stepBack = true;
 
-					approachObj->finishedWalk_ = false;
-					ctl.config().add("finishedWalk", false);
-				}
+				approachObj->finishedWalk_ = false;
+				ctl.config().add("finishedWalk", false);
 
 				resetFlags_and_efPose = false;
 				cout<<"\033[1;33m------------------------------> ***ready to start new handover routine***\033[0m\n";
