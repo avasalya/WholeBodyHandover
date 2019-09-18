@@ -1235,7 +1235,7 @@ namespace lipm_walking
 
 						ctl.postureTask->reset();
 
-						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+						walkPlan = "HANDOVER_back_" + stepSize + "cm";
 						ctl.loadFootstepPlan(walkPlan);
 						ctl.config().add("triggerWalk", true);
 					}
@@ -1259,7 +1259,6 @@ namespace lipm_walking
 					{
 						/*true when last DSP is finished*/
 						finishedWalk_ = ctl.config()("finishedWalk", false);
-
 
 						if(finishedWalk_)
 						{
@@ -1360,7 +1359,7 @@ namespace lipm_walking
 
 						ctl.postureTask->reset();
 
-						walkPlan = "HANDOVER_1stepCycle_back_" + stepSize + "cm";
+						walkPlan = "HANDOVER_back_" + stepSize + "cm";
 						ctl.loadFootstepPlan(walkPlan);
 						ctl.config().add("triggerWalk", true);
 

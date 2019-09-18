@@ -169,8 +169,10 @@ namespace lipm_walking
 			bool startCapture{false};
 			bool resetFlags_and_efPose{false};
 
-			bool stepFwd;
-			bool stepBack;
+			bool stepFwd{true};
+			bool stepBack{true};
+
+			bool isHumanReady{false};
 
 		public://Cortex_ROS_Bridge
 			std::shared_ptr<ros::NodeHandle> m_nh_;

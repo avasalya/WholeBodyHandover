@@ -183,6 +183,7 @@ namespace lipm_walking
 					ctl.logger().addLogEntry("HANDOVER_indiv_useRtEf",[this]() -> double { return approachObj->useRtEf; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_stopRtEf",[this]() -> double { return approachObj->stopRtEf; });
 
+					ctl.logger().addLogEntry("HANDOVER_indiv_localSurfF0",[this]() -> Eigen::Vector3d { return approachObj->localSurf_Fzero; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_Fzero",[this]() -> Eigen::Vector3d { return approachObj->Fzero; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_Fclose",[this]() -> Eigen::Vector3d { return approachObj->Fclose; });
 					ctl.logger().addLogEntry("HANDOVER_indiv_Finert",[this]() -> Eigen::Vector3d { return approachObj->Finert; });
@@ -203,7 +204,8 @@ namespace lipm_walking
 
 					ctl.logger().addLogEntry("HANDOVER_together_enableHand",[this]() -> double { return approachObj->enableHand; });
 
-					ctl.logger().addLogEntry("HANDOVER_together_efLAce",[this]() -> Eigen::Vector3d { return efLAce; });
+
+					ctl.logger().addLogEntry("HANDOVER_indiv_localSurfFL",[this]() -> Eigen::Vector3d { return approachObj->localSurf_FzeroL; });
 					ctl.logger().addLogEntry("HANDOVER_together_FzeroL",[this]() -> Eigen::Vector3d { return approachObj->FzeroL; });
 					ctl.logger().addLogEntry("HANDOVER_together_FcloseL",[this]() -> Eigen::Vector3d { return approachObj->FcloseL; });
 					ctl.logger().addLogEntry("HANDOVER_together_FinertL",[this]() -> Eigen::Vector3d { return approachObj->FinertL; });
@@ -212,7 +214,7 @@ namespace lipm_walking
 					ctl.logger().addLogEntry("HANDOVER_together_newThL",[this]() -> Eigen::Vector3d { return approachObj->newThL; });
 
 
-					ctl.logger().addLogEntry("HANDOVER_together_efRAce",[this]() -> Eigen::Vector3d { return efRAce; });
+					ctl.logger().addLogEntry("HANDOVER_indiv_localSurfFR",[this]() -> Eigen::Vector3d { return approachObj->localSurf_FzeroR; });
 					ctl.logger().addLogEntry("HANDOVER_together_FzeroR",[this]() -> Eigen::Vector3d { return approachObj->FzeroR; });
 					ctl.logger().addLogEntry("HANDOVER_together_FcloseR",[this]() -> Eigen::Vector3d { return approachObj->FcloseR; });
 					ctl.logger().addLogEntry("HANDOVER_together_FinertR",[this]() -> Eigen::Vector3d { return approachObj->FinertR; });
@@ -233,13 +235,15 @@ namespace lipm_walking
 				}
 
 
+				ctl.logger().addLogEntry("HANDOVER_together_efLAce",[this]() -> Eigen::Vector3d { return efLAce; });
+				ctl.logger().addLogEntry("HANDOVER_together_efRAce",[this]() -> Eigen::Vector3d { return efRAce; });
 
 				ctl.logger().addLogEntry("HANDOVER_cycle_1st",[this]() -> double { return approachObj->cycle_1st; });
 				ctl.logger().addLogEntry("HANDOVER_cycle_2nd",[this]() -> double { return approachObj->cycle_2nd; });
 
+				ctl.logger().addLogEntry("HANDOVER_human_isReady",[this]() -> double { return isHumanReady; });
 				ctl.logger().addLogEntry("HANDOVER_human_near",[this]() -> double { return approachObj->human_near; });
 				ctl.logger().addLogEntry("HANDOVER_human_far",[this]() -> double { return approachObj->human_far; });
-
 
 				ctl.logger().addLogEntry("HANDOVER_Flag_Individual",[this]() -> double { return approachObj->FlAG_INDIVIDUAL; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_Walk",[this]() -> double { return approachObj->Flag_WALK; });
@@ -1069,7 +1073,7 @@ namespace lipm_walking
 						if(approachObj->FlAG_INDIVIDUAL)
 						{
 							/*this should be relative to robot body*/
-							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST - 0.2 ) //1.2 //old was 0.7
+							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST /*- 0.2*/ ) //1.2 //old was 0.7
 							{
 
 								if( fingerPos(1) >= 0.11 )
@@ -1436,7 +1440,18 @@ namespace lipm_walking
 						*/
 						if( (!approachObj->Flag_WALK) && (!approachObj->walkFwd) )
 						{
-							if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+
+							if(approachObj->cycle_1st)
+							{
+								isHumanReady = approachObj->objectPosC(2) >= approachObj->objAboveWaist;
+							}
+							else if(approachObj->cycle_2nd)
+							{
+								isHumanReady = ( (approachObj->fingerPosL(2) >= approachObj->objAboveWaist) ||
+												 (approachObj->fingerPosR(2) >= approachObj->objAboveWaist) );
+							}
+
+							if(isHumanReady)
 							{
 								/*check where human is standing w.r.t robot*/
 								if(	(bodyPosS(0) > START_ZONE_DIST) && //1.4
@@ -1474,6 +1489,8 @@ namespace lipm_walking
 								};
 
 								where_Does_Human_Stand();
+
+								isHumanReady = false;
 							}
 
 						}
@@ -1492,7 +1509,7 @@ namespace lipm_walking
 									approachObj->stepSize = "20cm_10";
 									// approachObj->stepSize = "20cm_20";
 									logStepSize = 0.30;
-									Xmax = 0.80 + logStepSize;
+									Xmax = 0.80 + 0.1 + logStepSize;
 
 									approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
 									LOG_ERROR("------------------------------> selected WALK PLAN ---> "<< approachObj->walkPlan)
@@ -1635,6 +1652,8 @@ namespace lipm_walking
 				approachObj->cycle_2nd = false;
 				approachObj->human_near = false;
 				approachObj->human_far = false;
+
+				isHumanReady = false;
 
 				ctl.solver().addTask(objEfTask);
 
