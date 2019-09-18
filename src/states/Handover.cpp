@@ -194,6 +194,9 @@ namespace lipm_walking
 					ctl.logger().addLogEntry("HANDOVER_efPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->efPosOfHandover; });
 					ctl.logger().addLogEntry("HANDOVER_hPosOfHandover",[this]() -> Eigen::Vector3d {return approachObj->hPosOfHandover; });
 
+					ctl.logger().addLogEntry("HANDOVER_selectRobotHand",[this]() -> double {return approachObj->selectRobotHand; });
+
+
 				}
 				else // TOGETHER
 				{
@@ -276,6 +279,12 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_posTaskREval", [this]() -> Eigen::Vector3d { return posTaskR->eval(); });
 				ctl.logger().addLogEntry("HANDOVER_oriTaskLEval", [this]() -> Eigen::Vector3d { return oriTaskL->eval(); });
 				ctl.logger().addLogEntry("HANDOVER_oriTaskREval", [this]() -> Eigen::Vector3d { return oriTaskR->eval(); });
+
+				ctl.logger().addLogEntry("HANDOVER_posTaskLEval_norm", [this]() -> Eigen::Vector3d { return posTaskL->eval().norm(); });
+				ctl.logger().addLogEntry("HANDOVER_posTaskREval_norm", [this]() -> Eigen::Vector3d { return posTaskR->eval().norm(); });
+				ctl.logger().addLogEntry("HANDOVER_oriTaskLEval_norm", [this]() -> Eigen::Vector3d { return oriTaskL->eval().norm(); });
+				ctl.logger().addLogEntry("HANDOVER_oriTaskREval_norm", [this]() -> Eigen::Vector3d { return oriTaskR->eval().norm(); });
+
 
 				ctl.logger().addLogEntry("HANDOVER_fingerPosL",[this]() -> Eigen::Vector3d { return approachObj->fingerPosL; });
 				ctl.logger().addLogEntry("HANDOVER_fingerPosR",[this]() -> Eigen::Vector3d { return approachObj->fingerPosR; });

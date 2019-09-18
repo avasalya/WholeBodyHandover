@@ -1201,13 +1201,9 @@ namespace lipm_walking
 				}
 				else /*averaging load force to get object mass*/
 				{
-					Floadx.push_back(handForce[0]);
-					Floady.push_back(handForce[1]);
-					Floadz.push_back(handForce[2]);
-
-					// Floadx.push_back( abs(handForce[0]) );
-					// Floady.push_back( abs(handForce[1]) );
-					// Floadz.push_back( abs(handForce[2]) );
+					Floadx.push_back( abs(handForce[0]) );
+					Floady.push_back( abs(handForce[1]) );
+					Floadz.push_back( abs(handForce[2]) );
 				}
 				e+=1;
 
@@ -1278,11 +1274,11 @@ namespace lipm_walking
 				}
 				else
 				{
-					ctl.solver().addTask(posTask);
-					ctl.solver().addTask(oriTask);
+					// ctl.solver().addTask(posTask);
+					// ctl.solver().addTask(oriTask);
 
-					posTask->reset();
-					oriTask->reset();
+					// posTask->reset();
+					// oriTask->reset();
 
 					enableHand = true;
 				}
@@ -1298,7 +1294,7 @@ namespace lipm_walking
 					cycle_1st = false;
 					cycle_2nd = true;
 
-					LOG_INFO("------------------------------> ready to begin 2nd cycle, motion enabled")
+					LOG_INFO("------------------------------> 2nd cycle begin, motion enabled")
 				}
 
 			}
