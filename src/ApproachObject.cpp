@@ -357,34 +357,59 @@ namespace lipm_walking
 		else
 		{
 			handoverPos = offsetPos;
-			// if(i%300 == 0)
-			// { LOG_ERROR(Xmax << "   handoverPos   " << handoverPos(0)) }
 		}
 
-		/*robot constraint*/
-		if(enableHand &&
-			(handoverPos(0)>= 0.10) && (handoverPos(0)<= Xmax)
-			&& (handoverPos(1)>= Ymin)  && (handoverPos(1)<= Ymax)
-			&& (handoverPos(2)>= 0.80) /*&& (handoverPos(2)<= 1.4)*/
-			)
+		if(enableHand)
 		{
-
-			sva::PTransformd new_pose(get<3>(handPredict), handoverPos);
-			posTask->position(new_pose.translation());
-			oriTask->orientation(new_pose.rotation());
-
-			// LOG_INFO("it "<<it << "\npredictPos wp "<<handoverPos.transpose()<<"\n" << "offsetPos "<< offsetPos.transpose())
-
-			if(FlAG_INDIVIDUAL)
+			/*robot constraint*/
+			if( (handoverPos(0)>= 0.10) && (handoverPos(0)<= Xmax) &&
+				(handoverPos(1)>= Ymin)  && (handoverPos(1)<= Ymax) &&
+				(handoverPos(2)>= 0.80) )
 			{
-				if( (takeBackObject) && (bool_t6) )
+				sva::PTransformd new_pose(get<3>(handPredict), handoverPos);
+				posTask->position(new_pose.translation());
+				oriTask->orientation(new_pose.rotation());
+
+				// LOG_INFO("it "<<it << "\npredictPos wp "<<handoverPos.transpose()<<"\n" << "offsetPos "<< offsetPos.transpose())
+
+				if(FlAG_INDIVIDUAL)
 				{
-					bool_t6 = false;
-					t6 = difftime( time(0), start);
+					if( (takeBackObject) && (bool_t6) )
+					{
+						bool_t6 = false;
+						t6 = difftime( time(0), start);
+					}
+				}
+			}
+			else
+			{
+				if( Flag_WALK && enableWalk && robotHasObject && cycle_2nd )
+				{
+					if( !ctl.config()("finishedWalk", false) )//not finished
+					{
+						ctl.solver().removeTask(posTask);
+						ctl.solver().removeTask(oriTask);
+
+						ctl.postureTask->reset();
+
+						// if(i%200 == 0)
+						// { LOG_ERROR("  --------------------------------- not finished yet  " <<  ctl.config()("finishedWalk", false) ) }
+					}
+					else if( ctl.config()("finishedWalk", false) )//finished
+					{
+						ctl.solver().addTask(posTask);
+						ctl.solver().addTask(oriTask);
+
+						posTask->reset();
+						oriTask->reset();
+
+						// if(i%200 == 0)
+						// { LOG_SUCCESS("  --------------------------------- walk  finished  " <<  ctl.config()("finishedWalk", false) ) }
+
+					}
 				}
 			}
 		}
-
 	}
 
 
@@ -985,7 +1010,7 @@ namespace lipm_walking
 			auto checkForce = [&](const char *axis_name, int idx)
 			{
 
-				if( fin_rel_ef < 0.15 ) // not effective n efficient
+				if( fin_rel_ef < 0.10 ) // not effective n efficient //was 0.15
 				/*try to check if (Fpull > Th) for cont. over 1 sec or more*/
 				{
 					if( enableHand && tryToPull )
@@ -1235,7 +1260,7 @@ namespace lipm_walking
 						walkPlan = "HANDOVER_back_" + stepSize + "cm";
 						ctl.loadFootstepPlan(walkPlan);
 						ctl.config().add("triggerWalk", true);
-						LOG_SUCCESS("------------------------------> robot returning to relax pose with selected WALK PLAN ---> "<< walkPlan)
+						LOG_ERROR("------------------------------> robot returning to relax pose with selected WALK PLAN ---> "<< walkPlan)
 					}
 				}
 			}
@@ -1287,7 +1312,7 @@ namespace lipm_walking
 				{
 					tryToPull = true;
 
-					enableWalk = false;
+					enableWalk = false; //allows to walkFwd again
 
 					walkBack = false;
 
@@ -1363,7 +1388,7 @@ namespace lipm_walking
 
 						handoverComplete = true;
 
-						LOG_WARNING("------------------------------> now robot will walk back again\n")
+						LOG_ERROR("------------------------------> robot returning to initial pose with selected WALK PLAN ---> "<< walkPlan)
 					}
 					else
 					{

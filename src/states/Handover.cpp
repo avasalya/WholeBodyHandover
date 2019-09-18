@@ -244,7 +244,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_cycle_1st",[this]() -> double { return approachObj->cycle_1st; });
 				ctl.logger().addLogEntry("HANDOVER_cycle_2nd",[this]() -> double { return approachObj->cycle_2nd; });
 
-				ctl.logger().addLogEntry("HANDOVER_human_isReady",[this]() -> double { return isHumanReady; });
+				ctl.logger().addLogEntry("HANDOVER_human_isReady",[this]() { return isHumanReady; });
 				ctl.logger().addLogEntry("HANDOVER_human_near",[this]() -> double { return approachObj->human_near; });
 				ctl.logger().addLogEntry("HANDOVER_human_far",[this]() -> double { return approachObj->human_far; });
 
@@ -1445,6 +1445,7 @@ namespace lipm_walking
 
 
 
+
 						/*
 						* 2nd (a)
 						*/
@@ -1478,13 +1479,14 @@ namespace lipm_walking
 								{
 									approachObj->human_far = true;
 									approachObj->human_near = false;
-									// LOG_WARNING("farrrrrrrrrrrrr")
+									// LOG_INFO("farrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
 								}
-								else
+								else if((bodyPosS(0) > MIN_ALLOWED_DIST) && //0.1
+										(bodyPosS(0) < START_ZONE_DIST) ) //&&  //1.4
 								{
 									approachObj->human_near = true;
 									approachObj->human_far = false;
-									// LOG_SUCCESS("nearrrrrrrrrrrr")
+									// LOG_SUCCESS("nearrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
 									Xmax = 0.8;
 								}
 
@@ -1538,11 +1540,12 @@ namespace lipm_walking
 									{
 										Xmax = 0.8;
 									}
-								}
+								}/*some thing here when robot has object and walkfwd again posture task etc*/
 							}
 						}
 
 					}// startNow
+
 
 
 
