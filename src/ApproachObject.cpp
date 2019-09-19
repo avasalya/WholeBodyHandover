@@ -1304,12 +1304,6 @@ namespace lipm_walking
 				}
 				else
 				{
-					// ctl.solver().addTask(posTask);
-					// ctl.solver().addTask(oriTask);
-
-					// posTask->reset();
-					// oriTask->reset();
-
 					enableHand = true;
 				}
 
@@ -1406,7 +1400,6 @@ namespace lipm_walking
 					startNow = false;
 
 					restartHandover = false;
-
 				}
 
 			}//restartHandover

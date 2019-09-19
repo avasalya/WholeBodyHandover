@@ -199,8 +199,6 @@ namespace lipm_walking
 
 				// TOGETHER
 
-				ctl.logger().addLogEntry("HANDOVER_together_robotHasObject",[this]() -> double { return approachObj->robotHasObject; });
-				ctl.logger().addLogEntry("HANDOVER_together_subjHasObject",[this]() -> double { return approachObj->subjHasObject; });
 				ctl.logger().addLogEntry("HANDOVER_together_pickNearestHand",[this]() -> double { return approachObj->pickNearestHand; });
 
 				ctl.logger().addLogEntry("HANDOVER_together_enableHand",[this]() -> double { return approachObj->enableHand; });
@@ -236,7 +234,13 @@ namespace lipm_walking
 
 				// COMMON
 
+				ctl.logger().addLogEntry("HANDOVER_startNow",[this]() -> double { return approachObj->startNow; });
+
+				ctl.logger().addLogEntry("HANDOVER_robotHasObject",[this]() -> double { return approachObj->robotHasObject; });
+				ctl.logger().addLogEntry("HANDOVER_subjHasObject",[this]() -> double { return approachObj->subjHasObject; });
+
 				ctl.logger().addLogEntry("HANDOVER_restartHandover",[this]() -> double {return approachObj->restartHandover; });
+				ctl.logger().addLogEntry("HANDOVER_takeBackObject",[this]() -> double {return approachObj->takeBackObject; });
 
 				ctl.logger().addLogEntry("HANDOVER_efLAce",[this]() -> Eigen::Vector3d { return efLAce; });
 				ctl.logger().addLogEntry("HANDOVER_efRAce",[this]() -> Eigen::Vector3d { return efRAce; });
