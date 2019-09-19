@@ -66,7 +66,9 @@ namespace lipm_walking
 
 			bool Flag_WALK{true};			//TRUE, for walking, else only stabilizer DONT TRUE HERE
 
-			bool enableWalk{false};
+			bool disableWalk{false};
+			bool enableWalkFwd{false};
+			bool enableWalkBack{false};
 			bool walkFwd{false};
 			bool finishedWalk_{false};
 			bool walkFwdAgain{false};

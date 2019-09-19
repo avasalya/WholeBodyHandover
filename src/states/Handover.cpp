@@ -206,7 +206,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_together_enableHand",[this]() -> double { return approachObj->enableHand; });
 
 
-				ctl.logger().addLogEntry("HANDOVER_indiv_localSurfFL",[this]() -> Eigen::Vector3d { return approachObj->localSurf_FzeroL; });
+				ctl.logger().addLogEntry("HANDOVER_together_localSurfFL",[this]() -> Eigen::Vector3d { return approachObj->localSurf_FzeroL; });
 				ctl.logger().addLogEntry("HANDOVER_together_FzeroL",[this]() -> Eigen::Vector3d { return approachObj->FzeroL; });
 				ctl.logger().addLogEntry("HANDOVER_together_FcloseL",[this]() -> Eigen::Vector3d { return approachObj->FcloseL; });
 				ctl.logger().addLogEntry("HANDOVER_together_FinertL",[this]() -> Eigen::Vector3d { return approachObj->FinertL; });
@@ -215,7 +215,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_together_newThL",[this]() -> Eigen::Vector3d { return approachObj->newThL; });
 
 
-				ctl.logger().addLogEntry("HANDOVER_indiv_localSurfFR",[this]() -> Eigen::Vector3d { return approachObj->localSurf_FzeroR; });
+				ctl.logger().addLogEntry("HANDOVER_together_localSurfFR",[this]() -> Eigen::Vector3d { return approachObj->localSurf_FzeroR; });
 				ctl.logger().addLogEntry("HANDOVER_together_FzeroR",[this]() -> Eigen::Vector3d { return approachObj->FzeroR; });
 				ctl.logger().addLogEntry("HANDOVER_together_FcloseR",[this]() -> Eigen::Vector3d { return approachObj->FcloseR; });
 				ctl.logger().addLogEntry("HANDOVER_together_FinertR",[this]() -> Eigen::Vector3d { return approachObj->FinertR; });
@@ -244,13 +244,14 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_cycle_1st",[this]() -> double { return approachObj->cycle_1st; });
 				ctl.logger().addLogEntry("HANDOVER_cycle_2nd",[this]() -> double { return approachObj->cycle_2nd; });
 
-				ctl.logger().addLogEntry("HANDOVER_human_isReady",[this]() { return isHumanReady; });
 				ctl.logger().addLogEntry("HANDOVER_human_near",[this]() -> double { return approachObj->human_near; });
 				ctl.logger().addLogEntry("HANDOVER_human_far",[this]() -> double { return approachObj->human_far; });
 
 				ctl.logger().addLogEntry("HANDOVER_Flag_Individual",[this]() -> double { return approachObj->FlAG_INDIVIDUAL; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walk",[this]() -> double { return approachObj->Flag_WALK; });
-				ctl.logger().addLogEntry("HANDOVER_Flag_enableWalk",[this]() -> double { return approachObj->enableWalk; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_disableWalk",[this]() -> double { return approachObj->disableWalk; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_enableWalkFwd",[this]() -> double { return approachObj->enableWalkFwd; });
+				ctl.logger().addLogEntry("HANDOVER_Flag_enableWalkBack",[this]() -> double { return approachObj->enableWalkBack; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwd",[this]() -> double { return approachObj->walkFwd; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwdAgain",[this]() -> double { return approachObj->walkFwdAgain; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkBack",[this]() -> double { return approachObj->walkBack; });
@@ -330,9 +331,6 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_trials_rh_success",[this]() -> double { return approachObj->count_rh_success; });
 				ctl.logger().addLogEntry("HANDOVER_trials_rh_fail",[this]() -> double { return approachObj->count_rh_fail; });
 				ctl.logger().addLogEntry("HANDOVER_trials_reset",[this]() -> double { return approachObj->count_reset; });
-
-				ctl.logger().addLogEntry("HANDOVER_gOpen",[this]() -> double { return approachObj->gOpen; });
-				ctl.logger().addLogEntry("HANDOVER_gClose",[this]() -> double { return approachObj->gClose; });
 
 				ctl.logger().addLogEntry("HANDOVER_OpenGripper",[this]() -> double { return approachObj->openGripper; });
 				ctl.logger().addLogEntry("HANDOVER_CloseGripper",[this]() -> double { return approachObj->closeGripper; });
@@ -1083,7 +1081,7 @@ namespace lipm_walking
 						if(approachObj->FlAG_INDIVIDUAL)
 						{
 							/*this should be relative to robot body*/
-							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST /*- 0.2*/ ) //1.2 //old was 0.7
+							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST ) //1.2
 							{
 
 								if( fingerPos(1) >= 0.11 )
@@ -1406,20 +1404,19 @@ namespace lipm_walking
 						approachObj->cycle_1st = true;
 						approachObj->cycle_2nd = false;
 
-						if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
-						{
+						// if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+						// {
 							approachObj->startNow = true;
-							approachObj->enableWalk = false;
+							approachObj->enableWalkFwd = false;
 
-							LOG_SUCCESS("\n------------------------------> Handover Routine TRIGGERED")
+							LOG_SUCCESS("\n------------------------------> Handover Routine TRIGGERED <------------------------------")
 
 							ctl.solver().addTask(posTaskL);
 							ctl.solver().addTask(oriTaskL);
 
 							ctl.solver().addTask(posTaskR);
 							ctl.solver().addTask(oriTaskR);
-
-						}
+						// }
 
 					}
 
@@ -1449,9 +1446,10 @@ namespace lipm_walking
 						/*
 						* 2nd (a)
 						*/
-						if( (!approachObj->enableWalk) && (!approachObj->walkFwd) )
+						if( (!approachObj->enableWalkFwd) && (!approachObj->walkFwd) && (!approachObj->disableWalk) )
 						{
 
+							/*1st look for hand(Z)/obj(Z) position then look for bodyPosS(X)*/
 							if(approachObj->cycle_1st)
 							{
 								if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
@@ -1472,21 +1470,17 @@ namespace lipm_walking
 							{
 								/*check where human is standing w.r.t robot*/
 								if(	(bodyPosS(0) > START_ZONE_DIST) && //1.4
-									(bodyPosS(0) < SAFE_ZONE_DIST) ) //&&  //1.8
-
-									// (approachObj->objectPosC(0) > MIN_ALLOWED_DIST) && //0.1
-									// (approachObj->objectPosC(0) < START_ZONE_DIST)	) //1.4
+									(bodyPosS(0) < SAFE_ZONE_DIST) )   //1.8
 								{
 									approachObj->human_far = true;
 									approachObj->human_near = false;
-									// LOG_INFO("farrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
 								}
+								/*remove this below condition arguments -- leave it without */
 								else if((bodyPosS(0) > MIN_ALLOWED_DIST) && //0.1
-										(bodyPosS(0) < START_ZONE_DIST) ) //&&  //1.4
+										(bodyPosS(0) < START_ZONE_DIST) )   //1.4
 								{
 									approachObj->human_near = true;
 									approachObj->human_far = false;
-									// LOG_SUCCESS("nearrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
 									Xmax = 0.8;
 								}
 
@@ -1495,12 +1489,12 @@ namespace lipm_walking
 								{
 									if(approachObj->human_near)
 									{
-										approachObj->enableWalk = false;
+										approachObj->enableWalkFwd = false;
 										approachObj->walkFwd = false;
 									}
 									else if(approachObj->human_far)
 									{
-										approachObj->enableWalk = true;
+										approachObj->enableWalkFwd = true;
 										approachObj->walkFwd = true;
 									}
 								};
@@ -1515,7 +1509,7 @@ namespace lipm_walking
 						* 2nd (b)
 						*
 						*trigger step-walk only when walk Fwd is enabled*/
-						else if( (approachObj->enableWalk) && (approachObj->walkFwd) )
+						else if( (approachObj->enableWalkFwd) && (approachObj->walkFwd) )
 						{
 							if( (ID > START_ZONE_DIST) && (ID < SAFE_ZONE_DIST) ) //1.8>ID>1.4
 							{
@@ -1531,10 +1525,12 @@ namespace lipm_walking
 										Xmax = 0.80 + 0.1 + logStepSize;
 
 										approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
-										LOG_ERROR("------------------------------> FWD walking triggered with PLAN ---> "<< approachObj->walkPlan)
+										LOG_ERROR("------------------------------> FWD walking triggered")
 
 										ctl.loadFootstepPlan(approachObj->walkPlan);
 										ctl.config().add("triggerWalk", true);
+
+										approachObj->enableWalkBack = true;
 									}
 									else
 									{
@@ -1776,7 +1772,10 @@ namespace lipm_walking
 
 
 				/*SPECIFIC TO WALKING*/
-				approachObj->enableWalk = false;
+				approachObj->enableWalkFwd = false;
+				approachObj->enableWalkBack = false;
+
+				approachObj->disableWalk = false;
 
 				approachObj->walkFwd = false;
 				approachObj->walkBack = false;
