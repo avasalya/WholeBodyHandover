@@ -132,6 +132,7 @@ namespace lipm_walking
       }
 
       ctl.config().add("finishedWalk", true);
+      LOG_ERROR("*****FINISHED WALKING*****")
 
       output("Standing");
       return true;

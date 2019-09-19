@@ -1242,8 +1242,9 @@ namespace lipm_walking
 			*/
 			/*walk back when object arrives at relax pose*/
 			if( cycle_1st &&  (!takeBackObject) && (!walkBack) &&
-				( (abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) ) < objRELAX_POSx ) ||
-				( (posTask->eval().norm()) < 0.05) ) )
+				// ( (abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) ) < objRELAX_POSx ) ||
+				( (posTask->eval().norm()) < 0.05) ) //)
+				// (posTask->eval().norm() < 0.05) && (posTask->speed().norm() < 1e-3) )
 			{
 
 				if(robotHasObject)
