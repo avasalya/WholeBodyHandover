@@ -392,28 +392,7 @@ namespace lipm_walking
 					{
 						posTask->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPos(1), relaxPos(2)));
 						oriTask->orientation(relaxRot);
-
-
-						// ctl.solver().removeTask(posTask);
-						// ctl.solver().removeTask(oriTask);
-						// ctl.postureTask->reset();
-
-						// if(i%200 == 0)
-						// { LOG_ERROR("  --------------------------------- not finished yet  " <<  ctl.config()("finishedWalk", false) ) }
 					}
-					// else if( ctl.config()("finishedWalk", false) )//finished
-					// {
-
-
-					// 	// ctl.solver().addTask(posTask);
-					// 	// posTask->reset();
-					// 	// ctl.solver().addTask(oriTask);
-					// 	// oriTask->reset();
-
-					// 	// if(i%200 == 0)
-					// 	// { LOG_SUCCESS("  --------------------------------- walk  finished  " <<  ctl.config()("finishedWalk", false) ) }
-
-					// }
 				}
 			}
 		}
@@ -1242,14 +1221,12 @@ namespace lipm_walking
 		*  3rd
 		*/
 		/*walk back when object arrives at relax pose*/
-		if( cycle_1st &&  (!takeBackObject) && (!walkBack) && (posTask->eval().norm() < 0.05) )
+		if( cycle_1st &&  (!takeBackObject) && (!walkBack) &&
+			(posTask->eval().norm() < 0.05) && oriTask->eval().norm() < 0.05 )
 		{
-
 			if(robotHasObject)
 			{
-				takeBackObject = true;
 				walkBack = true;
-
 
 				if(Flag_WALK && enableWalkBack)
 				{
@@ -1268,181 +1245,195 @@ namespace lipm_walking
 
 
 
-		/*
-		*  4th
-		*/
-		/*add ef task again*/
-		if( cycle_1st && walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
+
+		if(	(fingerPosL(0) > MAX_ALLOWED_DIST) && //1.2
+			(fingerPosL(0) < START_ZONE_DIST) &&  //1.4
+
+			(fingerPosR(0) > MAX_ALLOWED_DIST) &&
+			(fingerPosR(0) < START_ZONE_DIST) )
+
+		// if( (nearestFingerPos(0) - abs(X_0_rel.translation()(0))) > 1.2 )
 		{
-			if(Flag_WALK && enableWalkBack)
+
+			/*
+			*  4th
+			*/
+			/*add ef task again*/
+
+			if( cycle_1st && walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
 			{
-				if( ctl.isLastDSP() )
+				if(Flag_WALK && enableWalkBack)
 				{
-					/*true when last DSP is finished*/
-					finishedWalk_ = ctl.config()("finishedWalk", false);
-
-					if(finishedWalk_)
+					if( ctl.isLastDSP() )
 					{
-						ctl.config().add("finishedWalk", false);
+						/*true when last DSP is finished*/
+						finishedWalk_ = ctl.config()("finishedWalk", false);
 
-						ctl.solver().addTask(posTask);
-						ctl.solver().addTask(oriTask);
+						if(finishedWalk_)
+						{
+							ctl.config().add("finishedWalk", false);
 
-						posTask->reset();
-						oriTask->reset();
+							ctl.solver().addTask(posTask);
+							ctl.solver().addTask(oriTask);
 
-						enableHand = true;
+							posTask->reset();
+							oriTask->reset();
 
-						enableWalkBack = false;
+							enableHand = true;
+
+							enableWalkBack = false;
+
+							takeBackObject = true;
+						}
 					}
+					else
+					{
+						ctl.postureTask->reset();
+					}
+				}
+				else
+				{
+					takeBackObject = true;
+
+					enableHand = true;
+				}
+
+				if(enableHand)
+				{
+					tryToPull = true;
+
+					disableWalk = false;
+					enableWalkFwd = false; //allows to walkFwd again
+					walkBack = false;
+
+					cycle_1st = false;
+					cycle_2nd = true;
+
+					LOG_INFO("------------------------------> 2nd cycle begin, motion enabled")
+				}
+			}
+
+
+
+
+
+			/*
+			*  7th
+			*/
+			/*at the end of 2nd cycle*/
+			if( cycle_2nd && restartHandover )
+			{
+
+				if(!subjHasObject)
+				{
+					e = 1;
+					t1 = 0.0;
+					t2 = 0.0;
+					t3 = 0.0;
+					t4 = 0.0;
+					t5 = 0.0;
+					t6 = 0.0;
+					t7 = 0.0;
+					t8 = 0.0;
+					t9 = 0.0;
+					t_falseClose = 0.0;
+
+					bool_t1 = true;
+					bool_t6 = true;
+					rh_fail = true;
+
+					openGripper = false;
+					closeGripper = false;
+
+					graspObject = true;
+
+					subjHasObject = true;
+
+					useLtEf=  true;
+					stopLtEf = true;
+
+					useRtEf = true;
+					stopRtEf = true;
+
+					tryToPull = false;
+
+					LOG_INFO("------------------------------> reseting flags for next Handover routine")
+				}
+
+
+
+				if(Flag_WALK && enableWalkBack)
+				{
+					ctl.solver().removeTask(posTask);
+					ctl.solver().removeTask(oriTask);
+
+					ctl.postureTask->reset();
+
+					ctl.config().add("finishedWalk", false);
+					walkPlan = "HANDOVER_back_" + stepSize + "cm";
+					ctl.loadFootstepPlan(walkPlan);
+					ctl.config().add("triggerWalk", true);
+
+					handoverComplete = true;
+
+					LOG_ERROR("------------------------------> robot returning to 'INITIAL' pose, walking back now")
+				}
+				else
+				{
+					selectRobotHand = true;
+					startNow = false;
+
+					LOG_SUCCESS("------------------------------> 'standing' Handover routine completed, begin next trial\n")
+				}
+
+
+				enableHand = true;
+
+				disableWalk = false;
+
+				restartHandover = false;
+
+			}//restartHandover
+
+
+			/*
+			*  8th, final
+			*/
+			if( cycle_2nd && handoverComplete && enableWalkBack )
+			{
+				/*true when last DSP is finished*/
+				finishedWalk_ = ctl.config()("finishedWalk", false);
+
+				if( finishedWalk_ || ctl.isLastDSP() )
+				{
+					finishedWalk_ = false;
+					ctl.config().add("finishedWalk", false);
+
+					ctl.solver().addTask(posTask);
+					ctl.solver().addTask(oriTask);
+
+					/* due to slowness in posTask.eval -- maybe better send ef to initPos then reset here*/
+					posTask->reset();
+					oriTask->reset();
+
+					handoverComplete = false;
+					enableWalkBack = false;
+
+					enableWalkFwd = false; //allows to walkFwd again
+
+					selectRobotHand = true;
+
+					startNow = false;
+
+					LOG_SUCCESS("------------------------------> 'step-walk' Handover routine completed, begin next trial\n")
 				}
 				else
 				{
 					ctl.postureTask->reset();
 				}
 			}
-			else
-			{
-				enableHand = true;
-			}
 
-			if(enableHand)
-			{
-				tryToPull = true;
-
-				disableWalk = false;
-				enableWalkFwd = false; //allows to walkFwd again
-				walkBack = false;
-
-				cycle_1st = false;
-				cycle_2nd = true;
-
-				LOG_INFO("------------------------------> 2nd cycle begin, motion enabled")
-			}
 		}
-
-
-
-
-
-		/*
-		*  7th
-		*/
-		/*at the end of 2nd cycle*/
-		if( cycle_2nd && restartHandover )
-		{
-
-			if(!subjHasObject)
-			{
-
-				e = 1;
-				t1 = 0.0;
-				t2 = 0.0;
-				t3 = 0.0;
-				t4 = 0.0;
-				t5 = 0.0;
-				t6 = 0.0;
-				t7 = 0.0;
-				t8 = 0.0;
-				t9 = 0.0;
-				t_falseClose = 0.0;
-
-				bool_t1 = true;
-				bool_t6 = true;
-				rh_fail = true;
-
-				openGripper = false;
-				closeGripper = false;
-
-				graspObject = true;
-
-				subjHasObject = true;
-
-				useLtEf=  true;
-				stopLtEf = true;
-
-				useRtEf = true;
-				stopRtEf = true;
-
-				tryToPull = false;
-
-			}
-
-
-
-			if(Flag_WALK && enableWalkBack)
-			{
-				ctl.solver().removeTask(posTask);
-				ctl.solver().removeTask(oriTask);
-
-				ctl.postureTask->reset();
-
-				ctl.config().add("finishedWalk", false);
-				walkPlan = "HANDOVER_back_" + stepSize + "cm";
-				ctl.loadFootstepPlan(walkPlan);
-				ctl.config().add("triggerWalk", true);
-
-				handoverComplete = true;
-
-				LOG_ERROR("------------------------------> robot returning to 'INITIAL' pose, walking back now")
-			}
-			else
-			{
-				selectRobotHand = true;
-				startNow = false;
-
-				LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
-			}
-
-
-			enableHand = true;
-
-			disableWalk = false;
-
-			restartHandover = false;
-
-		}//restartHandover
-
-
-		/*
-		*  8th, final
-		*/
-		if( cycle_2nd && handoverComplete && enableWalkBack )
-		{
-			/*true when last DSP is finished*/
-			finishedWalk_ = ctl.config()("finishedWalk", false);
-
-			if( finishedWalk_ || ctl.isLastDSP() )
-			{
-				finishedWalk_ = false;
-				ctl.config().add("finishedWalk", false);
-
-				ctl.solver().addTask(posTask);
-				ctl.solver().addTask(oriTask);
-
-				/* due to slowness in posTask.eval -- maybe better send ef to initPos then reset here*/
-				posTask->reset();
-				oriTask->reset();
-
-				handoverComplete = false;
-				enableWalkBack = false;
-
-				enableWalkFwd = false; //allows to walkFwd again
-
-				selectRobotHand = true;
-
-				startNow = false;
-
-				LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
-			}
-			else
-			{
-				ctl.postureTask->reset();
-			}
-		}
-
-
-		// }
 
 		return false;
 
