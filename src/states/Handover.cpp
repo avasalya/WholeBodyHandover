@@ -575,11 +575,11 @@ namespace lipm_walking
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
-								posTaskL->position(relaxPosL);
+								posTaskL->position(relaxPosL + X_0_rel.translation());
 								oriTaskL->orientation(relaxRotL);
 
 								relaxPosR = to.tail(3);
-								posTaskR->position(relaxPosR);
+								posTaskR->position(relaxPosR + X_0_rel.translation());
 								oriTaskR->orientation(relaxRotR);
 
 								stepFwd = false;
@@ -617,6 +617,7 @@ namespace lipm_walking
 								approachObj->stepSize = "30";
 								logStepSize = 30;
 								approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+
 								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
@@ -634,11 +635,17 @@ namespace lipm_walking
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
-								posTaskL->position(relaxPosL);
+
+								// posTaskL->position(relaxPosL + X_0_rel.translation());
+								posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosL(1), relaxPosL(2)));
+
 								oriTaskL->orientation(relaxRotL);
 
 								relaxPosR = to.tail(3);
-								posTaskR->position(relaxPosR);
+
+								// posTaskR->position(relaxPosR + X_0_rel.translation());
+								posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosR(1), relaxPosR(2)));
+
 								oriTaskR->orientation(relaxRotR);
 
 								stepFwd = false;
@@ -646,7 +653,10 @@ namespace lipm_walking
 
 								approachObj->stepSize = "40";
 								logStepSize = 40;
-								approachObj->walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
+
+								// approachObj->walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
+								approachObj->walkPlan = "forward_15cm_steps";
+
 								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
@@ -663,11 +673,15 @@ namespace lipm_walking
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
-								posTaskL->position(relaxPosL);
+								// posTaskL->position(relaxPosL);
+								posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosL(1), relaxPosL(2)));
+
 								oriTaskL->orientation(relaxRotL);
 
 								relaxPosR = to.tail(3);
-								posTaskR->position(relaxPosR);
+								// posTaskR->position(relaxPosR);
+								posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosR(1), relaxPosR(2)));
+
 								oriTaskR->orientation(relaxRotR);
 
 								stepBack = false;
@@ -675,7 +689,10 @@ namespace lipm_walking
 
 								approachObj->stepSize = "40";
 								logStepSize = 40;
-								approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+
+								// approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+								approachObj->walkPlan = "backward_15cm_steps";
+
 								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
 							}
@@ -719,6 +736,31 @@ namespace lipm_walking
 
 			relaxPosL << relaxPos.segment(0,3);
 			relaxPosR << relaxPos.segment(3,3);
+
+
+
+			if( (!stepFwd) && stepBack)
+			{
+
+				posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosL(1), relaxPosL(2)));
+				oriTaskL->orientation(relaxRotL);
+
+				posTaskR->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosR(1), relaxPosR(2)));
+				oriTaskR->orientation(relaxRotR);
+			}
+
+
+			if( stepFwd && (!stepBack) )
+			{
+				posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosL(1), relaxPosL(2)));
+				oriTaskL->orientation(relaxRotL);
+
+				posTaskR->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosR(1), relaxPosR(2)));
+				oriTaskR->orientation(relaxRotR);
+			}
+
+
+
 
 			/*relative to pelvis*/
 			sva::PTransformd X_0_body = ctl.robot().mbc().bodyPosW[ctl.robot().bodyIndexByName("BODY")];
@@ -1059,6 +1101,7 @@ namespace lipm_walking
 								subjRtHandOnObj();
 							}
 							else if( approachObj->robotHasObject && approachObj->pickNearestHand &&
+								/*may be not MAX_ALLOWED_DIST  but should be START_ZONE_DIST */
 								( (approachObj->finR_rel_efL < MAX_ALLOWED_DIST) || (approachObj->finL_rel_efR < MAX_ALLOWED_DIST) ) )
 							{
 								if(approachObj->bool_t6)
@@ -1087,74 +1130,79 @@ namespace lipm_walking
 
 						if(approachObj->FlAG_INDIVIDUAL)
 						{
-							/*this should be relative to robot body*/
-							if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST ) //1.2
+							if(fingerPos(2) >= approachObj->objAboveWaist)
 							{
-
-								if( fingerPos(1) >= 0.11 )
+								/*this should be relative to robot body*/
+								if( ( fingerPos(0) - abs(X_0_rel.translation()(0)) ) < MAX_ALLOWED_DIST ) //1.2
 								{
-									if( (approachObj->stopRtEf) && (approachObj->useLtEf) && (approachObj->selectRobotHand) )
+
+									if( fingerPos(1) >= 0.11 )
 									{
-										LOG_SUCCESS("------------------------------> robot 'LEFT' Hand in use")
-										approachObj->selectRobotHand = false;
+										if( (approachObj->stopRtEf) && (approachObj->useLtEf) && (approachObj->selectRobotHand) )
+										{
+											LOG_SUCCESS("------------------------------> robot 'LEFT' Hand in use")
+											approachObj->selectRobotHand = false;
 
-										approachObj->stopRtEf = false;
+											approachObj->stopRtEf = false;
 
-										// posTaskR->position(initPosR);
-										// oriTaskR->orientation(initRotR);
-										ctl.solver().removeTask(posTaskR);
-										ctl.solver().removeTask(oriTaskR);
+											// posTaskR->position(initPosR);
+											// oriTaskR->orientation(initRotR);
+											ctl.solver().removeTask(posTaskR);
+											ctl.solver().removeTask(oriTaskR);
 
 
-										approachObj->stopLtEf = true;
+											approachObj->stopLtEf = true;
+										}
+
+										if(!approachObj->selectRobotHand)
+										{
+											approachObj->lHandPredict = approachObj->predictionController(
+												ltPosW,
+												relaxRotL,
+												subjMarkersName);
+
+											approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+										}
+									}
+									else
+									{
+										if( (approachObj->stopLtEf) && (approachObj->useRtEf) && (approachObj->selectRobotHand) )
+										{
+											LOG_SUCCESS("------------------------------> robot 'RIGHT' Hand in use")
+											approachObj->selectRobotHand = false;
+
+											approachObj->stopLtEf = false;
+
+											// posTaskL->position(initPosL);
+											// oriTaskL->orientation(initRotL);
+											ctl.solver().removeTask(posTaskL);
+											ctl.solver().removeTask(oriTaskL);
+
+											approachObj->stopRtEf = true;
+										}
+
+										if(!approachObj->selectRobotHand)
+										{
+											approachObj->rHandPredict = approachObj->predictionController(
+												rtPosW,
+												relaxRotR,
+												subjMarkersName);
+
+											approachObj->predictPosR = get<4>(approachObj->rHandPredict);
+										}
 									}
 
-									if(!approachObj->selectRobotHand)
-									{
-										approachObj->lHandPredict = approachObj->predictionController(
-											ltPosW,
-											relaxRotL,
-											subjMarkersName);
 
-										approachObj->predictPosL = get<4>(approachObj->lHandPredict);
+									if( (approachObj->bool_t1) && (!approachObj->selectRobotHand) )
+									{
+										approachObj->bool_t1 = false;
+										approachObj->t1 = difftime( time(0), approachObj->start);
 									}
+
 								}
-								else
-								{
-									if( (approachObj->stopLtEf) && (approachObj->useRtEf) && (approachObj->selectRobotHand) )
-									{
-										LOG_SUCCESS("------------------------------> robot 'RIGHT' Hand in use")
-										approachObj->selectRobotHand = false;
-
-										approachObj->stopLtEf = false;
-
-										// posTaskL->position(initPosL);
-										// oriTaskL->orientation(initRotL);
-										ctl.solver().removeTask(posTaskL);
-										ctl.solver().removeTask(oriTaskL);
-
-										approachObj->stopRtEf = true;
-									}
-
-									if(!approachObj->selectRobotHand)
-									{
-										approachObj->rHandPredict = approachObj->predictionController(
-											rtPosW,
-											relaxRotR,
-											subjMarkersName);
-
-										approachObj->predictPosR = get<4>(approachObj->rHandPredict);
-									}
-								}
-
-
-								if( (approachObj->bool_t1) && (!approachObj->selectRobotHand) )
-								{
-									approachObj->bool_t1 = false;
-									approachObj->t1 = difftime( time(0), approachObj->start);
-								}
-
 							}
+
+
 
 							return false;
 						}
@@ -1231,6 +1279,9 @@ namespace lipm_walking
 								0.11,
 								0.7,
 								approachObj->enableLHand,
+								X_0_rel,
+								relaxRotL,
+								relaxPosL,
 								ltPosW,
 								posTaskL,
 								oriTaskL,
@@ -1268,6 +1319,9 @@ namespace lipm_walking
 								-0.7,
 								0.10,
 								approachObj->enableRHand,
+								X_0_rel,
+								relaxRotR,
+								relaxPosR,
 								rtPosW,
 								posTaskR,
 								oriTaskR,
@@ -1308,6 +1362,9 @@ namespace lipm_walking
 									-0.15,
 									0.75,
 									approachObj->enableHand,
+									X_0_rel,
+									relaxRotL,
+									relaxPosL,
 									ltPosW,
 									posTaskL,
 									oriTaskL,
@@ -1321,6 +1378,9 @@ namespace lipm_walking
 									-0.75,
 									0.15,
 									approachObj->enableHand,
+									X_0_rel,
+									relaxRotR,
+									relaxPosR,
 									rtPosW,
 									posTaskR,
 									oriTaskR,
@@ -1341,6 +1401,9 @@ namespace lipm_walking
 										-0.15,
 										0.75,
 										approachObj->enableHand,
+										X_0_rel,
+										relaxRotL,
+										relaxPosL,
 										ltPosW,
 										posTaskL,
 										oriTaskL,
@@ -1359,6 +1422,9 @@ namespace lipm_walking
 										-0.75,
 										0.15,
 										approachObj->enableHand,
+										X_0_rel,
+										relaxRotR,
+										relaxPosR,
 										rtPosW,
 										posTaskR,
 										oriTaskR,
@@ -1396,7 +1462,7 @@ namespace lipm_walking
 					* Trigger only when both object & human come to 'START ZONE'
 					*
 					*/
-					if( (!approachObj->startNow) &&
+					if( (!approachObj->startNow) && approachObj->selectRobotHand &&
 
 						(approachObj->objectPosC(0) > MIN_ALLOWED_DIST) && //0.1
 						(approachObj->objectPosC(0) < START_ZONE_DIST) 	&& //1.4
@@ -1442,7 +1508,7 @@ namespace lipm_walking
 
 						/*when walk Fwd -- this condition must satisfy --- otherwise routine wont work*/
 						if( (objBody_rel_robotBody >= ZERO) && //0.0
-							(objBody_rel_robotBody <= START_ZONE_DIST) ) //1.4 //MAX_ALLOWED_DIST //1.2
+							(objBody_rel_robotBody <= START_ZONE_DIST) ) //1.4
 						{
 							obj_rel_robot();
 						}
@@ -1526,8 +1592,8 @@ namespace lipm_walking
 
 									if(approachObj->Flag_WALK)
 									{
-										approachObj->stepSize = "20cm_10";
-										// approachObj->stepSize = "20cm_20";
+										// approachObj->stepSize = "20cm_10";
+										approachObj->stepSize = "20cm_20";
 										logStepSize = 0.30;
 										Xmax = 0.80 + 0.1 + logStepSize;
 

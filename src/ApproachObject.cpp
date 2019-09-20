@@ -336,6 +336,9 @@ namespace lipm_walking
 		double Ymin,
 		double Ymax,
 		bool& enableHand,
+		sva::PTransformd X_0_rel,
+		Eigen::Matrix3d relaxRot,
+		Eigen::Vector3d relaxPos,
 		Eigen::Vector3d& curPosEf,
 		std::shared_ptr<mc_tasks::PositionTask>& posTask,
 		std::shared_ptr<mc_tasks::OrientationTask>& oriTask,
@@ -383,30 +386,34 @@ namespace lipm_walking
 			}
 			else
 			{
-				if( Flag_WALK && enableWalkFwd && robotHasObject && cycle_2nd )
+				if( FlAG_INDIVIDUAL && Flag_WALK && enableWalkFwd && robotHasObject && cycle_2nd )
 				{
 					if( !ctl.config()("finishedWalk", false) )//not finished
 					{
-						ctl.solver().removeTask(posTask);
-						ctl.solver().removeTask(oriTask);
+						posTask->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPos(1), relaxPos(2)));
+						oriTask->orientation(relaxRot);
 
-						ctl.postureTask->reset();
+
+						// ctl.solver().removeTask(posTask);
+						// ctl.solver().removeTask(oriTask);
+						// ctl.postureTask->reset();
 
 						// if(i%200 == 0)
 						// { LOG_ERROR("  --------------------------------- not finished yet  " <<  ctl.config()("finishedWalk", false) ) }
 					}
-					else if( ctl.config()("finishedWalk", false) )//finished
-					{
-						ctl.solver().addTask(posTask);
-						ctl.solver().addTask(oriTask);
+					// else if( ctl.config()("finishedWalk", false) )//finished
+					// {
 
-						posTask->reset();
-						oriTask->reset();
 
-						// if(i%200 == 0)
-						// { LOG_SUCCESS("  --------------------------------- walk  finished  " <<  ctl.config()("finishedWalk", false) ) }
+					// 	// ctl.solver().addTask(posTask);
+					// 	// posTask->reset();
+					// 	// ctl.solver().addTask(oriTask);
+					// 	// oriTask->reset();
 
-					}
+					// 	// if(i%200 == 0)
+					// 	// { LOG_SUCCESS("  --------------------------------- walk  finished  " <<  ctl.config()("finishedWalk", false) ) }
+
+					// }
 				}
 			}
 		}
@@ -1068,6 +1075,27 @@ namespace lipm_walking
 
 
 			/*
+			*  6th
+			*/
+			/*just before the end of 2nd cycle, move EF to initial position at end of handover routine*/
+			if( cycle_2nd && restartHandover /*&& (fin_rel_ef > 0.45)*/ )
+			{
+
+				if( (!gClose) && (!goBackInitPose) )
+				{
+					posTask->position(initPos);
+					oriTask->orientation(initRot);
+
+					gClose = true;
+					goBackInitPose = true;
+
+					t9 = difftime( time(0), start);
+
+					LOG_WARNING("------------------------------> EF will move to half-sit pose")
+				}
+			}
+
+			/*
 			*
 			*  1st, robot is ready to grasp the object
 			*
@@ -1162,7 +1190,6 @@ namespace lipm_walking
 		/*comes only if object is grasped*/
 		if( cycle_1st &&  (closeGripper) && (!restartHandover) && subjHasObject )
 		{
-
 			if(e == 2)
 			{
 				t5 = difftime( time(0), start);
@@ -1207,7 +1234,6 @@ namespace lipm_walking
 				Floadz.push_back( abs(handForce[2]) );
 			}
 			e+=1;
-
 		}
 
 
@@ -1216,10 +1242,7 @@ namespace lipm_walking
 		*  3rd
 		*/
 		/*walk back when object arrives at relax pose*/
-		if( cycle_1st &&  (!takeBackObject) && (!walkBack) &&
-			// ( (abs( abs(X_0_rel.translation()(0)) - abs(objectPosC(0)) ) < objRELAX_POSx ) ||
-			( (posTask->eval().norm()) < 0.05) ) //)
-			// (posTask->eval().norm() < 0.05) && (posTask->speed().norm() < 1e-3) )
+		if( cycle_1st &&  (!takeBackObject) && (!walkBack) && (posTask->eval().norm() < 0.05) )
 		{
 
 			if(robotHasObject)
@@ -1238,7 +1261,7 @@ namespace lipm_walking
 					walkPlan = "HANDOVER_back_" + stepSize + "cm";
 					ctl.loadFootstepPlan(walkPlan);
 					ctl.config().add("triggerWalk", true);
-					LOG_ERROR("------------------------------> robot returning to 'RElAX' pose, walking now")
+					LOG_ERROR("------------------------------> robot returning to 'RElAX' pose, walking back now")
 				}
 			}
 		}
@@ -1251,7 +1274,6 @@ namespace lipm_walking
 		/*add ef task again*/
 		if( cycle_1st && walkBack && robotHasObject && (!enableHand) && (!tryToPull) )
 		{
-
 			if(Flag_WALK && enableWalkBack)
 			{
 				if( ctl.isLastDSP() )
@@ -1297,33 +1319,9 @@ namespace lipm_walking
 
 				LOG_INFO("------------------------------> 2nd cycle begin, motion enabled")
 			}
-
 		}
 
 
-
-
-
-		/*
-		*  6th
-		*/
-		/*just before the end of 2nd cycle, move EF to initial position at end of handover routine*/
-		if( cycle_2nd && restartHandover && (fin_rel_ef > 0.45) )
-		{
-
-			if( (!gClose) && (!goBackInitPose) )
-			{
-				posTask->position(initPos);
-				oriTask->orientation(initRot);
-
-				gClose = true;
-				goBackInitPose = true;
-
-				t9 = difftime( time(0), start);
-
-				LOG_WARNING("------------------------------> EF will move to half-sit pose")
-			}
-		}
 
 
 
@@ -1386,11 +1384,13 @@ namespace lipm_walking
 
 				handoverComplete = true;
 
-				LOG_ERROR("------------------------------> robot returning to 'INITIAL' pose, walking now")
+				LOG_ERROR("------------------------------> robot returning to 'INITIAL' pose, walking back now")
 			}
 			else
 			{
 				selectRobotHand = true;
+				startNow = false;
+
 				LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
 			}
 
@@ -1398,8 +1398,6 @@ namespace lipm_walking
 			enableHand = true;
 
 			disableWalk = false;
-
-			startNow = false;
 
 			restartHandover = false;
 
@@ -1422,15 +1420,19 @@ namespace lipm_walking
 				ctl.solver().addTask(posTask);
 				ctl.solver().addTask(oriTask);
 
-				/* due to slowness in posTask.eval -- better send ef to initPos then reset here*/
+				/* due to slowness in posTask.eval -- maybe better send ef to initPos then reset here*/
 				posTask->reset();
 				oriTask->reset();
 
 				handoverComplete = false;
+				enableWalkBack = false;
 
 				enableWalkFwd = false; //allows to walkFwd again
 
 				selectRobotHand = true;
+
+				startNow = false;
+
 				LOG_SUCCESS("------------------------------> Handover routine completed, begin next trial\n")
 			}
 			else
