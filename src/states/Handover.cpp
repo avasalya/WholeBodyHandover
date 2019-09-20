@@ -261,7 +261,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkBack",[this]() -> double { return approachObj->walkBack; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_finishedWalk_",[this]() -> double { return approachObj->finishedWalk_; });
 
-				ctl.logger().addLogEntry("HANDOVER_RoutineCompleted",[this]() -> double { return approachObj->handoverComplete; });
+				ctl.logger().addLogEntry("HANDOVER_handoverComplete",[this]() -> double { return approachObj->handoverComplete; });
 
 				ctl.logger().addLogEntry("HANDOVER_MaxAllowedDist",[this]() -> double { return MAX_ALLOWED_DIST; });
 
