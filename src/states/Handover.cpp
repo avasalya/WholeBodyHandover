@@ -307,6 +307,9 @@ namespace lipm_walking
 
 				ctl.logger().addLogEntry("HANDOVER_rpyFrom_objRot", [this]() -> Eigen::Vector3d { return mc_rbdyn::rpyFromMat(approachObj->objRot); });
 
+				ctl.logger().addLogEntry("HANDOVER_fingerRRelEfL",[this]() -> double { return approachObj->finR_rel_efL; });
+				ctl.logger().addLogEntry("HANDOVER_fingerLRelEfR",[this]() -> double { return approachObj->finL_rel_efR; });
+
 				ctl.logger().addLogEntry("HANDOVER_objRel_subjLtHand",[this]() -> double { return approachObj->obj_rel_subjLtHand; });
 				ctl.logger().addLogEntry("HANDOVER_objRel_subjRtHand",[this]() -> double { return approachObj->obj_rel_subjRtHand; });
 				ctl.logger().addLogEntry("HANDOVER_objRel_robotLtHand",[this]() -> double { return approachObj->obj_rel_robotLtHand; });

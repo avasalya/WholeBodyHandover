@@ -15,7 +15,7 @@
 		"admittance":
 		{
 			"com": [0.0, 0.0],
-			"cop": [0.012, 0.02],
+			"cop": [0.01, 0.01],
 			"dfz": 0.0001
 		},
 		"com":
@@ -78,10 +78,10 @@
 		},
 		"lipm_tracking":
 		{
-			"dcm_gain": 4.0,
-			"dcm_integral_gain": 6.0,
-			"dcm_integrator_time_constant": 15.0,
-			"zmp_gain": 0.0
+			"dcm_gain": 7.0,
+			"dcm_integral_gain": 20.0,
+			"dcm_integrator_time_constant": 20.0,
+			"zmp_gain": 5.0
 		},
 		"tasks":
 		{

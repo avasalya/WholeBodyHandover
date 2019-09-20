@@ -1367,8 +1367,11 @@ namespace lipm_walking
 				}
 
 
-				if( posTask->eval().norm() < 0.10 )
-				{
+				// if( posTask->eval().norm() < 0.10 )
+				// {
+
+					// if(i%300==0);
+					// 	LOG_INFO("----------------------------------> should walk back now")
 
 					if(Flag_WALK && enableWalkBack)
 					{
@@ -1400,7 +1403,7 @@ namespace lipm_walking
 					startNow = false;
 
 					restartHandover = false;
-				}
+				// }
 
 			}//restartHandover
 

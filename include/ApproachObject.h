@@ -228,7 +228,7 @@ namespace lipm_walking
 			sva::PTransformd virObjLeft, virObjRight;
 
 			double finR_rel_efL, finL_rel_efR;
-			double obj_rel_subjLtHand, obj_rel_subjRtHand, obj_rel_robotLtHand, obj_rel_robotRtHand;
+			double obj_rel_subjLtHand{0.0}, obj_rel_subjRtHand{0.0}, obj_rel_robotLtHand{0.0}, obj_rel_robotRtHand{0.0};
 			double virObj_rel_subjLtHand, virObj_rel_subjRtHand, virObj_rel_robotLtHand, virObj_rel_robotRtHand;
 
 			std::shared_ptr<lipm_walking::HandoverTrajectory> handoverTraj;
