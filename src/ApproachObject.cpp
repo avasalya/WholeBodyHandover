@@ -1246,13 +1246,13 @@ namespace lipm_walking
 
 
 
-		if(	(fingerPosL(0) > MAX_ALLOWED_DIST) && //1.2
-			(fingerPosL(0) < START_ZONE_DIST) &&  //1.4
+		// if(	(fingerPosL(0) > MAX_ALLOWED_DIST) && //1.2
+		// 	(fingerPosL(0) < START_ZONE_DIST) &&  //1.4
 
-			(fingerPosR(0) > MAX_ALLOWED_DIST) &&
-			(fingerPosR(0) < START_ZONE_DIST) )
+		// 	(fingerPosR(0) > MAX_ALLOWED_DIST) &&
+		// 	(fingerPosR(0) < START_ZONE_DIST) )
 
-		// if( (nearestFingerPos(0) - abs(X_0_rel.translation()(0))) > 1.2 )
+		if( ( nearestFingerPos(0) - abs( X_0_rel.translation()(0) ) ) > 1.2 )
 		{
 
 			/*
