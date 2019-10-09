@@ -58,7 +58,7 @@ namespace lipm_walking
 			~ApproachObject();
 
 
-			bool Flag_withoutRobot{false}; 	//TRUE, otherwise use ROBOT_Markers
+			bool Flag_withoutRobot{true}; 	//TRUE, otherwise use ROBOT_Markers
 
 			bool Flag_prediction{false}; 	//TRUE, otherwise, use finger Position
 
