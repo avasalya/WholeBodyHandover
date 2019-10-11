@@ -58,7 +58,7 @@ namespace lipm_walking
 			~ApproachObject();
 
 
-			bool Flag_withoutRobot{true}; 	//TRUE, otherwise use ROBOT_Markers
+			bool Flag_RobotMarkers{false}; 	//TRUE, otherwise don't use ROBOT_Markers
 
 			bool Flag_prediction{false}; 	//TRUE, otherwise, use finger Position
 
@@ -198,7 +198,7 @@ namespace lipm_walking
 			std::vector<std::string> objMarkers, subjRtMarkers, subjLtMarkers, subjMarkers, subjHeadMarkers;
 
 			Eigen::Matrix3d idtMat = Eigen::Matrix3d::Identity();
-			Eigen::Matrix3d handRot= idtMat;
+			Eigen::Matrix3d handRot = idtMat;
 			Eigen::Matrix3d subjLHandRot, subjRHandRot, objRot;
 
 			Eigen::Vector3d efPosOfHandover = Eigen::Vector3d::Zero();

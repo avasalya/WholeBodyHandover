@@ -47,7 +47,7 @@ namespace lipm_walking
 		for(int m=0; m<totalMarkers; m++)
 			{ markersPos[m] = Eigen::MatrixXd::Zero(3,600000); }
 
-		if(Flag_withoutRobot)
+		if(!Flag_RobotMarkers)
 			{	LOG_ERROR("robot markers are not considered") }
 
 		/*prediction controller parameter*/
@@ -69,7 +69,7 @@ namespace lipm_walking
 
 		bool checkNonZero{false};
 
-		if(Flag_withoutRobot)
+		if(!Flag_RobotMarkers)
 		{
 			/*robot left markers*/
 			Markers[0] << 0.208955, 0.350982, 0.552377;
