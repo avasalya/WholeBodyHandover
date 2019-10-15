@@ -930,7 +930,7 @@ namespace lipm_walking
 
 
 
-			/*everything dependent on markers goes inside here*/
+			/*everything that depends on markers go inside here*/
 			if( Flag_HandoverRun && approachObj->handoverRun() )
 			{
 
@@ -1608,7 +1608,7 @@ namespace lipm_walking
 								{
 									Xmax = 0.8;
 								}
-							}/*some thing here when robot has object and walkfwd again posture task etc*/
+							}/*something here when robot has object and walkfwd again posture task etc*/
 						}
 					}
 

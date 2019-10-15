@@ -259,27 +259,27 @@ namespace lipm_walking
 		y = markersPos[markers_name_index[lShpMarkersName[sizeStr-1]]].col(i) - curPosLshp;//vCD=Y
 		x = curPosLshp - markersPos[markers_name_index[lShpMarkersName[0]]].col(i);//vAC=X
 
+		lshp_X = x/x.norm();
+		lshp_Y = y/y.norm();
+		lshp_Z = lshp_X.cross(lshp_Y);
 
-		/* find initial default grasp configuration*/
-
-		lshp_X = x.dot(Eigen::Vector3d(1,0,0))*x;
-		lshp_Y = y.dot(Eigen::Vector3d(0,1,0))*y;
-		lshp_Z = (x.cross(y)).dot(Eigen::Vector3d(0,0,1))*x.cross(y);
-		// lshp_Z = lshp_X.cross(lshp_Y);
-
-		subjHandRot.col(0) = lshp_X/lshp_X.norm();
-		subjHandRot.col(1) = lshp_Y/lshp_Y.norm();
+		subjHandRot.col(0) = lshp_X;
+		subjHandRot.col(1) = lshp_Y;
 		subjHandRot.col(2) = lshp_Z/lshp_Z.norm();
+		// LOG_ERROR(subjHandRot<<"\n\n")
 
 
-		// lshp_X = x/x.norm();
-		// lshp_Y = y/y.norm();
-		// lshp_Z = lshp_X.cross(lshp_Y);
+		// /* find initial default grasp configuration*/
 
-		// subjHandRot.col(0) = lshp_X;
-		// subjHandRot.col(1) = lshp_Y;
+		// lshp_X = x.dot(Eigen::Vector3d(1,0,0))*x;
+		// lshp_Y = y.dot(Eigen::Vector3d(0,1,0))*y;
+		// lshp_Z = (x.cross(y)).dot(Eigen::Vector3d(0,0,1))*x.cross(y);
+		// // lshp_Z = lshp_X.cross(lshp_Y);
+
+		// subjHandRot.col(0) = lshp_X/lshp_X.norm();
+		// subjHandRot.col(1) = lshp_Y/lshp_Y.norm();
 		// subjHandRot.col(2) = lshp_Z/lshp_Z.norm();
-		// // LOG_ERROR(subjHandRot<<"\n\n")
+
 
 
 		P_M_Subj = Eigen::MatrixXd::Zero(3, t_observe);
@@ -312,7 +312,7 @@ namespace lipm_walking
 		{
 			if(subjHasObject)
 			{
-				X_M_Subj = sva::PTransformd(subjHandRot, predictPos);
+				X_M_Subj = sva::PTransformd(objRot, predictPos);
 			}
 			else if(robotHasObject)
 			{
