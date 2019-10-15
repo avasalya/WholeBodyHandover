@@ -25,13 +25,13 @@
 #include <mc_tasks/CoMTask.h>
 #include <mc_tasks/CoPTask.h>
 
-#include <lipm_walking/Pendulum.h>
 #include <lipm_walking/Contact.h>
+#include <lipm_walking/Pendulum.h>
 #include <lipm_walking/Sole.h>
 #include <lipm_walking/defs.h>
+#include <lipm_walking/utils/ExponentialMovingAverage.h>
 #include <lipm_walking/utils/LeakyIntegrator.h>
-#include <lipm_walking/utils/rotations.h>
-#include <lipm_walking/utils/stats.h>
+#include <lipm_walking/utils/StationaryOffsetFilter.h>
 
 namespace lipm_walking
 {
@@ -54,13 +54,14 @@ namespace lipm_walking
     static constexpr double MAX_FDC_RY_VEL = 0.2; // [rad] / [s]
     static constexpr double MAX_FDC_RZ_VEL = 0.2; // [rad] / [s]
 
-    /* Maximum gains for HRP4LIRMM in standing static equilibrium. */
+    /* Maximum gains in standing static equilibrium. */
     static constexpr double MAX_COM_ADMITTANCE = 20;
     static constexpr double MAX_COP_ADMITTANCE = 0.1;
+    static constexpr double MAX_DCM_D_GAIN = 10.;
     static constexpr double MAX_DCM_I_GAIN = 30.;
     static constexpr double MAX_DCM_P_GAIN = 10.;
     static constexpr double MAX_DFZ_ADMITTANCE = 5e-4;
-    static constexpr double MAX_ZMP_GAIN = 20.;
+    static constexpr double MAX_DFZ_DAMPING = 10.;
 
     /* Avoid low-pressure targets too close to contact switches */
     static constexpr double MIN_DS_PRESSURE = 15.; // [N]
@@ -73,12 +74,12 @@ namespace lipm_walking
      *
      * \param robot Robot model.
      *
-     * \param ref CoM state reference placeholder.
+     * \param pendulum CoM state reference placeholder.
      *
      * \param dt Controller timestep.
      *
      */
-    Stabilizer(const mc_rbdyn::Robot & robot, const Pendulum & ref, double dt);
+    Stabilizer(const mc_rbdyn::Robot & robot, const Pendulum & pendulum, double dt);
 
     /** Add GUI panel.
      *
@@ -323,68 +324,19 @@ namespace lipm_walking
      */
     void setSupportFootGains();
 
-    /** Simplest CoM control law: no feedback.
-     *
-     */
-    //void updateCoMOpenLoop();
-
-    /** Send desired net force after QP distribution.
-     *
-     * This approach is e.g. found in "Walking on Partial Footholds Including
-     * Line Contacts with the Humanoid Robot Atlas" (Wiedebach et al.,
-     * Humanoids 2016).
-     *
-     */
-    //void updateCoMDistribForce();
-
-    /** CoM compliance control.
-     *
-     * This approach is e.g. found in "Stabilization for the compliant humanoid
-     * robot COMAN exploiting intrinsic and controlled compliance" (Li et al.,
-     * ICRA 2012).
-     *
-     */
-    //void updateCoMComplianceControl();
-
-    /** CoM acceleration used for additional reaction force tracking.
-     *
-     * Same idea as ZMPCC but replacing the ZMP with the reaction force.
-     * Problem with looking at force rather than torque readings is that it
-     * yields steady-state ZMP error (standing upright, yes but not with the
-     * ZMP at the correct location).
-     *
-     */
-    //void updateCoMForceTracking();
-
-    /** ZMP Compensation Control.
-     *
-     * This implementation is based on
-     * "体幹位置コンプライアンス制御によるモデル誤差吸収" (Section 6.2.2 of
-     * Nagasaka's PhD thesis, 1999), available from
-     * <http://www.geocities.jp/kamono3/public.htm>.
-     *
-     */
-    //void updateCoMPosZMPCC();
-
-    /** ZMP Compensation Control applied after ZMP distribution.
-     *
-     * Same approach as Nagasaka's ZMPCC but (1) implemented as CoM
-     * acceleration reference sent to the inverse kinematics and (2) applied to
-     * the distributed ZMP.
-     *
-     */
-    //void updateCoMAccelZMPCC();
-
     /** Update CoM task with ZMP Compensation Control.
      *
-     * Same approach as Nagasaka's ZMPCC but (1) implemented as CoM damping
-     * control with an internal leaky integrator and (2) applied to the
-     * distributed ZMP.
+     * This approach is based on Section 6.2.2 of Dr Nagasaka's PhD thesis
+     * "体幹位置コンプライアンス制御によるモデル誤差吸収" (1999) from
+     * <https://sites.google.com/site/humanoidchannel/home/publication>.
+     * The main differences is that the CoM offset is (1) implemented as CoM
+     * damping control with an internal leaky integrator and (2) computed from
+     * the distributed rather than reference ZMP.
      *
      */
-    void updateCoMZMPCC();
+    void updateCoMTaskZMPCC();
 
-    /** Apply foot pressure difference control.
+    /** Apply foot force difference control.
      *
      * This method is described in Section III.E of "Biped walking
      * stabilization based on linear inverted pendulum tracking" (Kajita et
@@ -422,7 +374,7 @@ namespace lipm_walking
     Eigen::Vector3d comStiffness_ = {1000., 1000., 100.}; /**< Stiffness of CoM IK task */
     Eigen::Vector3d dcmAverageError_ = Eigen::Vector3d::Zero();
     Eigen::Vector3d dcmError_ = Eigen::Vector3d::Zero();
-    Eigen::Vector3d desiredCoMAccel_;
+    Eigen::Vector3d dcmVelError_ = Eigen::Vector3d::Zero();
     Eigen::Vector3d measuredCoM_;
     Eigen::Vector3d measuredCoMd_;
     Eigen::Vector3d measuredZMP_;
@@ -434,31 +386,29 @@ namespace lipm_walking
     ExponentialMovingAverage dcmIntegrator_;
     FDQPWeights fdqpWeights_;
     LeakyIntegrator zmpccIntegrator_;
+    StationaryOffsetFilter dcmDerivator_;
     bool inTheAir_ = false; /**< Is the robot in the air? */
     bool zmpccOnlyDS_ = true;
     const Pendulum & pendulum_; /**< Reference to desired reduced-model state */
     const mc_rbdyn::Robot & controlRobot_; /**< Control robot model (input to joint position controllers) */
     double comWeight_ = 1000.; /**< Weight of CoM IK task */
     double contactWeight_ = 100000.; /**< Weight of contact IK tasks */
-    double dcmGain_ = 1.; /**< Proportional gain on DCM error */
+    double dcmDerivGain_ = 0.; /**< Derivative gain on DCM error */
     double dcmIntegralGain_ = 5.; /**< Integral gain on DCM error */
-    double dfzAdmittance_ = 1e-4; /**< Admittance for vertical foot force control */
+    double dcmPropGain_ = 1.; /**< Proportional gain on DCM error */
+    double dfzAdmittance_ = 1e-4; /**< Admittance for foot force difference control */
+    double dfzDamping_ = 0.; /**< Damping term in foot force difference control */
+    double dfzForceError_ = 0.; /**< Force error in foot force difference control */
+    double dfzHeightError_ = 0.; /**< Height error in foot force difference control */
     double dt_ = 0.005; /**< Controller cycle in [s] */
     double leftFootRatio_ = 0.5;
-    double logMeasuredDFz_ = 0.; /**< Measured vertical force difference between left and right foot */
-    double logMeasuredSTz_ = 0.; /**< Model vertical position average between left and right foot */
-    double logTargetDFz_ = 0.; /**< Desired vertical force difference between left and right foot */
-    double logTargetSTz_ = 0.; /**< Desired vertical position average between left and right foot */
     double mass_ = 38.; /**< Robot mass in [kg] */
     double runTime_ = 0.;
     double swingFootStiffness_ = 2000.; /**< Stiffness of swing foot IK task */
     double swingFootWeight_ = 500.; /**< Weight of swing foot IK task */
-    double vdcDamping_ = 0.; /**< Vertical Drift Compensation damping */
-    double vdcFrequency_ = 1.; /**< Vertical Drift Compensation frequency */
-    double vdcStiffness_ = 1000.; /**< Vertical Drift Compensation stiffness */
-    double vdcZPos_ = 0.;
-    double vfcZCtrl_ = 0.;
-    double zmpGain_ = 1.; /**< Gain on ZMP error */
+    double vdcFrequency_ = 1.; /**< Frequency used in double-support vertical drift compensation */
+    double vdcHeightError_ = 0.; /**< Average height error used in vertical drift compensation */
+    double vdcStiffness_ = 1000.; /**< Stiffness used in single-support vertical drift compensation */
     mc_rtc::Configuration config_; /**< Stabilizer configuration dictionary */
     std::vector<std::string> comActiveJoints_; /**< Joints used by CoM IK task */
     sva::ForceVecd distribWrench_ = sva::ForceVecd::Zero();

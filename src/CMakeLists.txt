@@ -48,20 +48,27 @@ set(CONTROLLER_HDR
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/LowPassVelocityFilter.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/clamp.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/polynomials.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/rotations.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/stats.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/lipm_walking/utils/slerp.h
 
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/Trajectories.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/ApproachObject.h
 )
 
-set(FSM_CONTROLLER_LIB mc_control_fsm)
+set(FSM_CONTROLLER_LIB mc_control_fsm)#
+# set(CONTROLLER_NAME "${PROJET_NAME}_controller")
+
+
 add_library(${PROJECT_NAME} SHARED ${CONTROLLER_SRC} ${CONTROLLER_HDR})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DMC_CONTROL_EXPORTS")
-pkg_config_use_dependency(${PROJECT_NAME} copra)
-pkg_config_use_dependency(${PROJECT_NAME} mc_rtc)
+
+pkg_config_use_dependency(${PROJECT_NAME} copra)#
+pkg_config_use_dependency(${PROJECT_NAME} mc_rtc)#
+
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${FSM_CONTROLLER_LIB})
+
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${FSM_CONTROLLER_LIB})#
+# target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} copra::copra eigen-lssol::eigen-lssol mc_rtc::mc_control_fsm)
+
 install(TARGETS ${PROJECT_NAME} DESTINATION ${MC_RTC_LIBDIR}/mc_controller)
 
 add_library(${PROJECT_NAME}_controller SHARED lib.cpp)

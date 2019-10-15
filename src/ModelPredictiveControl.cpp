@@ -23,7 +23,7 @@
 
 #include <lipm_walking/ModelPredictiveControl.h>
 #include <lipm_walking/utils/clamp.h>
-#include <lipm_walking/utils/rotations.h>
+#include <lipm_walking/utils/slerp.h>
 
 namespace lipm_walking
 {
@@ -71,8 +71,8 @@ namespace lipm_walking
   {
     using namespace mc_rtc::gui;
     gui->addElement(
-      {"Walking", "MPC"},
-      ArrayInput("Cost weights",
+      {"Walking", "CoM"},
+      ArrayInput("MPC cost weights",
         {"jerk", "vel_x", "vel_y", "zmp"},
         [this]()
         {
@@ -91,7 +91,7 @@ namespace lipm_walking
           zmpWeight = weights[3];
         }),
       ComboInput(
-        "QP solver",
+        "MPC QP solver",
         {"QuadProgDense", "QLD", "LSSOL"},
         [this]()
         {
@@ -152,7 +152,7 @@ namespace lipm_walking
     }
     for (long i = 0; i <= 16; i++)
     {
-      // NB: SSP constraint is enforced at the very first step of DSP
+      // SSP constraint is enforced at the very first step of DSP
       if (i < nbInitSupportSteps_ || (0 < i && i == nbInitSupportSteps_))
       {
         indexToHrep_[i] = 0;

@@ -34,30 +34,20 @@ namespace lipm_walking
       netWrenchObs_(),
       stabilizer_(controlRobot(), pendulum_, dt)
   {
-    std::string robotName = controlRobot().name();
+    auto robotConfig = config("robot_models")(controlRobot().name());
+    auto planConfig = config("plans")(controlRobot().name());
 
     // Patch CoM height and step width in all plans
-    std::vector<std::string> plans = config("plans").keys();
-    double comHeight = config(robotName)("com")("height");
-    double stepWidth = config(controlRobot().name())("step_width");
-    maxCoMHeight_ = config(robotName)("com")("max_height");
-    minCoMHeight_ = config(robotName)("com")("min_height");
+    std::vector<std::string> plans = planConfig.keys();
+    double comHeight = robotConfig("com")("height");
+    maxCoMHeight_ = robotConfig("com")("max_height");
+    minCoMHeight_ = robotConfig("com")("min_height");
     for (const auto & p : plans)
     {
-      auto plan = config("plans")(p);
+      auto plan = planConfig(p);
       if (!plan.has("com_height"))
       {
         plan.add("com_height", comHeight);
-      }
-      if (plan.has("contacts"))
-      {
-        for (auto contact : plan("contacts"))
-        {
-          std::string surf = contact("surface");
-          Eigen::Vector3d trans = contact("pose")("translation");
-          trans.y() = ((surf == "LeftFootCenter") ? +0.5 : -0.5) * stepWidth;
-          contact("pose").add("translation", trans);
-        }
       }
     }
 
@@ -76,7 +66,7 @@ namespace lipm_walking
     postureTask->stiffness(postureStiffness);
     postureTask->weight(postureWeight);
 
-    std::string torsoName = config(robotName)("torso");
+    std::string torsoName = robotConfig("torso");
     double torsoStiffness = config("tasks")("torso")("stiffness");
     double torsoWeight = config("tasks")("torso")("weight");
     config("tasks")("torso")("pitch", defaultTorsoPitch_);
@@ -98,14 +88,15 @@ namespace lipm_walking
     }
 
     // Read settings from configuration file
-    plans_ = config("plans");
+    plans_ = planConfig;
     mpcConfig_ = config("mpc");
-    sole_ = config(robotName)("sole");
+    sole_ = robotConfig("sole");
     std::string initialPlan = plans_.keys()[0];
     config("initial_plan", initialPlan);
 
-    std::vector<std::string> comActiveJoints = config(robotName)("com")("active_joints");
-    config("stabilizer").add("admittance", config(robotName)("admittance"));
+    std::vector<std::string> comActiveJoints = robotConfig("com")("active_joints");
+    config("stabilizer").add("admittance", robotConfig("admittance"));
+    config("stabilizer").add("dcm_tracking", robotConfig("dcm_tracking"));
     config("stabilizer")("tasks")("com").add("active_joints", comActiveJoints);
     stabilizer_.configure(config("stabilizer"));
 
@@ -237,30 +228,13 @@ namespace lipm_walking
         }),
       Button(
         "Reset",
-        [this]() { this->resume("Initial"); }),
-      NumberInput(
-        "Torso pitch [rad]",
-        [this]() { return torsoPitch_; },
-        [this](double pitch)
-        {
-          pitch = clamp(pitch, MIN_CHEST_P, MAX_CHEST_P);
-          defaultTorsoPitch_ = pitch;
-          torsoPitch_ = pitch;
-        }));
+        [this]() { this->resume("Initial"); }));
 
     gui->addElement(
-      {"Walking", "Plan"},
+      {"Walking", "Phases"},
       Label(
-        "Name",
+        "Plan name",
         [this]() { return plan.name; }),
-      NumberInput(
-        "CoM height",
-        [this]() { return plan.comHeight(); },
-        [this](double height)
-        {
-          height = clamp(height, minCoMHeight_, maxCoMHeight_);
-          plan.comHeight(height);
-        }),
       NumberInput(
         "Initial DSP duration [s]",
         [this]() { return plan.initDSPDuration(); },
@@ -286,7 +260,36 @@ namespace lipm_walking
       NumberInput(
         "Final DSP duration [s]",
         [this]() { return plan.finalDSPDuration(); },
-        [this](double duration) { plan.finalDSPDuration(duration); }),
+        [this](double duration) { plan.finalDSPDuration(duration); }));
+
+    gui->addElement(
+      {"Walking", "CoM"},
+      Label(
+        "Plan name",
+        [this]() { return plan.name; }),
+      NumberInput(
+          "CoM height",
+          [this]() { return plan.comHeight(); },
+          [this](double height)
+          {
+            height = clamp(height, minCoMHeight_, maxCoMHeight_);
+            plan.comHeight(height);
+          }),
+      NumberInput(
+        "Torso pitch [rad]",
+        [this]() { return torsoPitch_; },
+        [this](double pitch)
+        {
+          pitch = clamp(pitch, MIN_CHEST_P, MAX_CHEST_P);
+          defaultTorsoPitch_ = pitch;
+          torsoPitch_ = pitch;
+        }));
+
+    gui->addElement(
+      {"Walking", "Swing foot"},
+      Label(
+        "Plan name",
+        [this]() { return plan.name; }),
       NumberInput(
         "Swing height [m]",
         [this]() { return plan.swingHeight(); },
@@ -402,23 +405,34 @@ namespace lipm_walking
     constexpr double DCM_POINT_SIZE = 0.015;
 
     gui->addElement(
-      {"Walking", "Markers", "Pendulum"},
-      Point3D(
-        "PendulumDCM",
-        PointConfig(COLORS.at('y'), DCM_POINT_SIZE),
-        [this]()
+      {"Walking", "Markers", "CoM-DCM"},
+      Arrow(
+        "Pendulum_CoM",
+        pendulumArrowConfig,
+        [this]() -> Eigen::Vector3d
         {
-          return pendulum_.dcm();
+          return this->pendulum_.zmp();
+        },
+        [this]() -> Eigen::Vector3d
+        {
+          return this->pendulum_.com();
         }),
       Point3D(
-        "RealCoM",
+        "Measured_CoM",
         PointConfig(COLORS.at('g'), COM_POINT_SIZE),
         [this]()
         {
           return realCom_;
         }),
       Point3D(
-        "RealDCM",
+        "Pendulum_DCM",
+        PointConfig(COLORS.at('y'), DCM_POINT_SIZE),
+        [this]()
+        {
+          return pendulum_.dcm();
+        }),
+      Point3D(
+        "Measured_DCM",
         PointConfig(COLORS.at('g'), DCM_POINT_SIZE),
         [this]() -> Eigen::Vector3d
         {
@@ -426,9 +440,38 @@ namespace lipm_walking
         }));
 
     gui->addElement(
-      {"Walking", "Markers", "Force"},
+      {"Walking", "Markers", "Net wrench"},
+      Point3D(
+        "Stabilizer_ZMP",
+        PointConfig(COLORS.at('m'), 0.02),
+        [this]() { return stabilizer_.zmp(); }),
+      Point3D(
+        "Measured_ZMP",
+        PointConfig(COLORS.at('r'), 0.02),
+        [this]() -> Eigen::Vector3d
+        {
+          return netWrenchObs_.zmp();
+        }),
+      Arrow(
+        "Measured_ZMPForce",
+        netWrenchForceArrowConfig,
+        [this]() -> Eigen::Vector3d
+        {
+          return this->netWrenchObs_.zmp();
+        },
+        [this, FORCE_SCALE]() -> Eigen::Vector3d
+        {
+          return netWrenchObs_.zmp() + FORCE_SCALE * netWrenchObs_.wrench().force();
+        }));
+
+    gui->addElement(
+      {"Walking", "Markers", "Foot wrenches"},
+      Point3D(
+        "Stabilizer_LeftCoP",
+        PointConfig(COLORS.at('m'), 0.01),
+        [this]() { return stabilizer_.leftFootTask->targetCoPW(); }),
       Force(
-        "LeftCoPForce",
+        "Measured_LeftCoPForce",
         copForceConfig,
         [this]()
         {
@@ -439,8 +482,12 @@ namespace lipm_walking
           Eigen::Vector3d cop = this->robot().copW("LeftFootCenter");
           return sva::PTransformd(this->robot().surface("LeftFootCenter").X_0_s(this->robot()).rotation(), cop);
         }),
+      Point3D(
+        "Stabilizer_RightCoP",
+        PointConfig(COLORS.at('m'), 0.01),
+        [this]() { return stabilizer_.rightFootTask->targetCoPW(); }),
       Force(
-        "RightCoPForce",
+        "Measured_RightCoPForce",
         copForceConfig,
         [this]()
         {
@@ -450,61 +497,7 @@ namespace lipm_walking
         {
           Eigen::Vector3d cop = this->robot().copW("RightFootCenter");
           return sva::PTransformd(this->robot().surface("RightFootCenter").X_0_s(this->robot()).rotation(), cop);
-        }),
-      Point3D(
-        "NetWrenchZMP",
-        PointConfig(COLORS.at('r'), 0.01),
-        [this]() -> Eigen::Vector3d
-        {
-          return netWrenchObs_.zmp();
-        }),
-      Arrow(
-        "NetWrenchForce",
-        netWrenchForceArrowConfig,
-        [this]() -> Eigen::Vector3d
-        {
-          return this->netWrenchObs_.zmp();
-        },
-        [this, FORCE_SCALE]() -> Eigen::Vector3d
-        {
-          return netWrenchObs_.zmp() + FORCE_SCALE * netWrenchObs_.wrench().force();
-        }),
-      Arrow(
-        "RefPendulum",
-        pendulumArrowConfig,
-        [this]() -> Eigen::Vector3d
-        {
-          return this->pendulum_.zmp();
-        },
-        [this]() -> Eigen::Vector3d
-        {
-          return this->pendulum_.com();
-        }),
-      Arrow(
-        "RefPendulumForce",
-        refPendulumForceArrowConfig,
-        [this]() -> Eigen::Vector3d
-        {
-          return this->pendulum_.zmp();
-        },
-        [this, FORCE_SCALE]() -> Eigen::Vector3d
-        {
-          double lambda = std::pow(pendulum_.omega(), 2);
-          Eigen::Vector3d contactForce = controlRobot().mass() * lambda * (pendulum_.com() - pendulum_.zmp());
-          return pendulum_.zmp() + FORCE_SCALE * contactForce;
-        }),
-      Point3D(
-        "StabilizerZMP",
-        PointConfig(COLORS.at('m'), 0.02),
-        [this]() { return stabilizer_.zmp(); }),
-      Point3D(
-        "StabilizerCoP_LeftFootCenter",
-        PointConfig(COLORS.at('m'), 0.01),
-        [this]() { return stabilizer_.leftFootTask->targetCoPW(); }),
-      Point3D(
-        "StabilizerCoP_RightFootCenter",
-        PointConfig(COLORS.at('m'), 0.01),
-        [this]() { return stabilizer_.rightFootTask->targetCoPW(); }));
+        }));
   }
 
   void Controller::reset(const mc_control::ControllerResetData & data)
@@ -545,8 +538,6 @@ namespace lipm_walking
 
     comVelFilter_.reset(controlCom_);
     pendulum_.reset(controlCom_);
-    //realCom_ = controlCom_; // set by updateRealFromKinematics()
-    //realComd_ = Eigen::Vector3d::Zero(); // idem
 
     // (5) reset floating-base observers
     floatingBaseObs_.reset(controlRobot().posW());

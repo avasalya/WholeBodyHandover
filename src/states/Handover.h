@@ -12,7 +12,7 @@
 // Walking controller
 #include <lipm_walking/Controller.h>
 #include <lipm_walking/State.h>
-#include <lipm_walking/utils/stats.h>
+// #include <lipm_walking/utils/stats.h>
 
 // MC control
 #include <mc_tasks/EndEffectorTask.h>

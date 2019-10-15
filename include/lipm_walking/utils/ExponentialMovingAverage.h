@@ -21,114 +21,6 @@
 
 #pragma once
 
-/** Average and standard deviation of a time series of scalar values.
- *
- */
-struct AvgStdEstimator
-{
-  /* Add new value to the time series.
-   *
-   * \param x New value.
-   *
-   */
-  void add(double x)
-  {
-    n_++;
-    total_ += x;
-    squareTotal_ += x * x;
-    if (x > max_)
-    {
-      max_ = x;
-    }
-    if (x < min_)
-    {
-      min_ = x;
-    }
-  }
-
-  /** Average of the time series.
-   *
-   */
-  double avg()
-  {
-    if (n_ < 1)
-    {
-      return 0.;
-    }
-    return total_ / n_;
-  }
-
-  /** Number of samples.
-   *
-   */
-  unsigned n()
-  {
-    return n_;
-  }
-
-  /** Reset estimator to a empty series.
-   *
-   */
-  void reset()
-  {
-    max_ = 0.;
-    min_ = 0.;
-    n_ = 0;
-    squareTotal_ = 0.;
-    total_ = 0.;
-  }
-
-  /** Standard deviation of the time series.
-   *
-   */
-  double std()
-  {
-    if (n_ <= 1)
-    {
-      return 0.;
-    }
-    double unbiased = std::sqrt(double(n_) / (n_ - 1));
-    return unbiased * std::sqrt(squareTotal_ / n_ - pow(avg(), 2));
-  }
-
-  /** Printout series statistics.
-   *
-   * \param round Number of output decimals.
-   *
-   * \param verbose Report extra information such as min and max values.
-   *
-   */
-  std::string str(unsigned round = 0, bool verbose = true)
-  {
-    std::ostringstream ss;
-    double avgVal = avg();
-    double stdVal = std();
-    double maxVal = max_;
-    double minVal = min_;
-    if (round > 0)
-    {
-      double pow = std::pow(10, round);
-      avgVal = std::round(pow * avgVal) / pow;
-      stdVal = std::round(pow * stdVal) / pow;
-      maxVal = std::round(pow * maxVal) / pow;
-      minVal = std::round(pow * minVal) / pow;
-    }
-    ss << avgVal << " +/- " << stdVal;
-    if (verbose)
-    {
-      ss << " (max: " << maxVal << ", min: " << minVal << " over " << n_ << " items)";
-    }
-    return ss.str();
-  }
-
-private:
-  double max_ = 0.;
-  double min_ = 0.;
-  double squareTotal_ = 0.;
-  double total_ = 0.;
-  unsigned n_ = 0;
-};
-
 /** Exponential Moving Average.
  *
  * This filter can be seen as an integrator:
@@ -147,6 +39,8 @@ private:
  */
 struct ExponentialMovingAverage
 {
+  static constexpr double MIN_TIME_CONSTANT = 0.01; // [s]
+
   /** Constructor.
    *
    * \param dt Time in [s] between two readings.
@@ -218,8 +112,8 @@ struct ExponentialMovingAverage
    */
   void timeConstant(double T)
   {
+    T = std::max(T, MIN_TIME_CONSTANT);
     alpha_ = 1. - std::exp(-dt_ / T);
-    //alpha_ = dt_ / T; // valid if dt_ << T
     timeConstant_ = T;
   }
 
