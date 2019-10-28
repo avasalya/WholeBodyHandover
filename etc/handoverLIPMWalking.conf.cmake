@@ -12,6 +12,8 @@
 	},
 
 
+	"RunObservers": ["Encoder"],
+	"UpdateObservers": ["Encoder"].
 
   "stabilizer":
   {
