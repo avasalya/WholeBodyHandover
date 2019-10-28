@@ -56,4 +56,8 @@ catkin_package(
   tf
 )
 
+include_directories(include ${catkin_INCLUDE_DIRS} $ENV{HOME}/.local/include)
+link_directories(${catkin_LIBRARY_DIRS} $ENV{HOME}/.local/lib)
+
+
 add_subdirectory(src)
