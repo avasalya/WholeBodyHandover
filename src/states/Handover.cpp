@@ -631,7 +631,7 @@ namespace lipm_walking
 
 							if(stepFwd)
 							{
-								walkThisDir  = "only BACKWARD allowed";
+								walkThisDir  = "only BACKWARD allowed---forward_15cm_steps";
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
@@ -669,7 +669,7 @@ namespace lipm_walking
 
 							if(stepBack)
 							{
-								walkThisDir  = "only FORWARD allowed";
+								walkThisDir  = "only FORWARD allowed---backward_15cm_steps";
 								relaxPos << to;
 
 								relaxPosL = to.head(3);
@@ -739,19 +739,9 @@ namespace lipm_walking
 
 
 
-			/*WHY ARE THEY HERE -- both are same*/
-			if( (!stepFwd) && stepBack)
-			{
 
-				posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosL(1), relaxPosL(2)));
-				oriTaskL->orientation(relaxRotL);
-
-				posTaskR->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosR(1), relaxPosR(2)));
-				oriTaskR->orientation(relaxRotR);
-			}
-
-
-			if( stepFwd && (!stepBack) )
+			/* only used for GUI step-walk*/
+			if(  ( (!stepFwd) && stepBack ) || ( stepFwd && (!stepBack) )  )
 			{
 				posTaskL->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosL(1), relaxPosL(2)));
 				oriTaskL->orientation(relaxRotL);
@@ -759,7 +749,6 @@ namespace lipm_walking
 				posTaskR->position(Eigen::Vector3d(X_0_rel.translation()(0), relaxPosR(1), relaxPosR(2)));
 				oriTaskR->orientation(relaxRotR);
 			}
-
 
 
 
@@ -1062,7 +1051,7 @@ namespace lipm_walking
 
 				/*
 				*
-				* 4th,
+				* 3rd,
 				*
 				* check object relative to human hands
 				*
@@ -1118,7 +1107,7 @@ namespace lipm_walking
 
 
 				/*
-				* 3rd,
+				* 4th,
 				*
 				* track only subj right hand when robot carries the object
 				*
@@ -1200,8 +1189,6 @@ namespace lipm_walking
 
 							}
 						}
-
-
 
 						return false;
 					}
@@ -1458,6 +1445,8 @@ namespace lipm_walking
 				/*
 				* 1st, TRIGGER HANDOVER ROUTINE
 				*
+				* Start from the SAFE_ZONE, then
+				*
 				* Trigger only when both object & human come to 'START ZONE'
 				*
 				*/
@@ -1551,8 +1540,8 @@ namespace lipm_walking
 							else if((bodyPosS(0) > MIN_ALLOWED_DIST) && //0.1
 									(bodyPosS(0) < START_ZONE_DIST) )   //1.4
 							{
-								approachObj->human_near = true;
 								approachObj->human_far = false;
+								approachObj->human_near = true;
 								Xmax = 0.8;
 							}
 
@@ -1860,8 +1849,6 @@ namespace lipm_walking
 				cout<<"\033[1;33m------------------------------> ***ready to start new handover routine***\033[0m\n";
 
 			} // resetFlags_and_efPose
-
-
 
 
 		}// runState

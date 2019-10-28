@@ -58,13 +58,13 @@ namespace lipm_walking
 			~ApproachObject();
 
 
-			bool Flag_RobotMarkers{true}; 	//TRUE, otherwise don't use ROBOT_Markers
-
-			bool Flag_prediction{false}; 	//TRUE, otherwise, use finger Position
+			bool Flag_WALK{true};			//TRUE, for walking, else only stabilizer DONT TRUE HERE
 
 			bool FlAG_INDIVIDUAL{true}; 	//TRUE, to use individual hand, otherwise use both hands together
 
-			bool Flag_WALK{false};			//TRUE, for walking, else only stabilizer DONT TRUE HERE
+			bool Flag_RobotMarkers{true}; 	//TRUE, otherwise don't use ROBOT_Markers
+
+			bool Flag_prediction{false}; 	//TRUE, otherwise, use finger Position
 
 			bool disableWalk{false};
 			bool enableWalkFwd{false};
