@@ -1,3 +1,4 @@
 [submodule "cmake"]
-	path = cmake
-	url = arnaud@150.29.145.134:/home/arnaud/src/Ashesh/handovercontroller/cmake
+    url  = https://github.com/jrl-umi3218/jrl-cmakemodules
+    path = cmake
+    #url = arnaud@150.29.145.134:/home/arnaud/src/Ashesh/handovercontroller/cmake
