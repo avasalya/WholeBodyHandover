@@ -24,7 +24,7 @@ macro(add_fsm_state state_name state_SRC state_HDR)
       PROPERTIES
       PREFIX ""
       LIBRARY_OUTPUT_DIRECTORY "${CATKIN_DEVEL_PREFIX}/lib/${PROJECT_NAME}/states")
-  target_link_libraries(${state_name} handover_walking_controller)
+  target_link_libraries(${state_name} PUBLIC ${PROJECT_NAME})
   install(TARGETS ${state_name} DESTINATION ${FSM_STATES_INSTALL_PREFIX})
   install(FILES ${state_HDR} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/mc_control/fsm/states)
 endmacro()
@@ -40,7 +40,7 @@ find_package(catkin REQUIRED COMPONENTS cortex_bridge cortex_ros_bridge) # my pc
 
 include_directories(${catkin_INCLUDE_DIRS})
 add_fsm_state_simple(Handover)
-target_link_libraries(Handover cortex_sdk pthread m)
+target_link_libraries(Handover PUBLIC cortex_sdk)
 
 add_fsm_state_simple(DoubleSupport)
 add_fsm_state_simple(Initial)

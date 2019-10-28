@@ -60,14 +60,9 @@ set(FSM_CONTROLLER_LIB mc_control_fsm)#
 
 add_library(${PROJECT_NAME} SHARED ${CONTROLLER_SRC} ${CONTROLLER_HDR})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DMC_CONTROL_EXPORTS")
-
-pkg_config_use_dependency(${PROJECT_NAME} copra)#
-pkg_config_use_dependency(${PROJECT_NAME} mc_rtc)#
+target_link_libraries(${PROJECT_NAME} PUBLIC copra::copra mc_rtc::mc_control_fsm)
 
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${FSM_CONTROLLER_LIB})#
-# target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} copra::copra eigen-lssol::eigen-lssol mc_rtc::mc_control_fsm)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${MC_RTC_LIBDIR}/mc_controller)
 
@@ -78,7 +73,7 @@ set_target_properties(${PROJECT_NAME}_controller
     OUTPUT_NAME "${PROJECT_NAME}"
     LIBRARY_OUTPUT_DIRECTORY "${CATKIN_DEVEL_PREFIX}/lib/${PROJECT_NAME}"
 )
-target_link_libraries(${PROJECT_NAME}_controller ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_controller PUBLIC ${PROJECT_NAME})
 install(TARGETS ${PROJECT_NAME}_controller DESTINATION ${MC_RTC_LIBDIR}/mc_controller)
 
 set(CONF_OUT "$ENV{HOME}/.config/mc_rtc/controllers/handoverLIPMWalking.conf")

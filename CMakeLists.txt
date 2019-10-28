@@ -39,14 +39,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-
-# Use jrl-cmakemodules to get mc_rtc depency
-set(PKG_CONFIG_ADDITIONAL_VARIABLES "${PKG_CONFIG_ADDITIONAL_VARIABLES} libdir")
-add_required_dependency(copra)
-add_compile_options(-DEIGEN_QLD_FOUND) # see https://github.com/vsamy/copra/issues/2
-add_compile_options(-DEIGEN_LSSOL_FOUND) # see https://github.com/vsamy/copra/issues/2
-add_required_dependency(eigen-lssol)
-add_required_dependency(mc_rtc)
+find_package(mc_rtc REQUIRED)
+find_package(copra REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
 
@@ -61,8 +55,5 @@ catkin_package(
   std_msgs
   tf
 )
-
-include_directories(include ${catkin_INCLUDE_DIRS} $ENV{HOME}/.local/include)
-link_directories(${catkin_LIBRARY_DIRS} $ENV{HOME}/.local/lib)
 
 add_subdirectory(src)

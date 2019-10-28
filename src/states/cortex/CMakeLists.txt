@@ -15,9 +15,9 @@
 # set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -ggdb")
 
 add_library(cortex_sdk SHARED m3x3.cpp cortex_socket.cpp cortex_unpack.cpp cortex.cpp)
-target_link_libraries(cortex_sdk pthread m)
+target_link_libraries(cortex_sdk PUBLIC pthread m)
 
 add_executable(clienttest clienttest.cpp)
-target_link_libraries(clienttest cortex_sdk)
+target_link_libraries(clienttest PUBLIC cortex_sdk)
 
 install(TARGETS cortex_sdk DESTINATION lib)
