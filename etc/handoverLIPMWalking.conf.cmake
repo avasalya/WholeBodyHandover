@@ -919,7 +919,7 @@
 	"UseSandbox" : false,
 
 
-  // "RunObservers": ["Encoder"],
-  // "UpdateObservers": ["Encoder"],
+//	"RunObservers": ["Encoder"],
+//	"UpdateObservers": ["Encoder"],
 
 }
