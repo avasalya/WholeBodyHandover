@@ -12,9 +12,6 @@
 	},
 
 
-	"RunObservers": ["Encoder"],
-	"UpdateObservers": ["Encoder"].
-
   "stabilizer":
   {
     "fdqp_weights":
@@ -55,7 +52,6 @@
       "integrator_leak_rate": 0.1,
     }
   },
-
 
 
   "tasks":
@@ -127,7 +123,6 @@
   		"torso": "CHEST_LINK1"
   	}
   },
-
 
 
 	"plans":
@@ -808,7 +803,6 @@
 	},
 
 
-
 	"contacts": [],
 
 	"constraints":
@@ -858,9 +852,6 @@
 		}
 	},
 
-	//
-	// mc_control::fsm::Controller configuration
-	//
 
 	"init": "Initial",
 
@@ -926,5 +917,9 @@
 	// Controller is created in a sandbox, which in between a thread and a fork;
 	// try to keep it to false, as it can create weird conflicts with threads
 	"UseSandbox" : false,
+
+
+  // "RunObservers": ["Encoder"],
+  // "UpdateObservers": ["Encoder"],
 
 }

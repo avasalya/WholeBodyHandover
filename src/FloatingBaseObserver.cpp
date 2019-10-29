@@ -53,8 +53,8 @@ namespace lipm_walking
     sva::PTransformd X_0_rBase = realRobot.posW();
     sva::PTransformd X_0_rIMU = realRobot.bodyPosW(realRobot.bodySensor().parentBody());
     sva::PTransformd X_rIMU_rBase = X_0_rBase * X_0_rIMU.inv();
-    //Eigen::Matrix3d R_0_mIMU = realRobot.bodySensor().orientation().toRotationMatrix();
-    Eigen::Matrix3d R_0_mIMU = controlRobot_.bodySensor().orientation().toRotationMatrix();
+    Eigen::Matrix3d R_0_mIMU = realRobot.bodySensor().orientation().toRotationMatrix();
+    // Eigen::Matrix3d R_0_mIMU = controlRobot_.bodySensor().orientation().toRotationMatrix();
     Eigen::Matrix3d R_0_cBase = controlRobot_.posW().rotation();
     Eigen::Matrix3d R_0_mBase = X_rIMU_rBase.rotation() * R_0_mIMU;
     Eigen::Vector3d cRPY = mc_rbdyn::rpyFromMat(R_0_cBase);
