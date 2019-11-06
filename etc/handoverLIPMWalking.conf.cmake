@@ -371,10 +371,10 @@
   			"swing_height": 0.04,
   			"contacts":
   			[
-  				{ "pose": { "translation": [0.0,  -0.09, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "RightFootCenter" },
-  				{ "pose": { "translation": [0.0,   0.09, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "LeftFootCenter" },
-  				{ "pose": { "translation": [0.4,  -0.09, 0.0] }, "ref_vel": [0.20, 0.0, 0.0], "surface": "RightFootCenter" },
-  				{ "pose": { "translation": [0.4,   0.09, 0.0] }, "ref_vel": [0.20, 0.0, 0.0], "surface": "LeftFootCenter" },
+  				{ "pose": { "translation": [0.0,  -0.105, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "RightFootCenter" },
+  				{ "pose": { "translation": [0.0,   0.105, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "LeftFootCenter" },
+  				{ "pose": { "translation": [0.4,  -0.105, 0.0] }, "ref_vel": [0.0, 0.0, 0.0], "surface": "RightFootCenter" },
+  				{ "pose": { "translation": [0.4,   0.105, 0.0] }, "ref_vel": [0.0, 0.0, 0.0], "surface": "LeftFootCenter" },
   			]
   		},
 
@@ -391,6 +391,33 @@
   				{ "pose": { "translation": [-0.4,   0.09, 0.0] }, "ref_vel": [-0.20, 0.0, 0.0], "surface": "LeftFootCenter"  },
   			]
   		},
+
+
+       "ashesh":
+      {
+        "init_dsp_duration": 0.6,
+        "double_support_duration": 0.1,
+        "single_support_duration": 0.7,
+        "final_dsp_duration": 0.6,
+        "swing_height": 0.04,
+        "torso_pitch": 0.0,
+        "contacts":
+        [
+          { "pose": { "translation": [0.0, -0.105, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "RightFootCenter" },
+          { "pose": { "translation": [0.0,  0.105, 0.0] }, "ref_vel": [0.1,  0.0, 0.0], "surface": "LeftFootCenter"  },
+          { "pose": { "translation": [0.4, -0.105, 0.0] }, "ref_vel": [0.1,  0.0, 0.0], "surface": "RightFootCenter" },
+          { "pose": { "translation": [0.4,  0.105, 0.0] }, "ref_vel": [0.0,  0.0, 0.0], "surface": "LeftFootCenter"  }
+        ],
+        "mpc":
+        {
+          "weights":
+          {
+            "jerk": 1.0,
+            "vel": [100.0, 100.0],
+            "zmp": 1000.0
+          }
+        }
+      },
 
 
   		"HANDOVER_fwd_15cm_steps_30cm_dist":

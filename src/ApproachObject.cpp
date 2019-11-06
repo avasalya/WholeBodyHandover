@@ -1180,7 +1180,7 @@ namespace lipm_walking
 		*  2nd
 		*/
 		/*comes only if object is grasped*/
-		if( cycle_1st &&  (closeGripper) && (!restartHandover) && subjHasObject )
+		if( cycle_1st && closeGripper && (!restartHandover) && subjHasObject )
 		{
 			if(e == 2)
 			{
@@ -1231,7 +1231,7 @@ namespace lipm_walking
 
 
 		/*
-		*  3rd
+		*  3rd, if walk Fwd earleir
 		*/
 		/*walk back when object arrives at relax pose*/
 		if( cycle_1st &&  (!takeBackObject) && (!walkBack) &&
@@ -1243,6 +1243,7 @@ namespace lipm_walking
 
 				if(Flag_WALK && enableWalkBack)
 				{
+					/*                should I remove or keept arm steady @relax pose?       */
 					ctl.solver().removeTask(posTask);
 					ctl.solver().removeTask(oriTask);
 
@@ -1277,6 +1278,7 @@ namespace lipm_walking
 			{
 				if(Flag_WALK && enableWalkBack)
 				{
+					// finished walking
 					if( ctl.isLastDSP() )
 					{
 						/*true when last DSP is finished*/
@@ -1306,16 +1308,16 @@ namespace lipm_walking
 				}
 				else
 				{
-					takeBackObject = true;
-
 					enableHand = true;
+
+					takeBackObject = true;
 				}
 
 				if(enableHand)
 				{
 					tryToPull = true;
 
-					disableWalk = false;
+					disableWalk = false; // too early ?? see 2nd (a) Handover.cpp
 					enableWalkFwd = false; //allows to walkFwd again
 					walkBack = false;
 
@@ -1438,7 +1440,7 @@ namespace lipm_walking
 
 					startNow = false;
 
-					LOG_SUCCESS("------------------------------> 'step-walk' Handover routine completed, begin next trial\n")
+					LOG_SUCCESS("------------------------------> 'step-walk' Handover routine completed, RETURN to SAFE ZONE and begin next trial\n")
 				}
 				else
 				{

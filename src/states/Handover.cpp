@@ -654,8 +654,8 @@ namespace lipm_walking
 								approachObj->stepSize = "40";
 								logStepSize = 40;
 
-								// approachObj->walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
-								approachObj->walkPlan = "forward_15cm_steps";
+								approachObj->walkPlan = "HANDOVER_1stepCycle_fwd_" + approachObj->stepSize + "cm";
+								// approachObj->walkPlan = "forward_15cm_steps";
 
 								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
@@ -690,8 +690,8 @@ namespace lipm_walking
 								approachObj->stepSize = "40";
 								logStepSize = 40;
 
-								// approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
-								approachObj->walkPlan = "backward_15cm_steps";
+								approachObj->walkPlan = "HANDOVER_1stepCycle_back_" + approachObj->stepSize + "cm";
+								// approachObj->walkPlan = "backward_15cm_steps";
 
 								ctl.loadFootstepPlan(approachObj->walkPlan);
 								ctl.config().add("triggerWalk", true);
@@ -1248,7 +1248,7 @@ namespace lipm_walking
 
 
 				/*
-				* 5th,
+				* 5th, final
 				*
 				* feed Ef pose
 				*
@@ -1574,15 +1574,16 @@ namespace lipm_walking
 					{
 						if( (ID > START_ZONE_DIST) && (ID < SAFE_ZONE_DIST) ) //1.8>ID>1.4
 						{
-							if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
-							{
+							/*below  'if' not valid for 2nd cycle*/
+							// if(approachObj->objectPosC(2) >= approachObj->objAboveWaist)
+							// {
 								approachObj->walkFwd = false;
 
 								if(approachObj->Flag_WALK)
 								{
 									// approachObj->stepSize = "20cm_10";
 									approachObj->stepSize = "20cm_20";
-									logStepSize = 0.30;
+									logStepSize = 0.40;
 									Xmax = 0.80 + 0.1 + logStepSize;
 
 									approachObj->walkPlan = "HANDOVER_fwd_" + approachObj->stepSize + "cm";
@@ -1597,7 +1598,8 @@ namespace lipm_walking
 								{
 									Xmax = 0.8;
 								}
-							}/*something here when robot has object and walkfwd again posture task etc*/
+							// }
+							/*something here when robot has object and walkfwd again posture task etc*/
 						}
 					}
 
