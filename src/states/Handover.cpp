@@ -257,7 +257,7 @@ namespace lipm_walking
 				ctl.logger().addLogEntry("HANDOVER_Flag_enableWalkFwd",[this]() -> double { return approachObj->enableWalkFwd; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_enableWalkBack",[this]() -> double { return approachObj->enableWalkBack; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwd",[this]() -> double { return approachObj->walkFwd; });
-				ctl.logger().addLogEntry("HANDOVER_Flag_walkFwdAgain",[this]() -> double { return approachObj->walkFwdAgain; });
+				// ctl.logger().addLogEntry("HANDOVER_Flag_walkFwdAgain",[this]() -> double { return approachObj->walkFwdAgain; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_walkBack",[this]() -> double { return approachObj->walkBack; });
 				ctl.logger().addLogEntry("HANDOVER_Flag_finishedWalk_",[this]() -> double { return approachObj->finishedWalk_; });
 
@@ -1144,7 +1144,7 @@ namespace lipm_walking
 
 									if(!approachObj->selectRobotHand)
 									{
-										approachObj->lHandPredict = approachObj->predictionController(
+										approachObj->lHandPredict = approachObj->handoverPose(
 											ltPosW,
 											relaxRotL,
 											subjMarkersName);
@@ -1171,7 +1171,7 @@ namespace lipm_walking
 
 									if(!approachObj->selectRobotHand)
 									{
-										approachObj->rHandPredict = approachObj->predictionController(
+										approachObj->rHandPredict = approachObj->handoverPose(
 											rtPosW,
 											relaxRotR,
 											subjMarkersName);
@@ -1199,14 +1199,14 @@ namespace lipm_walking
 							/*CHECK once every prediction cycle*/
 							if( (approachObj->i)%(approachObj->t_observe) == 0 )
 							{
-								approachObj->rHandPredict = approachObj->predictionController(
+								approachObj->rHandPredict = approachObj->handoverPose(
 									rtPosW,
 									relaxRotR,
 									approachObj->subjLtMarkers);
 
 								approachObj->useRightEf = get<0>(approachObj->rHandPredict);
 
-								approachObj->lHandPredict = approachObj->predictionController(
+								approachObj->lHandPredict = approachObj->handoverPose(
 									ltPosW,
 									relaxRotL,
 									approachObj->subjRtMarkers);
@@ -1218,7 +1218,7 @@ namespace lipm_walking
 						{
 							if( subjMarkersName[0] == "lShapeRtA" )
 							{
-								approachObj->lHandPredict = approachObj->predictionController(
+								approachObj->lHandPredict = approachObj->handoverPose(
 									ltPosW,
 									relaxRotL,
 									subjMarkersName);
@@ -1228,7 +1228,7 @@ namespace lipm_walking
 							}
 							else
 							{
-								approachObj->rHandPredict = approachObj->predictionController(
+								approachObj->rHandPredict = approachObj->handoverPose(
 									rtPosW,
 									relaxRotR,
 									subjMarkersName);
@@ -1689,7 +1689,7 @@ namespace lipm_walking
 				approachObj->takeBackObject = false;
 				approachObj->restartHandover = false;
 
-				approachObj->walkFwdAgain = false;
+				// approachObj->walkFwdAgain = false;
 
 				ID = 0.0;
 				bodyPosR = Eigen::Vector3d::Zero();

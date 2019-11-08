@@ -60,7 +60,7 @@ namespace lipm_walking
 
 			bool Flag_WALK{true};			//TRUE, for walking, else only stabilizer DONT TRUE HERE
 
-			bool FlAG_INDIVIDUAL{true}; 	//TRUE, to use individual hand, otherwise use both hands together
+			bool FlAG_INDIVIDUAL{false}; 	//TRUE, one-hand handover, otherwise bi-manual handover
 
 			bool Flag_RobotMarkers{true}; 	//TRUE, otherwise don't use ROBOT_Markers
 
@@ -71,7 +71,6 @@ namespace lipm_walking
 			bool enableWalkBack{false};
 			bool walkFwd{false};
 			bool finishedWalk_{false};
-			bool walkFwdAgain{false};
 			bool walkBack{false};
 
 			bool cycle_1st{false};
@@ -87,7 +86,7 @@ namespace lipm_walking
 
 			bool handoverRun();
 
-			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d, Eigen::Vector3d> predictionController(
+			std::tuple<bool, Eigen::MatrixXd, Eigen::Vector3d, Eigen::Matrix3d, Eigen::Vector3d> handoverPose(
 				const Eigen::Vector3d& curPosEf,
 				const Eigen::Matrix3d & constRotLink6,
 				std::vector<std::string> subjMarkersName);
